@@ -1,0 +1,44 @@
+@model IEnumerable<DefenceDB.EL.Models.Category>
+@{
+    ViewData["Title"] = "Ürün Kategorisi Seçin";
+    var rootCategories = Model.Where(c => c.ParentCategoryId == null).OrderBy(c => c.SortOrder).ToList();
+}
+
+<div class="container mt-5">
+    <h2>Yeni Ürün Ekle</h2>
+    <p class="text-muted">Önce eklenecek ürünün türünü seçin:</p>
+
+    <div class="row mt-4">
+        @foreach (var root in rootCategories)
+        {
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-dark text-white fw-bold">
+                        <i class="@root.IconClass me-2"></i> @root.Name
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        @if (root.SubCategories != null && root.SubCategories.Any())
+                        {
+                            @foreach (var sub in root.SubCategories)
+                            {
+                                <li class="list-group-item">
+                                    <a asp-action="Create" asp-route-categoryId="@sub.Id" class="text-decoration-none">
+                                        <i class="bi bi-chevron-right me-1"></i> @sub.Name
+                                    </a>
+                                </li>
+                            }
+                        }
+                        else
+                        {
+                            <li class="list-group-item">
+                                <a asp-action="Create" asp-route-categoryId="@root.Id" class="text-decoration-none fw-bold text-primary">
+                                    <i class="bi bi-plus-circle me-1"></i> @root.Name Ekle
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+    </div>
+</div>

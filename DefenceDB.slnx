@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="DefenceDB.BLL/DefenceDB.BLL.csproj" />
+  <Project Path="DefenceDB.DAL/DefenceDB.DAL.csproj" />
+  <Project Path="DefenceDB.EL/DefenceDB.EL.csproj" />
+  <Project Path="DefenceDB.WebUI/DefenceDB.WebUI.csproj" />
+</Solution>

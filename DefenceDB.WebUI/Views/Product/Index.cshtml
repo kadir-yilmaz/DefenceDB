@@ -1,0 +1,402 @@
+@model List<DefenseProduct>
+@{
+    var categories = ViewBag.Categories as List<Category> ?? new List<Category>();
+    var currentCategory = ViewBag.CurrentCategory as Category;
+    var totalProductCount = categories.Sum(cat => (cat.Products?.Count ?? 0) + (cat.SubCategories?.Sum(sc => sc.Products?.Count ?? 0) ?? 0));
+}
+
+<div class="container py-5">
+    <style>
+        .sidebar-sticky {
+            position: sticky;
+            top: 20px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+        /* Custom scrollbar for sidebar */
+        .sidebar-sticky::-webkit-scrollbar {
+            width: 6px;
+        }
+        .sidebar-sticky::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar-sticky::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 193, 7, 0.5);
+            border-radius: 10px;
+        }
+        .sidebar-sticky::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(255, 193, 7, 0.8);
+        }
+
+        /* Pagination CSS */
+        .admin-pagination-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-top: 1.5rem;
+            padding: 0.75rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            background-color: var(--theme-card-bg, #ffffff);
+            border: 1px solid var(--theme-border, #e5e7eb);
+        }
+        
+        .admin-pagination {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        
+        .admin-pagination .page-link-custom {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 36px;
+            padding: 0 10px;
+            border-radius: 8px;
+            background: rgba(99, 102, 241, 0.1);
+            color: #6366f1;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        
+        .admin-pagination .page-link-custom:hover {
+            background: rgba(99, 102, 241, 0.2);
+            color: #4f46e5;
+        }
+        
+        .admin-pagination .active .page-link-custom {
+            background: #4f46e5;
+            color: white;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+        }
+        
+        .admin-pagination .disabled .page-link-custom {
+            background: transparent;
+            color: #a1a1aa;
+            cursor: not-allowed;
+        }
+        
+        .admin-pagination .page-link-text {
+            background: transparent;
+            color: #4f46e5;
+            padding: 0 12px;
+        }
+        .admin-pagination .page-link-text:hover {
+            background: rgba(99, 102, 241, 0.05);
+        }
+        
+        .admin-pagination .ellipsis {
+            color: #8b5cf6;
+            padding: 0 4px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: end;
+            height: 100%;
+            padding-bottom: 4px;
+        }
+    </style>
+
+    @* amamamamam Mobile Offcanvas - Sadece telefonda gorunur amamamamam *@
+    <div class="offcanvas offcanvas-start bg-theme" tabindex="-1" id="mobileFilterPanel" aria-labelledby="mobileFilterPanelLabel" style="width: 75%;">
+        <div class="offcanvas-header border-bottom border-theme">
+            <h5 class="offcanvas-title text-primary-theme" id="mobileFilterPanelLabel">
+                <i class="bi bi-funnel-fill text-warning me-2"></i> Filtreler
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            @* Kategori Listesi (Mobil) *@
+            <div class="bg-theme-card border border-theme rounded-4 p-3 shadow-sm mb-4">
+                <h6 class="text-primary-theme mb-3 pb-2 border-bottom border-theme d-flex align-items-center gap-2">
+                    <i class="bi bi-grid-3x3-gap-fill text-warning"></i>
+                    <span>Tüm Kategoriler</span>
+                </h6>
+                <div class="category-list">
+                    <a href="@Url.Action("Index", "Product", new { country = ViewBag.CurrentCountry })" class="sidebar-category-link @(currentCategory == null ? "active" : "") d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-list-stars me-2"></i>Tüm Ürünler</span>
+                        <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme">@totalProductCount</span>
+                    </a>
+                    @foreach (var cat in categories)
+                    {
+                        var mRootCount = (cat.Products?.Count ?? 0) + (cat.SubCategories?.Sum(sc => sc.Products?.Count ?? 0) ?? 0);
+                        var mIsRootActive = currentCategory?.Id == cat.Id || currentCategory?.ParentCategoryId == cat.Id;
+                        <a href="@Url.Action("Index", "Product", new { categorySlug = cat.Slug, country = ViewBag.CurrentCountry })" 
+                           class="sidebar-category-link @(mIsRootActive ? "active fw-bold" : "") d-flex justify-content-between align-items-center">
+                            <span>@cat.Name</span>
+                            <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme">@mRootCount</span>
+                        </a>
+                        if (mIsRootActive && cat.SubCategories != null && cat.SubCategories.Any())
+                        {
+                            <div class="ps-3 border-start border-theme ms-3 mb-2 mt-1">
+                                @foreach (var sub in cat.SubCategories)
+                                {
+                                    var mSubCount = sub.Products?.Count ?? 0;
+                                    <a href="@Url.Action("Index", "Product", new { categorySlug = sub.Slug, country = ViewBag.CurrentCountry })" 
+                                       class="sidebar-category-link @(currentCategory?.Id == sub.Id ? "active text-warning" : "text-secondary-theme") d-flex justify-content-between align-items-center py-1 mt-1" style="font-size: 0.9rem;">
+                                        <span><i class="@sub.IconClass me-2"></i>@sub.Name</span>
+                                        <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme" style="font-size: 0.75rem;">@mSubCount</span>
+                                    </a>
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+            @* Ozellik Filtreleri (Mobil) *@
+            @if (ViewBag.FilterProperties != null && ((List<System.Reflection.PropertyInfo>)ViewBag.FilterProperties).Any())
+            {
+                <div class="bg-theme-card border border-theme rounded-4 p-3 shadow-sm">
+                    <h6 class="text-primary-theme mb-3 pb-2 border-bottom border-theme d-flex align-items-center gap-2">
+                        <i class="bi bi-sliders text-warning"></i>
+                        <span>Özellik Filtreleri</span>
+                    </h6>
+                    @await Html.PartialAsync("_FilterForm")
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="row">
+        @* amamamamam PC Sidebar - d-none d-lg-block ile sadece masaustunde gorunur amamamamam *@
+        <div class="col-lg-3 d-none d-lg-block mb-4 mb-lg-0 pe-lg-3">
+            <div class="sidebar-sticky">
+                <!-- Categories block -->
+                <div class="bg-theme-card border border-theme rounded-4 p-4 shadow-sm mb-4">
+                    <h5 class="text-primary-theme mb-4 pb-2 border-bottom border-theme d-flex align-items-center gap-2">
+                        <i class="bi bi-grid-3x3-gap-fill text-warning"></i>
+                        <span>Tüm Kategoriler</span>
+                    </h5>
+                    <div class="category-list">
+                        <a href="@Url.Action("Index", "Product", new { country = ViewBag.CurrentCountry })" class="sidebar-category-link @(currentCategory == null ? "active" : "") d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-list-stars me-2"></i>Tüm Ürünler</span>
+                            <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme">@totalProductCount</span>
+                        </a>
+                        
+                        @foreach (var cat in categories)
+                        {
+                            var rootCount = (cat.Products?.Count ?? 0) + (cat.SubCategories?.Sum(sc => sc.Products?.Count ?? 0) ?? 0);
+                            var isRootActive = currentCategory?.Id == cat.Id || currentCategory?.ParentCategoryId == cat.Id;
+                            
+                            <a href="@Url.Action("Index", "Product", new { categorySlug = cat.Slug, country = ViewBag.CurrentCountry })" 
+                               class="sidebar-category-link @(isRootActive ? "active fw-bold" : "") d-flex justify-content-between align-items-center">
+                                <span>@cat.Name</span>
+                                <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme">@rootCount</span>
+                            </a>
+
+                            if (isRootActive && cat.SubCategories != null && cat.SubCategories.Any())
+                            {
+                                <div class="ps-3 border-start border-theme ms-3 mb-2 mt-1">
+                                    @foreach (var sub in cat.SubCategories)
+                                    {
+                                        var subCount = sub.Products?.Count ?? 0;
+                                        <a href="@Url.Action("Index", "Product", new { categorySlug = sub.Slug, country = ViewBag.CurrentCountry })" 
+                                           class="sidebar-category-link @(currentCategory?.Id == sub.Id ? "active text-warning" : "text-secondary-theme") d-flex justify-content-between align-items-center py-1 mt-1" style="font-size: 0.9rem;">
+                                            <span><i class="@sub.IconClass me-2"></i>@sub.Name</span>
+                                            <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme" style="font-size: 0.75rem;">@subCount</span>
+                                        </a>
+                                    }
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+
+                <!-- Dynamic Properties Filter -->
+                @if (ViewBag.FilterProperties != null && ((List<System.Reflection.PropertyInfo>)ViewBag.FilterProperties).Any())
+                {
+                    <div class="bg-theme-card border border-theme rounded-4 p-4 shadow-sm">
+                        <h5 class="text-primary-theme mb-4 pb-2 border-bottom border-theme d-flex align-items-center gap-2">
+                            <i class="bi bi-sliders text-warning"></i>
+                            <span>Özellik Filtreleri</span>
+                        </h5>
+                        @await Html.PartialAsync("_FilterForm")
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Main Product Grid -->
+        <div class="col-lg-9">
+            
+            <!-- Top Action Bar -->
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-theme">
+                <div class="d-flex align-items-center gap-2 gap-md-3">
+                    <!-- Mobilde filtre butonu -->
+                    <button class="btn btn-warning d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileFilterPanel" aria-controls="mobileFilterPanel">
+                        <i class="bi bi-funnel-fill"></i>
+                    </button>
+                    <div>
+                        @if (currentCategory != null)
+                        {
+                            <h4 class="text-primary-theme fw-bold mb-0 d-flex align-items-center gap-2">
+                                @currentCategory.Name
+                            </h4>
+                            @if (!string.IsNullOrEmpty(currentCategory.Description))
+                            {
+                                <p class="text-secondary-theme fs-7 mb-0 d-none d-md-block">@currentCategory.Description</p>
+                            }
+                        }
+                        else
+                        {
+                            <h4 class="text-primary-theme fw-bold mb-0 d-flex align-items-center gap-2">
+                                <i class="bi bi-shield-fill text-warning"></i> Tüm Savunma Ürünleri
+                            </h4>
+                        }
+                    </div>
+                </div>
+                
+                <div class="dropdown">
+                    <button class="btn bg-theme-card border border-theme text-primary-theme dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        @if(!string.IsNullOrEmpty(ViewBag.CurrentCountry))
+                        {
+                            var flagUrlBtn = "https://flagcdn.com/w20/" + ((List<DefenceDB.WebUI.Models.CountryHelper.CountryItem>)ViewBag.CountriesList).FirstOrDefault(c => c.Name == ViewBag.CurrentCountry)?.Code + ".png";
+                            <img src="@flagUrlBtn" alt="@ViewBag.CurrentCountry" style="width:16px; height:auto; border-radius: 2px;" onerror="this.style.display='none';" />
+                            <span class="fw-bold">@ViewBag.CurrentCountry</span>
+                        }
+                        else
+                        {
+                            <span class="fw-bold">Tüm Ülkeler</span>
+                        }
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end bg-theme-card border-theme shadow-lg" style="max-height: 350px; overflow-y: auto;">
+                        <li>
+                            <a class="dropdown-item text-primary-theme d-flex align-items-center gap-2 @(string.IsNullOrEmpty(ViewBag.CurrentCountry) ? "active bg-warning text-dark" : "")" 
+                               href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug })">
+                                <i class="bi bi-globe text-muted"></i> Tüm Ülkeler
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider border-theme"></li>
+                        @foreach (var c in ViewBag.CountriesList as List<DefenceDB.WebUI.Models.CountryHelper.CountryItem> ?? new List<DefenceDB.WebUI.Models.CountryHelper.CountryItem>())
+                        {
+                            var flagUrl = "https://flagcdn.com/w20/" + c.Code + ".png";
+                            <li>
+                                <a class="dropdown-item text-primary-theme d-flex align-items-center gap-2 @(string.Equals(ViewBag.CurrentCountry, c.Name, StringComparison.OrdinalIgnoreCase) ? "active bg-warning text-dark" : "bg-theme-hover")" 
+                                   href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = c.Name })">
+                                    <img src="@flagUrl" alt="@c.Name" style="width: 16px; height: auto; border-radius: 2px;" />
+                                    @c.Name
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Products List -->
+            @if (Model.Count == 0)
+            {
+                <div class="text-center py-5 bg-theme-card border border-theme rounded-4">
+                    <i class="bi bi-shield-slash text-warning fs-1"></i>
+                    <h4 class="mt-3 text-primary-theme">Kayıt Bulunamadı</h4>
+                    <p class="text-secondary-theme">Bu kategoriye ait henüz veri girişi yapılmamıştır.</p>
+                    <a href="/Product" class="btn btn-warning text-dark btn-sm rounded-pill px-4 mt-2">Tüm Ürünlere Dön</a>
+                </div>
+            }
+            else
+            {
+                <div class="row g-4">
+                    @foreach (var prod in Model)
+                    {
+                        var mainImage = prod.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? prod.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
+                        
+                        <div class="col-lg-4 col-md-6 col-sm-12">
+                            <div class="card-premium h-100 d-flex flex-column" style="cursor: pointer;" onclick="handleProductClick(event, '/Product/Detail/@(prod.Id)-@(prod.Slug)')">
+                                <span class="category-badge">@prod.Category.Name</span>
+                                <div class="card-img-wrapper">
+                                    <img src="@mainImage" alt="@prod.Name" onerror="handleImageError(this, '@prod.Name')" />
+                                </div>
+                                <div class="card-body d-flex flex-column flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h5 class="card-title text-truncate text-primary-theme" style="max-width: 70%;" title="@prod.Name">@prod.Name</h5>
+                                        @if (!string.IsNullOrEmpty(prod.Country))
+                                        {
+                                            <span class="badge bg-theme-hover border border-theme text-secondary-theme fs-8 d-inline-flex align-items-center gap-1">
+                                                @if (!string.IsNullOrEmpty(CountryHelper.GetFlagUrl(prod.Country)))
+                                                {
+                                                    <img src="@CountryHelper.GetFlagUrl(prod.Country)" alt="@prod.Country" style="width: 14px; height: auto; object-fit: contain;" />
+                                                }
+                                                else
+                                                {
+                                                    <i class="bi bi-geo-alt-fill text-warning me-1"></i>
+                                                }
+                                                @prod.Country
+                                            </span>
+                                        }
+                                    </div>
+                                    
+                                    @if (!string.IsNullOrEmpty(prod.NatoReportingName))
+                                    {
+                                        <div class="fs-7 text-secondary italic mb-2">NATO: "@prod.NatoReportingName"</div>
+                                    }
+
+                                    <p class="card-text text-secondary-theme flex-grow-1">
+                                        @prod.Description
+                                    </p>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top border-theme">
+                                        <span class="fs-8 text-muted-theme">Üretici: <strong class="text-secondary-theme">@prod.Manufacturer</strong></span>
+                                        <span class="text-warning fw-bold fs-7 d-inline-flex align-items-center gap-1">
+                                            İncele <i class="bi bi-chevron-right"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (ViewBag.TotalPages > 1)
+            {
+                int currentPage = ViewBag.CurrentPage ?? 1;
+                int totalPages = ViewBag.TotalPages ?? 1;
+                var currentCategorySlug = ViewBag.CurrentCategory?.Slug;
+                var currentCountry = ViewBag.CurrentCountry;
+                var currentSearch = ViewBag.CurrentSearch;
+
+                <div class="admin-pagination-wrapper mt-5">
+                    <ul class="admin-pagination">
+                        <li class="@(currentPage == 1 ? "disabled" : "")">
+                            <a href="@(currentPage > 1 ? Url.Action("Index", new { categorySlug = currentCategorySlug, country = currentCountry, search = currentSearch, page = currentPage - 1 }) : "#")" class="page-link-custom page-link-text">
+                                <i class="bi bi-chevron-left me-1" style="font-size: 0.8rem;"></i> Back
+                            </a>
+                        </li>
+
+                        @for (int i = 1; i <= totalPages; i++)
+                        {
+                            if (i == 1 || i == totalPages || (i >= currentPage - 1 && i <= currentPage + 1))
+                            {
+                                <li class="@(i == currentPage ? "active" : "")">
+                                    <a href="@Url.Action("Index", new { categorySlug = currentCategorySlug, country = currentCountry, search = currentSearch, page = i })" class="page-link-custom">@i</a>
+                                </li>
+                            }
+                            else if (i == 2 && currentPage > 3)
+                            {
+                                <li><span class="ellipsis">...</span></li>
+                            }
+                            else if (i == totalPages - 1 && currentPage < totalPages - 2)
+                            {
+                                <li><span class="ellipsis">...</span></li>
+                            }
+                        }
+
+                        <li class="@(currentPage == totalPages ? "disabled" : "")">
+                            <a href="@(currentPage < totalPages ? Url.Action("Index", new { categorySlug = currentCategorySlug, country = currentCountry, search = currentSearch, page = currentPage + 1 }) : "#")" class="page-link-custom page-link-text">
+                                Next <i class="bi bi-chevron-right ms-1" style="font-size: 0.8rem;"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            }
+
+        </div>
+    </div>
+</div>

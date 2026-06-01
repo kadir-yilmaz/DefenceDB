@@ -1,0 +1,407 @@
+@{
+    var categories = ViewBag.Categories as List<Category> ?? new List<Category>();
+    var recentProducts = ViewBag.RecentProducts as List<DefenseProduct> ?? new List<DefenseProduct>();
+    ViewData["IsHome"] = true;
+}
+
+<!-- Hero Section with Full Screen Video -->
+<style>
+    .hero-video-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        min-height: 600px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 4rem;
+        margin-top: 0;
+        background: linear-gradient(-45deg, #020617, #0f172a, #1e293b, #0f172a);
+        background-size: 400% 400%;
+        animation: heroBgGradient 5s ease infinite;
+    }
+
+    @@keyframes heroBgGradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    .hero-video-wrapper video {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        min-width: 100%;
+        min-height: 100%;
+        width: auto;
+        height: auto;
+        transform: translateX(-50%) translateY(-50%);
+        z-index: 0;
+        object-fit: cover;
+    }
+
+    @@media (max-width: 767.98px) {
+        .hero-video-wrapper {
+            height: 82svh;
+            min-height: 520px;
+            margin-bottom: 2.5rem;
+        }
+
+        .hero-video-wrapper video {
+            width: auto;
+            height: 82%;
+            min-width: 0;
+            min-height: 0;
+            object-fit: cover;
+            object-position: center center;
+            transform: translateX(-50%) translateY(-50%);
+        }
+
+        .hero-overlay {
+            background:
+                radial-gradient(circle at center, rgba(15, 23, 42, 0.28), rgba(15, 23, 42, 0.78) 72%),
+                linear-gradient(rgba(15, 23, 42, 0.28), rgba(15, 23, 42, 0.92));
+        }
+
+        .quote-wrapper p:first-child {
+            font-size: 1.05rem !important;
+            line-height: 1.5 !important;
+        }
+
+        .quote-wrapper p:last-child {
+            font-size: 0.85rem !important;
+            letter-spacing: 1.5px !important;
+        }
+    }
+
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(rgba(15, 23, 42, 0.6), rgba(15, 23, 42, 0.95)); /* Dark theme blending */
+        z-index: 1;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        width: 100%;
+        animation: fadeIn 1s ease-out;
+    }
+    
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<section class="hero-video-wrapper">
+    <!-- Masaüstü Videosu (Geniş Ekranlar - Yatay 16:9) -->
+    <video loop muted playsinline preload="auto" class="home-hero-video d-none d-md-block">
+        <source data-src="/videos/home.mp4" type="video/mp4">
+        <source data-src="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4">
+    </video>
+    
+    <!-- Mobil Videosu (Telefonlar - Dikey 9:16) -->
+    <video loop muted playsinline preload="auto" class="home-hero-video d-block d-md-none">
+        <source data-src="/videos/home.mp4" type="video/mp4">
+        <!-- Kaliteli ve akıcı dikey uçak uçuşu fallback videosu -->
+        <source data-src="https://assets.mixkit.co/videos/preview/mixkit-fighter-jet-maneuvering-in-the-clouds-43187-large.mp4" type="video/mp4">
+    </video>
+    
+    <div class="hero-overlay"></div>
+    
+    <div class="container hero-content h-100 d-flex flex-column justify-content-end pb-5">
+        <div class="quote-wrapper text-center w-100 mb-4 px-3" style="animation: fadeInUp 1.5s ease-out;">
+            <p class="text-white opacity-75 fst-italic mx-auto" style="max-width: 800px; font-size: 1.5rem; line-height: 1.6; font-family: 'Outfit', sans-serif;">
+                "Uçmayı bir kere tattıktan sonra, yeryüzünde sonsuza dek gözleriniz gökyüzüne çevrilmiş bir şekilde yürüyeceksiniz..."
+            </p>
+            <p class="text-warning fw-bold mt-2" style="font-size: 1.1rem; letter-spacing: 2px;">
+                — LEONARDO DA VINCI
+            </p>
+        </div>
+    </div>
+</section>
+
+<script>
+    (function () {
+        function loadHomeHeroVideo() {
+            var isMobile = window.matchMedia('(max-width: 767.98px)').matches;
+            var selector = isMobile ? '.home-hero-video.d-md-none' : '.home-hero-video.d-md-block';
+            var video = document.querySelector(selector);
+
+            if (!video || video.dataset.loaded === 'true') return;
+
+            video.querySelectorAll('source[data-src]').forEach(function (source) {
+                source.src = source.dataset.src;
+            });
+
+            video.dataset.loaded = 'true';
+            video.load();
+
+            var playPromise = video.play();
+            if (playPromise && typeof playPromise.catch === 'function') {
+                playPromise.catch(function () { });
+            }
+        }
+
+        // Delay loading just a little bit so it doesn't block the very first frame render
+        window.addEventListener('DOMContentLoaded', function () {
+            setTimeout(loadHomeHeroVideo, 100);
+        });
+    })();
+</script>
+
+<style>
+    @@keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(40px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<!-- Showcase Products Section (Vitrin) -->
+@{
+    var showcaseProducts = ViewBag.ShowcaseProducts as List<DefenseProduct> ?? new List<DefenseProduct>();
+}
+@if (showcaseProducts.Any())
+{
+    <section class="container mb-5">
+        <div class="row mb-4 align-items-center">
+            <div class="col-md-12">
+                <h2 class="text-primary-theme"><i class="bi bi-star-fill text-warning me-2"></i> Öne Çıkanlar</h2>
+                <p class="text-secondary-theme mb-0">Sizin için seçtiklerimiz</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            @{ var showIndex = 0; }
+            @foreach (var prod in showcaseProducts)
+            {
+                var mainImage = prod.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? prod.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
+                <div class="col-md-6 col-lg-4 reveal-card" style="--delay: @(showIndex * 45)ms;">
+                    <div class="card-premium h-100 d-flex flex-column" style="cursor: pointer; border-color: rgba(251, 191, 36, 0.25) !important; box-shadow: 0 4px 25px rgba(251, 191, 36, 0.05);" onclick="handleProductClick(event, '/Product/Detail/@(prod.Id)-@(prod.Slug)')">
+                        <span class="showcase-star" aria-label="Öne çıkan">⭐</span>
+                        <span class="category-badge bg-warning text-dark border-0 fw-bold">@prod.Category.Name</span>
+                        <div class="card-img-wrapper" style="position: relative;">
+                            <img src="@mainImage" alt="@prod.Name" onerror="handleImageError(this, '@prod.Name')" />
+                            @if (!string.IsNullOrEmpty(prod.Country))
+                            {
+                                <div style="position: absolute; bottom: 12px; left: 12px; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); padding: 5px 10px; border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.15); display: flex; align-items: center; gap: 6px;">
+                                    @if (!string.IsNullOrEmpty(CountryHelper.GetFlagUrl(prod.Country)))
+                                    {
+                                        <img src="@CountryHelper.GetFlagUrl(prod.Country)" alt="@prod.Country" style="width: 14px; height: auto; object-fit: contain; border-radius: 1px;" />
+                                    }
+                                    <span style="font-family: monospace; font-size: 0.75rem; color: #fbbf24; font-weight: 700; line-height: 1;">@prod.Country</span>
+                                </div>
+                            }
+                        </div>
+                        <div class="card-body d-flex flex-column flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title text-truncate text-warning font-outfit mb-0" style="max-width: 80%; font-weight: 600;" title="@prod.Name">@prod.Name</h5>
+                            </div>
+                            
+                            @if (!string.IsNullOrEmpty(prod.NatoReportingName))
+                            {
+                                <div class="fs-7 text-secondary italic mb-2">NATO: "@prod.NatoReportingName"</div>
+                            }
+
+                            <p class="card-text text-secondary-theme flex-grow-1" style="font-size: 0.9rem;">
+                                @prod.Description
+                            </p>
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top border-theme">
+                                <span class="fs-8 text-muted-theme">Üretici: <strong class="text-secondary-theme">@prod.Manufacturer</strong></span>
+                                <span class="text-warning fw-bold fs-7 d-inline-flex align-items-center gap-1">
+                                    İncele <i class="bi bi-chevron-right"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                showIndex++;
+            }
+        </div>
+    </section>
+}
+
+<!-- Categories Section -->
+<section class="container mb-5">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h2 class="text-primary-theme"><i class="bi bi-grid-fill text-warning me-2"></i> Savunma Kategorileri</h2>
+            <p class="text-secondary-theme mb-0">Teknoloji sınıflarına göre filtreleyip detaylı incelemeler yapabilirsiniz.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-2 mt-md-0">
+            <a href="/Product" class="text-warning text-decoration-none fw-bold">
+                Tüm Kategorileri Gör <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        @{ var catIndex = 0; }
+        @foreach (var cat in categories)
+        {
+            <div class="col-md-4 reveal-card" style="--delay: @(catIndex * 45)ms;">
+                <div class="card-premium d-flex flex-column h-100 p-4" style="cursor: pointer;" onclick="location.href='@Url.Action("Index", "Product", new { categorySlug = cat.Slug })'">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="p-3 bg-theme-hover border border-theme rounded-circle text-warning fs-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                            <i class="@cat.IconClass"></i>
+                        </div>
+                        <div>
+                            <h4 class="card-title mb-0 text-primary-theme">@cat.Name</h4>
+                        </div>
+                    </div>
+                    <p class="card-text text-secondary-theme mb-4 flex-grow-1">
+                        @cat.Description
+                    </p>
+                    <div class="mt-auto d-flex align-items-center justify-content-between text-warning fw-bold fs-7">
+                        <span>İncele</span>
+                        <i class="bi bi-chevron-right"></i>
+                    </div>
+                </div>
+            </div>
+            catIndex++;
+        }
+    </div>
+</section>
+
+<!-- Compact Grid Styling for 5 columns -->
+<style>
+    .grid-5-columns {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1.5rem;
+    }
+    @@media (max-width: 1200px) {
+        .grid-5-columns {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    @@media (max-width: 768px) {
+        .grid-5-columns {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @@media (max-width: 576px) {
+        .grid-5-columns {
+            grid-template-columns: 1fr;
+        }
+    }
+    .card-compact {
+        padding: 0.85rem !important;
+    }
+    .card-compact .card-img-wrapper {
+        height: 110px !important;
+        margin-bottom: 0.65rem;
+        border-radius: 6px;
+    }
+    .card-compact .card-title {
+        font-size: 0.9rem !important;
+        font-weight: 600 !important;
+    }
+    .card-compact .card-text {
+        font-size: 0.78rem !important;
+        line-height: 1.4;
+        margin-bottom: 0.5rem;
+    }
+    .card-compact .category-badge {
+        font-size: 0.65rem !important;
+        padding: 2px 6px !important;
+        top: 8px !important;
+        left: 8px !important;
+    }
+</style>
+
+<!-- Recent Products Section (5 per row, 2 rows) -->
+<section class="container mb-5 pb-5">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h2 class="text-primary-theme"><i class="bi bi-lightning-charge-fill text-warning me-2"></i> En Son Eklenen Ürünler</h2>
+            <p class="text-secondary-theme mb-0">Veritabanına en son eklenen aktif savunma sanayii ürünleri.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-2 mt-md-0">
+            <a href="/Product" class="text-warning text-decoration-none fw-bold">
+                Tüm Veritabanını Gör <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="grid-5-columns">
+        @{ var prodIndex = 0; }
+        @foreach (var prod in recentProducts)
+        {
+            var mainImage = prod.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? prod.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
+            <div class="reveal-card" style="--delay: @(prodIndex * 35)ms;">
+                <div class="card-premium card-compact h-100 d-flex flex-column" style="cursor: pointer;" onclick="handleProductClick(event, '/Product/Detail/@(prod.Id)-@(prod.Slug)')">
+                    <span class="category-badge">@prod.Category.Name</span>
+                    <div class="card-img-wrapper">
+                        <img src="@mainImage" alt="@prod.Name" onerror="handleImageError(this, '@prod.Name')" />
+                    </div>
+                    <div class="card-body p-0 d-flex flex-column flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <h5 class="card-title text-truncate text-primary-theme m-0" style="max-width: 75%;" title="@prod.Name">@prod.Name</h5>
+                            @if (!string.IsNullOrEmpty(prod.Country))
+                            {
+                                <span class="badge bg-theme-hover border border-theme text-secondary-theme fs-9 d-inline-flex align-items-center gap-0.5" style="padding: 2px 4px;">
+                                    @if (!string.IsNullOrEmpty(CountryHelper.GetFlagUrl(prod.Country)))
+                                    {
+                                        <img src="@CountryHelper.GetFlagUrl(prod.Country)" alt="@prod.Country" style="width: 10px; height: auto; object-fit: contain;" />
+                                    }
+                                    @prod.Country
+                                </span>
+                            }
+                        </div>
+                        
+                        @if (!string.IsNullOrEmpty(prod.NatoReportingName))
+                        {
+                            <div class="text-secondary italic mb-1" style="font-size: 0.72rem;">NATO: "@prod.NatoReportingName"</div>
+                        }
+
+                        <p class="card-text text-secondary-theme flex-grow-1 text-truncate-3" style="font-size: 0.78rem;">
+                            @prod.Description
+                        </p>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top border-theme" style="font-size: 0.75rem;">
+                            <span class="text-muted-theme text-truncate" style="max-width: 60%;">Üretici: <strong class="text-secondary-theme">@prod.Manufacturer</strong></span>
+                            <span class="text-warning fw-bold d-inline-flex align-items-center gap-0.5">
+                                İncele <i class="bi bi-chevron-right" style="font-size: 0.65rem;"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            prodIndex++;
+        }
+    </div>
+</section>
+
+@section Scripts {
+<style>
+    .reveal-card {
+        opacity: 1;
+        transform: none;
+    }
+    .showcase-star {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 5;
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: rgba(15, 23, 42, 0.82);
+        border: 1px solid rgba(251, 191, 36, 0.45);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+        font-size: 1rem;
+        line-height: 1;
+    }
+</style>
+}

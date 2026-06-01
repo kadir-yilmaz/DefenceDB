@@ -1,0 +1,106 @@
+@inject DefenceDB.BLL.Abstract.ICategoryService CategoryService
+@{
+    var rootCategories = await CategoryService.GetCategoriesWithChildrenAsync();
+}
+
+<div class="udemy-navbar-container @(ViewData["IsHome"] as bool? == true ? "navbar-transparent-home" : "")">
+    @if (ViewData["IsHome"] as bool? == true)
+    {
+        <style>
+            .navbar-transparent-home nav.navbar {
+                background-color: transparent !important;
+                border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+            }
+            .navbar-transparent-home .udemy-categories-bar {
+                background-color: rgba(0,0,0,0.3) !important;
+                border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+            }
+            .navbar-transparent-home .udemy-cat-link {
+                color: rgba(255,255,255,0.85) !important;
+            }
+            .navbar-transparent-home .udemy-cat-link:hover {
+                color: #fff !important;
+            }
+            .navbar-transparent-home .brand-text {
+                color: white !important;
+            }
+            .navbar-transparent-home .search-input {
+                background-color: rgba(255,255,255,0.1) !important;
+                color: white !important;
+                border: 1px solid rgba(255,255,255,0.2) !important;
+            }
+            .navbar-transparent-home .search-input::placeholder {
+                color: rgba(255,255,255,0.6) !important;
+            }
+        </style>
+    }
+    <!-- TOP BAR (Logo + Search + Links) -->
+    <nav class="navbar navbar-expand-lg navbar-dark border-bottom border-slate-850 py-2" style="background-color: var(--bg-navbar); transition: background-color 0.3s ease;">
+        <div class="container-fluid px-4 align-items-center">
+            
+            <!-- Brand -->
+            <a class="navbar-brand d-flex align-items-center gap-2 me-4" asp-area="" asp-controller="Home" asp-action="Index">
+                <i class="bi bi-shield-fill text-warning fs-3"></i>
+                <span class="brand-text d-none d-sm-block">DEFENCE<strong class="text-warning">DB</strong></span>
+            </a>
+
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTopContent" aria-controls="navbarTopContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarTopContent">
+                <div class="flex-grow-1"></div>
+                <!-- Small Transparent Search Bar with Autocomplete -->
+                <div class="me-3 my-2 my-lg-0 position-relative" id="searchContainer">
+                    <form asp-controller="Product" asp-action="Index" method="get" class="position-relative">
+                        <i class="bi bi-search position-absolute text-secondary-theme" style="left: 14px; top: 50%; transform: translateY(-50%); font-size: 0.9rem; z-index: 5;"></i>
+                        <input type="text" id="searchInput" name="search" class="form-control rounded-pill bg-theme text-primary-theme border-theme" 
+                               style="padding-left: 38px; width: 240px; font-size: 0.85rem; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);" 
+                               placeholder="Platform ara..." autocomplete="off" 
+                               onfocus="this.style.width='450px'" onblur="setTimeout(() => { if(!$('#searchSuggestions').is(':hover')) this.style.width='240px'; }, 200)" />
+                    </form>
+                    
+                    <!-- Suggestions Dropdown -->
+                    <div id="searchSuggestions" class="position-absolute w-100 bg-theme-card border border-theme rounded-3 shadow-lg d-none mt-2" style="z-index: 1050; max-height: 400px; overflow-y: auto;">
+                        <div class="list-group list-group-flush" id="searchSuggestionsList">
+                            <!-- JS fills this -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Links Removed per user request -->
+            </div>
+        </div>
+    </nav>
+
+    <!-- SECOND BAR: Root Categories (Udemy Style) -->
+    <div class="udemy-categories-bar">
+        <ul class="udemy-cat-list">
+            @foreach (var rootCat in rootCategories)
+            {
+                <li class="udemy-cat-item">
+                    @{ var rootCount = (rootCat.Products?.Count ?? 0) + (rootCat.SubCategories?.Sum(sc => sc.Products?.Count ?? 0) ?? 0); }
+                    <a href="@Url.Action("Index", "Product", new { categorySlug = rootCat.Slug })" class="udemy-cat-link">
+                        @rootCat.Name <span class="ms-1 fs-8 opacity-75">(@rootCount)</span>
+                    </a>
+                    
+                    @if (rootCat.SubCategories.Any())
+                    {
+                        <!-- THIRD BAR: Subcategories (Black background drop-down row) -->
+                        <div class="udemy-submenu-bar">
+                            <div class="udemy-submenu-inner">
+                                @foreach (var child in rootCat.SubCategories)
+                                {
+                                    <a href="@Url.Action("Index", "Product", new { categorySlug = child.Slug })" class="udemy-sub-link">
+                                        @if(!string.IsNullOrEmpty(child.IconClass)) { <i class="@child.IconClass me-1"></i> }
+                                        @child.Name <span class="ms-1 fs-8 opacity-75">(@child.Products.Count)</span>
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    }
+                </li>
+            }
+        </ul>
+    </div>
+</div>

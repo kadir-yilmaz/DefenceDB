@@ -1,0 +1,18 @@
+[
+  { "name": "Türkiye", "code": "tr" },
+  { "name": "ABD", "code": "us" },
+  { "name": "Rusya", "code": "ru" },
+  { "name": "Çin", "code": "cn" },
+  { "name": "Birleşik Krallık", "code": "gb" },
+  { "name": "Fransa", "code": "fr" },
+  { "name": "Almanya", "code": "de" },
+  { "name": "İtalya", "code": "it" },
+  { "name": "İsrail", "code": "il" },
+  { "name": "Güney Kore", "code": "kr" },
+  { "name": "Japonya", "code": "jp" },
+  { "name": "İsveç", "code": "se" },
+  { "name": "Hindistan", "code": "in" },
+  { "name": "Brezilya", "code": "br" },
+  { "name": "Güney Afrika", "code": "za" },
+  { "name": "Avrupa Ortak", "code": "eu" }
+]

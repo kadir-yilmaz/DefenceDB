@@ -1,0 +1,18 @@
+{
+  "Türkiye": ["ASELSAN", "TUSAŞ (TAI)", "BAYKAR", "ROKETSAN", "HAVELSAN", "FNSS", "Otokar", "BMC", "MKE", "STM", "TEI", "Kale Grubu"],
+  "ABD": ["Lockheed Martin", "Boeing", "Northrop Grumman", "Raytheon (RTX)", "General Dynamics", "L3Harris", "Huntington Ingalls", "Bell Textron", "Sikorsky"],
+  "Rusya": ["Rostec", "Almaz-Antey", "Sukhoi", "MiG", "Tupolev", "Kalashnikov", "Uralvagonzavod", "Russian Helicopters", "Kronshtadt"],
+  "Çin": ["AVIC", "NORINCO", "CASC", "CASIC", "CSGC", "CSSC"],
+  "Birleşik Krallık": ["BAE Systems", "Rolls-Royce", "Babcock International", "QinetiQ", "Aston Martin"],
+  "Fransa": ["Thales", "Naval Group", "Safran", "Dassault Aviation", "Nexter", "Airbus Helicopters"],
+  "Almanya": ["Rheinmetall", "ThyssenKrupp Marine Systems", "Krauss-Maffei Wegmann (KMW)", "Hensoldt", "Diehl Defence"],
+  "İtalya": ["Leonardo", "Fincantieri", "Iveco Defence Vehicles"],
+  "İsrail": ["Elbit Systems", "IAI (Israel Aerospace Industries)", "Rafael Advanced Defense Systems", "IWI"],
+  "Güney Kore": ["Hanwha Aerospace", "KAI (Korea Aerospace Industries)", "LIG Nex1", "Hyundai Rotem", "DSME"],
+  "Japonya": ["Mitsubishi Heavy Industries", "Kawasaki Heavy Industries", "Subaru"],
+  "İsveç": ["Saab", "Bofors"],
+  "Hindistan": ["HAL (Hindustan Aeronautics Limited)", "DRDO", "Bharat Electronics", "BrahMos Aerospace"],
+  "Brezilya": ["Embraer", "Avibras", "Taurus"],
+  "Güney Afrika": ["Denel", "Paramount Group"],
+  "Avrupa Ortak": ["Airbus Defence and Space", "MBDA", "Eurofighter", "NHIndustries"]
+}

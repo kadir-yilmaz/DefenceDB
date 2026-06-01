@@ -1,0 +1,439 @@
+@model List<DefenseProduct>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 style="font-family: 'Outfit', sans-serif; font-weight: 700; margin: 0;">
+            <i class="bi bi-box-seam-fill text-warning me-2"></i> Savunma Envanteri
+        </h4>
+        <p style="color: var(--admin-text-muted); font-size: 0.85rem; margin: 4px 0 0;">
+            Tüm savunma platformlarını buradan yönetebilirsiniz.
+        </p>
+    </div>
+    <a asp-action="Create" class="btn-admin-primary">
+        <i class="bi bi-plus-circle-fill"></i> Yeni Ürün Ekle
+    </a>
+</div>
+
+<style>
+    .admin-category-filter {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 12px;
+        margin-bottom: 24px;
+        border-bottom: 1px solid var(--admin-border);
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .admin-category-filter::-webkit-scrollbar {
+        display: none;
+    }
+    .admin-filter-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        background-color: var(--admin-surface);
+        border: 1px solid var(--admin-border);
+        color: var(--admin-text-secondary);
+        text-decoration: none;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .admin-filter-pill:hover {
+        background-color: var(--admin-accent-glow);
+        border-color: var(--admin-accent);
+        color: var(--admin-accent);
+    }
+    .admin-filter-pill.active {
+        background-color: var(--admin-accent) !important;
+        border-color: var(--admin-accent) !important;
+        color: #ffffff !important;
+        font-weight: 600;
+    }
+    .admin-filter-select {
+        min-width: 210px;
+        height: 42px;
+        padding: 0 38px 0 14px;
+        border: 1px solid var(--admin-border);
+        border-radius: 20px;
+        background-color: var(--admin-surface);
+        color: var(--admin-text-secondary);
+        font-size: 0.85rem;
+        font-weight: 600;
+        outline: none;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .admin-filter-select:focus {
+        border-color: var(--admin-accent);
+        box-shadow: 0 0 0 3px var(--admin-accent-glow);
+    }
+
+    /* Subcategories filter styles */
+    .admin-subcategory-filter {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 10px;
+        margin-top: -12px;
+        margin-bottom: 24px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .admin-subcategory-filter::-webkit-scrollbar {
+        display: none;
+    }
+    .admin-sub-filter-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 12px;
+        background-color: var(--admin-bg-secondary);
+        border: 1px solid var(--admin-border);
+        color: var(--admin-text-secondary);
+        text-decoration: none;
+        border-radius: 16px;
+        font-size: 0.78rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+    .admin-sub-filter-pill:hover {
+        background-color: var(--admin-accent-glow);
+        border-color: var(--admin-accent);
+        color: var(--admin-accent);
+    }
+    .admin-sub-filter-pill.active {
+        background-color: var(--admin-accent) !important;
+        border-color: var(--admin-accent) !important;
+        color: #ffffff !important;
+        font-weight: 600;
+    }
+
+    /* Pagination CSS */
+    .admin-pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-top: 1.5rem;
+        padding: 0.75rem;
+        background: var(--admin-surface);
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+    
+    .admin-pagination {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    
+    .admin-pagination .page-link-custom {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 32px;
+        height: 36px;
+        padding: 0 10px;
+        border-radius: 8px;
+        background: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: none;
+    }
+    
+    .admin-pagination .page-link-custom:hover {
+        background: rgba(99, 102, 241, 0.2);
+        color: #4f46e5;
+    }
+    
+    .admin-pagination .active .page-link-custom {
+        background: #4f46e5;
+        color: white;
+        box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+    }
+    
+    .admin-pagination .disabled .page-link-custom {
+        background: transparent;
+        color: #a1a1aa;
+        cursor: not-allowed;
+    }
+    
+    .admin-pagination .page-link-text {
+        background: transparent;
+        color: #4f46e5;
+        padding: 0 12px;
+    }
+    .admin-pagination .page-link-text:hover {
+        background: rgba(99, 102, 241, 0.05);
+    }
+    
+    .admin-pagination .ellipsis {
+        color: #8b5cf6;
+        padding: 0 4px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        display: flex;
+        align-items: end;
+        height: 100%;
+        padding-bottom: 4px;
+    }
+</style>
+
+@{
+    var selectedId = ViewBag.SelectedCategoryId as int?;
+    var selectedCountry = ViewBag.SelectedCountry as string;
+    var countries = ViewBag.Countries as List<string> ?? new List<string>();
+    var currentCategory = ViewBag.CurrentCategory as Category;
+    List<Category> subCategoriesToShow = null;
+    int? parentId = null;
+
+    if (currentCategory != null)
+    {
+        if (currentCategory.ParentCategoryId == null)
+        {
+            // It is a root category, show its children
+            if (currentCategory.SubCategories != null && currentCategory.SubCategories.Any())
+            {
+                subCategoriesToShow = currentCategory.SubCategories.OrderBy(sc => sc.Id).ToList();
+                parentId = currentCategory.Id;
+            }
+        }
+        else
+        {
+            // It is a subcategory/child, show siblings of the same parent
+            var allRootCategories = ViewBag.Categories as List<Category> ?? new List<Category>();
+            var parentCategory = allRootCategories.FirstOrDefault(c => c.Id == currentCategory.ParentCategoryId);
+            if (parentCategory != null && parentCategory.SubCategories != null && parentCategory.SubCategories.Any())
+            {
+                subCategoriesToShow = parentCategory.SubCategories.OrderBy(sc => sc.Id).ToList();
+                parentId = parentCategory.Id;
+            }
+        }
+    }
+}
+
+<div class="d-flex align-items-center border-bottom mb-4 pb-2" style="border-color: var(--admin-border) !important;">
+    <div class="admin-category-filter flex-grow-1 border-bottom-0 mb-0 pb-1" style="position: relative; z-index: 1;">
+        <a href="@Url.Action("Index", "ProductManagement", new { country = selectedCountry })" class="admin-filter-pill @(!selectedId.HasValue ? "active" : "")">
+            <i class="bi bi-grid-fill"></i> Tüm Ürünler (@ViewBag.TotalProductCount)
+        </a>
+        
+        @foreach (var cat in ViewBag.Categories as List<Category> ?? new List<Category>())
+        {
+            var rootCount = (cat.Products?.Count ?? 0) + (cat.SubCategories?.Sum(sc => sc.Products?.Count ?? 0) ?? 0);
+            var isRootActive = selectedId == cat.Id || (currentCategory != null && currentCategory.ParentCategoryId == cat.Id);
+            
+            <a href="@Url.Action("Index", "ProductManagement", new { categoryId = cat.Id, country = selectedCountry })" class="admin-filter-pill @(isRootActive ? "active" : "")">
+                @if (!string.IsNullOrEmpty(cat.IconClass))
+                {
+                    <i class="@cat.IconClass"></i>
+                }
+                @cat.Name (@rootCount)
+            </a>
+        }
+    </div>
+
+    <div class="dropdown ms-3 flex-shrink-0" style="z-index: 1050;">
+        <button class="admin-filter-pill dropdown-toggle d-flex align-items-center justify-content-between" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="min-width: 180px; height: 42px; cursor: pointer; padding: 0 16px; border: 1px solid var(--admin-border); background-color: var(--admin-surface);">
+            <span class="d-flex align-items-center">
+                @if (string.IsNullOrEmpty(selectedCountry))
+                {
+                    <i class="bi bi-globe me-2 text-muted"></i> @:Tüm Ülkeler
+                }
+                else
+                {
+                    var flagUrl = CountryHelper.GetFlagUrl(selectedCountry);
+                    if (!string.IsNullOrEmpty(flagUrl))
+                    {
+                        <img src="@flagUrl" alt="@selectedCountry" style="width: 18px; height: auto; margin-right: 8px; border-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);" />
+                    }
+                    else
+                    {
+                        <i class="bi bi-geo-alt me-2 text-muted"></i>
+                    }
+                    <span style="font-weight: 600;">@selectedCountry</span>
+                }
+            </span>
+        </button>
+        <ul class="dropdown-menu shadow dropdown-menu-end border-0" style="border-radius: 12px; min-width: 220px; max-height: 350px; overflow-y: auto; padding: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;">
+            <li>
+                <a class="dropdown-item rounded @(string.IsNullOrEmpty(selectedCountry) ? "active" : "") d-flex align-items-center" href="@Url.Action("Index", "ProductManagement", new { categoryId = selectedId, country = "" })" style="padding: 10px 16px; margin-bottom: 4px; transition: all 0.2s;">
+                    <i class="bi bi-globe me-3 @(string.IsNullOrEmpty(selectedCountry) ? "text-white" : "text-muted")"></i> <span style="font-weight: 500;">Tüm Ülkeler</span>
+                </a>
+            </li>
+            <li><hr class="dropdown-divider opacity-10" style="margin: 4px 0 8px 0;"></li>
+            @foreach (var country in countries)
+            {
+                var flagUrl = CountryHelper.GetFlagUrl(country);
+                <li>
+                    <a class="dropdown-item rounded @(string.Equals(selectedCountry, country, StringComparison.OrdinalIgnoreCase) ? "active" : "") d-flex align-items-center" 
+                       href="@Url.Action("Index", "ProductManagement", new { categoryId = selectedId, country = country })" style="padding: 8px 16px; margin-bottom: 2px; transition: all 0.2s; font-weight: 500;">
+                        @if (!string.IsNullOrEmpty(flagUrl))
+                        {
+                            <img src="@flagUrl" alt="@country" style="width: 20px; height: auto; margin-right: 12px; border-radius: 3px; box-shadow: 0 1px 2px rgba(0,0,0,0.15);" />
+                        }
+                        else
+                        {
+                            <i class="bi bi-geo-alt me-3 @(string.Equals(selectedCountry, country, StringComparison.OrdinalIgnoreCase) ? "text-white" : "text-muted")"></i>
+                        }
+                        @country
+                    </a>
+                </li>
+            }
+        </ul>
+    </div>
+</div>
+
+@if (subCategoriesToShow != null && subCategoriesToShow.Any())
+{
+    <div class="admin-subcategory-filter">
+        <a href="@Url.Action("Index", "ProductManagement", new { categoryId = parentId, country = selectedCountry })" class="admin-sub-filter-pill @(selectedId == parentId ? "active" : "")">
+            <i class="bi bi-list-nested"></i> Tümü
+        </a>
+        @foreach (var sub in subCategoriesToShow)
+        {
+            <a href="@Url.Action("Index", "ProductManagement", new { categoryId = sub.Id, country = selectedCountry })" class="admin-sub-filter-pill @(selectedId == sub.Id ? "active" : "")">
+                @if (!string.IsNullOrEmpty(sub.IconClass))
+                {
+                    <i class="@sub.IconClass"></i>
+                }
+                @sub.Name
+            </a>
+        }
+    </div>
+}
+
+<div class="table-wrapper">
+    <div class="table-body">
+        <div class="table-responsive">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">Görsel</th>
+                        <th style="width: 25%;">Ürün Adı</th>
+                        <th style="width: 15%;">Kategori</th>
+                        <th style="width: 15%;">Ülke</th>
+                        <th style="width: 18%;">Üretici</th>
+                        <th style="width: 10%;">Durum</th>
+                        <th style="width: 12%;" class="text-end">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var prod in Model)
+                    {
+                        <tr>
+                            <td>
+                                @{
+                                    var mainImage = prod.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? prod.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
+                                }
+                                <img src="@mainImage" alt="@prod.Name" class="product-thumb"
+                                     onerror="this.onerror=null; this.src='/images/default.jpg';" />
+                            </td>
+                            <td>
+                                <div style="font-weight: 600;">@prod.Name</div>
+                                @if (!string.IsNullOrEmpty(prod.NatoReportingName))
+                                {
+                                    <small style="color: var(--admin-accent); font-family: monospace; font-size: 0.7rem;">
+                                        NATO: "@prod.NatoReportingName"
+                                    </small>
+                                }
+                            </td>
+                            <td>
+                                <span class="admin-badge info">
+                                    <i class="@prod.Category.IconClass"></i> @prod.Category.Name
+                                </span>
+                            </td>
+                            <td>
+                                <span style="color: var(--admin-text-secondary); display: flex; align-items: center; gap: 5px;">
+                                    @if (!string.IsNullOrEmpty(CountryHelper.GetFlagUrl(prod.Country)))
+                                    {
+                                        <img src="@CountryHelper.GetFlagUrl(prod.Country)" alt="@prod.Country" style="width: 16px; height: auto;" />
+                                    }
+                                    @prod.Country
+                                </span>
+                            </td>
+                            <td style="color: var(--admin-text-secondary);">@prod.Manufacturer</td>
+                            <td>
+                                @if (prod.Status == "Active")
+                                {
+                                    <span class="admin-badge active"><i class="bi bi-check-circle-fill"></i> Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="admin-badge warning"><i class="bi bi-exclamation-circle-fill"></i> @prod.Status</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="/Product/Detail/@(prod.Id)-@(prod.Slug)" class="btn-icon" title="Detay" target="_blank">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@prod.Id" class="btn-icon info" title="Düzenle">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <form asp-action="Delete" asp-route-id="@prod.Id" method="post"
+                                          onsubmit="return confirm('Bu savunma ürününü silmek istediğinize emin misiniz?');" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn-icon danger" title="Sil">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@if (ViewBag.TotalPages > 1)
+{
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+
+    <div class="admin-pagination-wrapper">
+        <ul class="admin-pagination">
+            <li class="@(currentPage == 1 ? "disabled" : "")">
+                <a href="@(currentPage > 1 ? Url.Action("Index", new { categoryId = ViewBag.SelectedCategoryId, country = ViewBag.SelectedCountry, page = currentPage - 1 }) : "#")" class="page-link-custom page-link-text">
+                    <i class="bi bi-chevron-left me-1" style="font-size: 0.8rem;"></i> Back
+                </a>
+            </li>
+
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                if (i == 1 || i == totalPages || (i >= currentPage - 1 && i <= currentPage + 1))
+                {
+                    <li class="@(i == currentPage ? "active" : "")">
+                        <a href="@Url.Action("Index", new { categoryId = ViewBag.SelectedCategoryId, country = ViewBag.SelectedCountry, page = i })" class="page-link-custom">@i</a>
+                    </li>
+                }
+                else if (i == 2 && currentPage > 3)
+                {
+                    <li><span class="ellipsis">...</span></li>
+                }
+                else if (i == totalPages - 1 && currentPage < totalPages - 2)
+                {
+                    <li><span class="ellipsis">...</span></li>
+                }
+            }
+
+            <li class="@(currentPage == totalPages ? "disabled" : "")">
+                <a href="@(currentPage < totalPages ? Url.Action("Index", new { categoryId = ViewBag.SelectedCategoryId, country = ViewBag.SelectedCountry, page = currentPage + 1 }) : "#")" class="page-link-custom page-link-text">
+                    Next <i class="bi bi-chevron-right ms-1" style="font-size: 0.8rem;"></i>
+                </a>
+            </li>
+        </ul>
+    </div>
+}

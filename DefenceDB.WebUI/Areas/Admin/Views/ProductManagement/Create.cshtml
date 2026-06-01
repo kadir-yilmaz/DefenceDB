@@ -1,0 +1,517 @@
+@model DefenceDB.EL.Models.DefenseProduct
+@{
+    ViewData["Title"] = "Ürün Ekle";
+    
+    var baseProperties = typeof(DefenceDB.EL.Models.DefenseProduct).GetProperties()
+        .Select(p => p.Name).ToList();
+        
+    var specificProperties = Model.GetType().GetProperties()
+        .Where(p => !baseProperties.Contains(p.Name))
+        .ToList();
+}
+
+<div class="container mt-4">
+    <h2>Yeni @Model.GetType().Name Ekle</h2>
+    <form asp-action="Create" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="ModelTypeFullName" value="@Model.GetType().FullName" />
+        <input type="hidden" asp-for="CategoryId" />
+
+        <div class="row">
+            <!-- Temel Özellikler -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">Genel Bilgiler</div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Ürün Adı</label>
+                            <input type="text" asp-for="Name" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Üretici Ülke</label>
+                            <select id="countrySelect" asp-for="Country" class="form-select"></select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Üretici Firma</label>
+                            <select id="manufacturerSelect" multiple="multiple" class="form-select"></select>
+                            <input type="hidden" asp-for="Manufacturer" id="ManufacturerHidden" />
+                            <small class="text-muted d-block mt-1">Çoklu seçim yapabilirsiniz. Ülke seçtikten sonra liste güncellenir. Listede yoksa yazarak ekleyebilirsiniz.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Durum</label>
+                            <select asp-for="Status" class="form-select">
+                                <option value="Active">Aktif Kullanımda</option>
+                                <option value="In Development">Geliştirme Aşamasında</option>
+                                <option value="Retired">Emekliye Ayrılmış</option>
+                                <option value="Prototype">Prototip</option>
+                            </select>
+                            <span asp-validation-for="Status" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="VideoUrl" class="form-label fw-semibold">YouTube Video Linki (İsteğe Bağlı)</label>
+                            <input asp-for="VideoUrl" class="form-control" placeholder="Örn: https://www.youtube.com/watch?v=..." />
+                            <span asp-validation-for="VideoUrl" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" asp-for="IsActive" class="form-check-input" checked />
+                            <label class="form-check-label">Aktif (Sitede Görünsün)</label>
+                        </div>
+                        <div class="mb-3 form-check form-switch">
+                            <input type="checkbox" asp-for="IsShowcase" class="form-check-input" />
+                            <label class="form-check-label fw-semibold">Vitrin Ürünü (Ana Sayfada Gösterilsin)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resim Yükleme -->
+                <div class="card mt-4 border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <i class="bi bi-images me-1"></i> Ürün Resimleri
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small">Maksimum 10 adet resim yükleyebilirsiniz. İlk yüklenen resim kapak fotoğrafı olacaktır.</p>
+                        <input type="file" name="UploadedImages" id="imageUpload" multiple accept="image/*" class="form-control" />
+                        
+                        <div id="imagePreviewContainer" class="d-flex flex-wrap gap-2 mt-3">
+                            <!-- JS ile önizlemeler buraya eklenecek -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tipe Özel Özellikler (Reflection) -->
+            <div class="col-md-6 mb-4">
+                <div class="card border-info">
+                    <div class="card-header bg-info text-white">@Model.GetType().Name Özellikleri</div>
+                    <div class="card-body">
+                        @if (!specificProperties.Any())
+                        {
+                            <p class="text-muted">Bu modele özel ekstra alan bulunmuyor.</p>
+                        }
+                        
+                        @foreach (var prop in specificProperties)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">@prop.Name</label>
+                                
+                                @if (prop.Name == "FighterGeneration")
+                                {
+                                    <select name="@prop.Name" class="form-select">
+                                        <option value="1">1. Nesil</option>
+                                        <option value="2">2. Nesil</option>
+                                        <option value="3">3. Nesil</option>
+                                        <option value="4" selected>4. Nesil</option>
+                                        <option value="4.5">4.5 Nesil</option>
+                                        <option value="5">5. Nesil</option>
+                                        <option value="6">6. Nesil</option>
+                                    </select>
+                                }
+                                else if (prop.PropertyType == typeof(bool))
+                                {
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="@prop.Name" value="true">
+                                        <input type="hidden" name="@prop.Name" value="false">
+                                    </div>
+                                }
+                                else if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(int?))
+                                {
+                                    <input type="number" name="@prop.Name" class="form-control" />
+                                }
+                                else if (prop.PropertyType == typeof(double) || prop.PropertyType == typeof(double?))
+                                {
+                                    <input type="number" step="0.01" name="@prop.Name" class="form-control" />
+                                }
+                                else if (prop.Name == "GuidanceType")
+                                {
+                                    string[] availableTypes = new[] { "IR (Kızılötesi)", "IIR (Görüntüleyici IR)", "RF (Aktif Radar)", "SARH (Yarı Aktif Radar)", "Pasif Radar", "EO (Elektro-Optik)" };
+                                    
+                                    <div class="d-flex flex-wrap gap-3 mb-2">
+                                        @foreach(var type in availableTypes)
+                                        {
+                                            var typeCode = type.Split(' ')[0];
+                                            <div class="form-check custom-checkbox">
+                                                <input class="form-check-input guidance-checkbox" type="checkbox" value="@typeCode" id="guidance_@typeCode">
+                                                <label class="form-check-label" for="guidance_@typeCode">@type</label>
+                                            </div>
+                                        }
+                                    </div>
+                                    <input type="hidden" name="GuidanceType" id="GuidanceTypeHidden" />
+                                }
+                                else if (prop.Name == "FoxCode")
+                                {
+                                    string[] availableFoxes = new[] { "1", "2", "3" };
+                                    
+                                    <div class="d-flex flex-wrap gap-3 mb-2">
+                                        @foreach(var fox in availableFoxes)
+                                        {
+                                            <div class="form-check custom-checkbox">
+                                                <input class="form-check-input fox-checkbox" type="checkbox" value="@fox" id="fox_@fox">
+                                                <label class="form-check-label fw-bold text-danger" for="fox_@fox">Fox @fox</label>
+                                            </div>
+                                        }
+                                    </div>
+                                    <input type="hidden" name="FoxCode" id="FoxCodeHidden" />
+                                }
+                                else if (prop.Name == "BallisticType")
+                                {
+                                    string[] ballisticTypes = new[] { "SRBM", "MRBM", "IRBM", "ICBM", "SLBM", "ALBM" };
+                                    <select name="BallisticType" class="form-select">
+                                        <option value="">-- Tip Seçin --</option>
+                                        @foreach(var bt in ballisticTypes)
+                                        {
+                                            <option value="@bt">@bt</option>
+                                        }
+                                    </select>
+                                }
+                                else
+                                {
+                                    <input type="text" name="@prop.Name" class="form-control" />
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="card mt-4 border-secondary shadow-sm">
+                    <div class="card-header bg-secondary text-white d-flex align-items-center">
+                        <i class="bi bi-text-paragraph me-2"></i> Açıklama / Detaylı Bilgi
+                    </div>
+                    <div class="card-body p-0">
+                        <textarea asp-for="Description" class="form-control border-0 p-3" rows="12" style="resize: vertical;" placeholder="Ürün hakkında detaylı bilgi, tarihçe, kullanım alanları gibi verileri buraya girebilirsiniz..."></textarea>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-success mt-4 w-100 fw-bold py-2 fs-5"><i class="bi bi-save me-2"></i> Kaydet</button>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12 animate-in" style="animation-delay: 0.25s;">
+                <div class="card border-0 shadow-lg bg-dark-glass">
+                    <div class="card-header bg-gradient-navy text-white d-flex align-items-center justify-content-between py-3" style="background: linear-gradient(135deg, #1e293b, #0f172a); border-bottom: 2px solid var(--admin-accent);">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-link-45deg fs-4 text-warning"></i>
+                            <h5 class="m-0 fw-bold font-outfit text-white">Bağlantılı Ürünler ve Ekipmanlar (Opsiyonel)</h5>
+                        </div>
+                        <span class="badge bg-warning text-dark font-monospace px-3 py-2 fw-bold">DİNAMİK İLİŞKİ AJANI</span>
+                    </div>
+                    <div class="card-body p-4" style="background-color: var(--admin-surface);">
+                        <p class="text-muted small mb-4">Bu platformun kullandığı, entegre olduğu veya uyumlu çalıştığı diğer radar, füze, silah sistemlerini veya platformları aşağıdan seçebilirsiniz. Arama kutusunu kullanarak hızlıca filtreleme yapabilirsiniz.</p>
+                        
+                        <!-- Search & Filter bar -->
+                        <div class="row mb-4 align-items-center">
+                            <div class="col-md-6 col-lg-4">
+                                <div class="input-group shadow-sm">
+                                    <span class="input-group-text border-end-0" style="background-color: var(--admin-bg-secondary); border-color: var(--admin-border) !important; color: var(--admin-text-muted) !important;"><i class="bi bi-search"></i></span>
+                                    <input type="text" id="relationSearch" class="form-control border-start-0" placeholder="Ekipman veya ürün adıyla ara..." style="background-color: var(--admin-bg-secondary); border-color: var(--admin-border) !important; color: var(--admin-text) !important;" />
+                                </div>
+                            </div>
+                            <div class="col-md-6 text-md-end mt-2 mt-md-0">
+                                <button type="button" class="btn btn-sm btn-outline-secondary me-2" onclick="clearAllSelections()"><i class="bi bi-eraser me-1"></i> Tüm Seçimleri Kaldır</button>
+                            </div>
+                        </div>
+
+                        <style>
+                            .relation-card {
+                                border: 1px solid var(--admin-border) !important;
+                                border-radius: var(--radius);
+                                transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                                background: var(--admin-surface);
+                                box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+                            }
+                            .relation-card:hover {
+                                border-color: var(--admin-accent) !important;
+                                box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12);
+                                transform: translateY(-2px);
+                            }
+                            .relation-item-container {
+                                max-height: 280px;
+                                overflow-y: auto;
+                                padding-right: 4px;
+                            }
+                            .relation-item {
+                                border-radius: var(--radius-sm);
+                                padding: 10px 14px;
+                                transition: all 0.2s ease;
+                                border: 1px solid var(--admin-border);
+                                background: var(--admin-bg-secondary);
+                                margin-bottom: 8px;
+                                cursor: pointer;
+                            }
+                            .relation-item:hover {
+                                background: var(--admin-surface);
+                                border-color: var(--admin-border-hover);
+                                transform: translateX(3px);
+                            }
+                            .relation-item.checked-item {
+                                background: var(--admin-accent-glow) !important;
+                                border-color: var(--admin-accent) !important;
+                            }
+                            .relation-item.checked-item label {
+                                color: var(--admin-accent) !important;
+                                font-weight: 700 !important;
+                            }
+                            .category-badge {
+                                font-size: 0.72rem;
+                                background: rgba(37, 99, 235, 0.08);
+                                border: 1px solid rgba(37, 99, 235, 0.15);
+                                color: var(--admin-accent);
+                                padding: 3px 10px;
+                                border-radius: 20px;
+                                font-weight: 600;
+                            }
+                            .select-all-btn {
+                                font-size: 0.75rem;
+                                font-weight: 600;
+                                color: var(--admin-accent);
+                                text-decoration: none;
+                                cursor: pointer;
+                                transition: all 0.2s;
+                            }
+                            .select-all-btn:hover {
+                                color: var(--admin-accent-hover);
+                                text-decoration: underline;
+                            }
+                            .cursor-pointer {
+                                cursor: pointer;
+                            }
+                        </style>
+                        
+                        <div class="row g-4">
+                            @if (ViewBag.AllProducts != null)
+                            {
+                                var groupedProducts = ((IEnumerable<DefenceDB.EL.Models.DefenseProduct>)ViewBag.AllProducts)
+                                    .GroupBy(p => p.Category?.Name ?? "Diğer Ekipmanlar")
+                                    .OrderBy(g => g.Key);
+                                    
+                                foreach (var group in groupedProducts)
+                                {
+                                    var catIcon = group.FirstOrDefault()?.Category?.IconClass ?? "bi bi-cpu";
+                                    <div class="col-md-4">
+                                        <div class="card relation-card h-100 border-0">
+                                            <div class="card-body p-3 d-flex flex-column h-100">
+                                                <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-3">
+                                                    <h6 class="m-0 fw-bold d-flex align-items-center gap-2 text-white" style="color: var(--admin-text) !important;">
+                                                        <i class="@catIcon text-warning" style="font-size: 1.1rem;"></i> @group.Key
+                                                    </h6>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <span class="category-badge">@group.Count()</span>
+                                                        <span class="select-all-btn" onclick="toggleSelectAllCategory(this)">Tümünü Seç</span>
+                                                    </div>
+                                                </div>
+                                                <div class="relation-item-container d-flex flex-column gap-1 flex-grow-1">
+                                                    @foreach (var prod in group)
+                                                    {
+                                                        <div class="relation-item d-flex align-items-center justify-content-between" onclick="toggleItemClick(this, event)">
+                                                            <div class="form-check m-0 d-flex align-items-center gap-1 cursor-pointer">
+                                                                <input class="form-check-input relation-checkbox cursor-pointer" type="checkbox" name="RelatedProductIds" value="@prod.Id" id="radar-@prod.Id" onchange="toggleItemChecked(this)" />
+                                                                <label class="form-check-label fw-semibold ms-1 cursor-pointer text-start" for="radar-@prod.Id" style="font-size:0.85rem; color: var(--admin-text-secondary);">
+                                                                    @prod.Name
+                                                                </label>
+                                                            </div>
+                                                            @if (!string.IsNullOrEmpty(prod.Country))
+                                                            {
+                                                                <span class="badge bg-dark border border-secondary text-white-50 font-monospace fs-9 py-1 px-2 rounded">@prod.Country</span>
+                                                            }
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </form>
+</div>
+
+@section Scripts {
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            function formatCountry (country) {
+                if (!country.id) { return country.text; }
+                var flagUrl = $(country.element).data('flag');
+                if(!flagUrl) return country.text;
+                var $country = $('<span><img src="' + flagUrl + '" class="img-flag border" style="width:24px;height:16px;margin-right:8px;object-fit:cover;" /> ' + country.text + '</span>');
+                return $country;
+            }
+
+            var manufacturersData = {};
+            
+            // Üretici verilerini çek
+            $.getJSON('/data/manufacturers.json', function(data) {
+                manufacturersData = data;
+            });
+
+            // Üretici select2'sini başlat (tags: true ile serbest metin girişi de açık)
+            $('#manufacturerSelect').select2({
+                tags: true,
+                placeholder: "Üretici Seçin veya Yazın...",
+                width: '100%'
+            });
+
+            $.getJSON('/data/countries.json', function(data) {
+                var select = $('#countrySelect');
+                select.append('<option value="">Ülke Seçin...</option>');
+                
+                data.forEach(function(c) {
+                    select.append('<option value="' + c.name + '" data-flag="https://flagcdn.com/w40/' + c.code + '.png">' + c.name + '</option>');
+                });
+
+                select.select2({
+                    templateResult: formatCountry,
+                    templateSelection: formatCountry,
+                    width: '100%'
+                });
+            });
+
+            // Ülke değiştiğinde üreticileri güncelle
+            $('#countrySelect').on('change', function() {
+                var selectedCountry = $(this).val();
+                var manufacturerSelect = $('#manufacturerSelect');
+                
+                // Mevcut seçenekleri temizle
+                manufacturerSelect.empty();
+                
+                if (selectedCountry && manufacturersData[selectedCountry]) {
+                    var manufacturers = manufacturersData[selectedCountry];
+                    manufacturers.forEach(function(m) {
+                        manufacturerSelect.append(new Option(m, m, false, false));
+                    });
+                }
+                
+                // Select2'yi güncelle
+                manufacturerSelect.trigger('change');
+            });
+
+            // Resim Önizleme
+            $('#imageUpload').on('change', function(e) {
+                var files = e.target.files;
+                var container = $('#imagePreviewContainer');
+                container.empty();
+
+                if (files.length > 10) {
+                    alert('Maksimum 10 adet resim seçebilirsiniz!');
+                    $(this).val('');
+                    return;
+                }
+
+                for (var i = 0; i < files.length; i++) {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        var img = $('<img>').attr('src', e.target.result).addClass('img-thumbnail').css({width: '100px', height: '100px', objectFit: 'cover'});
+                        container.append(img);
+                    }
+                    reader.readAsDataURL(files[i]);
+                }
+            });
+
+            // --- İLİŞKİLİ ÜRÜN SEÇİM FONKSİYONLARI ---
+            window.toggleItemChecked = function(checkbox) {
+                var container = $(checkbox).closest('.relation-item');
+                if (checkbox.checked) {
+                    container.addClass('checked-item');
+                } else {
+                    container.removeClass('checked-item');
+                }
+            };
+
+            window.toggleItemClick = function(item, event) {
+                if (event.target.tagName.toLowerCase() === 'input' || event.target.tagName.toLowerCase() === 'label') {
+                    return;
+                }
+                var checkbox = $(item).find('.relation-checkbox')[0];
+                if (checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                    window.toggleItemChecked(checkbox);
+                }
+            };
+
+            window.toggleSelectAllCategory = function(btn) {
+                var card = $(btn).closest('.relation-card');
+                var checkboxes = card.find('.relation-checkbox');
+                var allChecked = true;
+                checkboxes.each(function() {
+                    if (!this.checked) allChecked = false;
+                });
+                
+                checkboxes.each(function() {
+                    this.checked = !allChecked;
+                    window.toggleItemChecked(this);
+                });
+                
+                $(btn).text(allChecked ? "Tümünü Seç" : "Seçimi Kaldır");
+            };
+
+            window.clearAllSelections = function() {
+                if (confirm('Tüm bağlantılı ekipman seçimlerini kaldırmak istediğinize emin misiniz?')) {
+                    $('.relation-checkbox').each(function() {
+                        this.checked = false;
+                        window.toggleItemChecked(this);
+                    });
+                    $('.select-all-btn').text('Tümünü Seç');
+                }
+            };
+
+            // Canlı Arama Filtresi
+            $('#relationSearch').on('keyup', function() {
+                var query = $(this).val().toLowerCase();
+                
+                $('.relation-card').each(function() {
+                    var card = $(this);
+                    var visibleItems = 0;
+                    
+                    card.find('.relation-item').each(function() {
+                        var item = $(this);
+                        var text = item.find('label').text().toLowerCase();
+                        if (text.indexOf(query) > -1) {
+                            item.show();
+                            visibleItems++;
+                        } else {
+                            item.hide();
+                        }
+                    });
+                    
+                    if (visibleItems > 0 || query === '') {
+                        card.closest('.col-md-4').fadeIn(200);
+                    } else {
+                        card.closest('.col-md-4').fadeOut(150);
+                    }
+                });
+            });
+            // Combine GuidanceType and Manufacturer before submit
+            $('form').on('submit', function() {
+                if ($('.guidance-checkbox').length > 0) {
+                    var selected = [];
+                    $('.guidance-checkbox:checked').each(function() {
+                        selected.push($(this).next('label').text().trim());
+                    });
+                    $('#GuidanceTypeHidden').val(selected.join(' / '));
+                }
+
+                if ($('.fox-checkbox').length > 0) {
+                    var selectedFoxes = [];
+                    $('.fox-checkbox:checked').each(function() {
+                        selectedFoxes.push($(this).val());
+                    });
+                    $('#FoxCodeHidden').val(selectedFoxes.join(' / '));
+                }
+                
+                var mfgs = $('#manufacturerSelect').val();
+                if (mfgs && mfgs.length > 0) {
+                    $('#ManufacturerHidden').val(mfgs.join(' + '));
+                } else {
+                    $('#ManufacturerHidden').val('');
+                }
+            });
+        });
+    </script>
+}

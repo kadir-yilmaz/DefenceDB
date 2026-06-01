@@ -1,0 +1,135 @@
+@{
+    var totalProducts = (int)ViewBag.TotalProducts;
+    var totalCategories = (int)ViewBag.TotalCategories;
+    var totalUsers = (int)ViewBag.TotalUsers;
+    var activeProducts = (int)ViewBag.ActiveProducts;
+    var recentProducts = (List<DefenseProduct>)ViewBag.RecentProducts;
+    var currentUser = (AppUser?)ViewBag.CurrentUser;
+}
+
+<!-- Welcome Section -->
+<div class="welcome-section animate-in">
+    <div class="welcome-title">
+        <i class="bi bi-lightning-fill text-warning me-2"></i>
+        Hoş geldin, @(currentUser?.FirstName ?? "Admin")!
+    </div>
+    <p class="welcome-subtitle">
+        DefenceDB yönetim paneli aktif. Envanterde <strong class="text-warning">@totalProducts</strong> savunma platformu kayıtlı.
+    </p>
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-3 col-md-6 animate-in">
+        <div class="stat-card accent">
+            <div class="stat-icon accent">
+                <i class="bi bi-box-seam-fill"></i>
+            </div>
+            <div class="stat-value">@totalProducts</div>
+            <div class="stat-label">Toplam Ürün</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 animate-in">
+        <div class="stat-card success">
+            <div class="stat-icon success">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <div class="stat-value">@activeProducts</div>
+            <div class="stat-label">Aktif Sistemler</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 animate-in">
+        <div class="stat-card info">
+            <div class="stat-icon info">
+                <i class="bi bi-tag-fill"></i>
+            </div>
+            <div class="stat-value">@totalCategories</div>
+            <div class="stat-label">Kategoriler</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 animate-in">
+        <div class="stat-card danger">
+            <div class="stat-icon danger">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="stat-value">@totalUsers</div>
+            <div class="stat-label">Kullanıcılar</div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Products Table -->
+<div class="table-wrapper animate-in">
+    <div class="table-header">
+        <h6 class="table-header-title">
+            <i class="bi bi-clock-history text-warning"></i> Son Eklenen Savunma Sistemleri
+        </h6>
+        <a href="@Url.Action("Index", "ProductManagement", new { area = "Admin" })" class="btn-admin-outline">
+            <i class="bi bi-arrow-right"></i> Tümünü Gör
+        </a>
+    </div>
+    <div class="table-body">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Görsel</th>
+                    <th>Platform Adı</th>
+                    <th>Kategori</th>
+                    <th>Ülke</th>
+                    <th>Durum</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (recentProducts != null && recentProducts.Any())
+                {
+                    @foreach (var product in recentProducts)
+                    {
+                        <tr>
+                            <td>
+                                @{
+                                    var mainImage = product.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? product.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
+                                }
+                                <img src="@mainImage" alt="@product.Name" class="product-thumb"
+                                     onerror="this.onerror=null; this.src='/images/default.jpg';" />
+                            </td>
+                            <td>
+                                <div style="font-weight: 600;">@product.Name</div>
+                                @if (!string.IsNullOrEmpty(product.NatoReportingName))
+                                {
+                                    <small style="color: var(--admin-accent); font-family: monospace; font-size: 0.7rem;">
+                                        NATO: "@product.NatoReportingName"
+                                    </small>
+                                }
+                            </td>
+                            <td>
+                                <span class="admin-badge info">
+                                    @product.Category?.Name
+                                </span>
+                            </td>
+                            <td style="color: var(--admin-text-secondary);">@product.Country</td>
+                            <td>
+                                @if (product.Status == "Active")
+                                {
+                                    <span class="admin-badge active"><i class="bi bi-check-circle-fill"></i> Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="admin-badge warning"><i class="bi bi-exclamation-circle-fill"></i> @product.Status</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center py-5" style="color: var(--admin-text-muted);">
+                            <i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 8px;"></i>
+                            Henüz kayıtlı ürün bulunmamaktadır.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

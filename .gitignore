@@ -1,0 +1,36 @@
+# .NET Core
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+TestResults/
+*.log
+
+# Sensitive Settings
+appsettings.Development.json
+appsettings.json
+
+# Static Assets (Videos & Uploaded Images)
+DefenceDB.WebUI/wwwroot/images/*
+!DefenceDB.WebUI/wwwroot/images/.gitkeep
+DefenceDB.WebUI/wwwroot/videos/*
+!DefenceDB.WebUI/wwwroot/videos/.gitkeep
+
+# Security & Deploy Files
+DefenceDB.WebUI/App_Data/
+Properties/PublishProfiles/
+*.pubxml
+*.pubxml.user
+
+# AI / Dev Temp Folders
+scratch/
+
+# Mac
+.DS_Store
+
+# Windows
+Thumbs.db

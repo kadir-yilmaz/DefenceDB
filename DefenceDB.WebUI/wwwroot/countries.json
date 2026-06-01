@@ -1,0 +1,18 @@
+[
+  { "code": "tr", "emoji": "🇹🇷", "name": "Türkiye" },
+  { "code": "us", "emoji": "🇺🇸", "name": "ABD" },
+  { "code": "fr", "emoji": "🇫🇷", "name": "Fransa" },
+  { "code": "gb", "emoji": "🇬🇧", "name": "İngiltere" },
+  { "code": "ru", "emoji": "🇷🇺", "name": "Rusya" },
+  { "code": "de", "emoji": "🇩🇪", "name": "Almanya" },
+  { "code": "it", "emoji": "🇮🇹", "name": "İtalya" },
+  { "code": "se", "emoji": "🇸🇪", "name": "İsveç" },
+  { "code": "cn", "emoji": "🇨🇳", "name": "Çin" },
+  { "code": "kr", "emoji": "🇰🇷", "name": "Güney Kore" },
+  { "code": "jp", "emoji": "🇯🇵", "name": "Japonya" },
+  { "code": "ua", "emoji": "🇺🇦", "name": "Ukrayna" },
+  { "code": "es", "emoji": "🇪🇸", "name": "İspanya" },
+  { "code": "ca", "emoji": "🇨🇦", "name": "Kanada" },
+  { "code": "au", "emoji": "🇦🇺", "name": "Avustralya" },
+  { "code": "az", "emoji": "🇦🇿", "name": "Azerbaycan" }
+]

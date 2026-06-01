@@ -1,0 +1,190 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Savunma Wiki & Veritabanı</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/DefenceDB.WebUI.styles.css" asp-append-version="true" />
+    <script>
+        window.handleImageError = function (img, title) {
+            // If we've already tried /images/default.jpg and it failed, load the gorgeous SVG radar placeholder!
+            if (img.src.indexOf('/images/default.jpg') !== -1) {
+                img.onerror = null; // Prevent infinite loop if fallback fails
+                var cleanTitle = title ? title.replace(/['"<>]/g, "") : "Savunma Platformu";
+                
+                var svg = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
+                        <rect width="100%" height="100%" fill="%230f172a"/>
+                        <!-- Grid Lines -->
+                        <g stroke="%231e293b" stroke-width="1">
+                            <line x1="0" y1="50" x2="600" y2="50"/><line x1="0" y1="100" x2="600" y2="100"/>
+                            <line x1="0" y1="150" x2="600" y2="150"/><line x1="0" y1="200" x2="600" y2="200"/>
+                            <line x1="0" y1="250" x2="600" y2="250"/><line x1="0" y1="300" x2="600" y2="300"/>
+                            <line x1="0" y1="350" x2="600" y2="350"/>
+                            <line x1="50" y1="0" x2="50" y2="400"/><line x1="100" y1="0" x2="100" y2="400"/>
+                            <line x1="150" y1="0" x2="150" y2="400"/><line x1="200" y1="0" x2="200" y2="400"/>
+                            <line x1="250" y1="0" x2="250" y2="400"/><line x1="300" y1="0" x2="300" y2="400"/>
+                            <line x1="350" y1="0" x2="350" y2="400"/><line x1="400" y1="0" x2="400" y2="400"/>
+                            <line x1="450" y1="0" x2="450" y2="400"/><line x1="500" y1="0" x2="500" y2="400"/>
+                            <line x1="550" y1="0" x2="550" y2="400"/>
+                        </g>
+                        <!-- Radar sweep circles -->
+                        <circle cx="300" cy="200" r="80" fill="none" stroke="%23d97706" stroke-width="1.5" stroke-opacity="0.3"/>
+                        <circle cx="300" cy="200" r="140" fill="none" stroke="%23d97706" stroke-width="1" stroke-dasharray="6,4" stroke-opacity="0.4"/>
+                        <circle cx="300" cy="200" r="180" fill="none" stroke="%231e293b" stroke-width="1"/>
+                        <!-- Crosshairs -->
+                        <path d="M 300 20 L 300 380 M 20 200 L 580 200" stroke="%231e293b" stroke-width="1"/>
+                        <path d="M 285 200 L 315 200 M 300 185 L 300 215" stroke="%23d97706" stroke-width="2"/>
+                        <!-- Title and Subtitle -->
+                        <text x="300" y="190" fill="%23f59e0b" font-family="'Outfit', sans-serif" font-size="22" font-weight="bold" text-anchor="middle">${cleanTitle}</text>
+                        <text x="300" y="225" fill="%2394a3b8" font-family="'Inter', sans-serif" font-size="12" font-weight="600" letter-spacing="2" text-anchor="middle">TACTICAL DATA ACTIVE</text>
+                    </svg>
+                `.trim().replace(/\s+/g, " ");
+
+                img.src = "data:image/svg+xml;utf8," + svg;
+            } else {
+                // Try user's /images/default.jpg first
+                img.src = "/images/default.jpg";
+            }
+        };
+    </script>
+</head>
+<body>
+    <header class="@(ViewData["IsHome"] as bool? == true ? "position-absolute w-100 top-0 z-3" : "")" style="z-index: 1030;">
+        <partial name="_Navbar" />
+    </header>
+
+    <div class="app-container min-vh-100 d-flex flex-column">
+        <main role="main" class="flex-grow-1">
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- Modal Placeholder for AJAX Popups -->
+    <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content modal-content-theme border-0 shadow-lg" id="modalContentPlaceholder">
+                <div class="modal-body-theme text-center p-5 text-primary-theme">
+                    <div class="spinner-border text-warning" role="status">
+                        <span class="visually-hidden">Yükleniyor...</span>
+                    </div>
+                    <p class="mt-3 text-secondary-theme">Teknik özellikler yükleniyor...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Premium Thick Dark Footer with Glowing Defense Emblems -->
+    <style>
+        .premium-footer {
+            background: linear-gradient(180deg, #0b0f19, #05070c);
+            border-top: 2px solid rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+            font-family: 'Inter', sans-serif;
+            position: relative;
+        }
+        .premium-footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--admin-accent, #2563eb), transparent);
+            opacity: 0.5;
+        }
+        .footer-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            color: #f8fafc;
+            margin-bottom: 1.25rem;
+            letter-spacing: -0.01em;
+            font-size: 1.05rem;
+        }
+        .footer-link {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .footer-link:hover {
+            color: var(--admin-accent, #2563eb);
+            transform: translateX(4px);
+        }
+
+        .footer-bottom {
+            background: #030408;
+            padding: 1.25rem 0;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+    </style>
+
+    <footer class="premium-footer pt-5 mt-auto">
+        <div class="container">
+            <div class="row g-4">
+                <!-- Column 1: Info -->
+                <div class="col-lg-5">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <i class="bi bi-shield-fill-check text-warning fs-3" style="filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.3));"></i>
+                        <span class="fs-4 fw-bold text-white font-outfit" style="letter-spacing: -0.02em;">DefenceDB</span>
+                    </div>
+                    <p class="fs-7 pe-lg-4" style="line-height: 1.6; font-size: 0.875rem;">
+                        Türkiye'nin ve dünyanın en kapsamlı bağımsız askeri teknoloji, savunma sanayii sistemleri ansiklopedisi ve taktik veritabanı portalı. Açık kaynaklı istihbarat (OSINT) standartlarına göre derlenmektedir.
+                    </p>
+
+                </div>
+
+                <!-- Column 2: Fast Links -->
+                <div class="col-sm-6 col-lg-3 offset-lg-1">
+                    <h5 class="footer-title">Hızlı Bağlantılar</h5>
+                    <ul class="list-unstyled d-flex flex-column gap-2 m-0">
+                        <li><a href="/" class="footer-link"><i class="bi bi-house-door"></i> Ana Sayfa</a></li>
+                        <li><a href="/Product" class="footer-link"><i class="bi bi-search"></i> Tüm Veritabanı</a></li>
+                        <li><a href="/Product?categorySlug=savas-ucaklari" class="footer-link"><i class="bi bi-airplane"></i> Havacılık Sistemleri</a></li>
+                        <li><a href="/Product?categorySlug=savas-gemileri" class="footer-link"><i class="bi bi-tsunami"></i> Deniz Sistemleri</a></li>
+                        <li><a href="/Admin" class="footer-link" target="_blank"><i class="bi bi-lock"></i> Yönetim Paneli</a></li>
+                    </ul>
+                </div>
+
+                <!-- Column 3: Tech Info -->
+                <div class="col-sm-6 col-lg-3">
+                    <h5 class="footer-title">Teknik Güvence</h5>
+                    <p class="fs-7 mb-3" style="line-height: 1.6; font-size: 0.85rem;">
+                        Sistemde sunulan tüm radar kavisleri, füze menzilleri, harp başlığı ağırlıkları ve askeri veri setleri üreticilerin resmi katalogları referans alınarak girilmektedir.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- System copyright bottom row -->
+        <div class="footer-bottom">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-6 text-center text-md-start mb-2 mb-md-0">
+                        &copy; 2026 - DefenceDB. Tüm hakları saklıdır.
+                    </div>
+                    <div class="col-md-6 text-center text-md-end" style="font-size: 0.75rem;">
+                        Bağımsız Askeri Ansiklopedi ve Havacılık/Deniz/Füze Veri Portalı.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

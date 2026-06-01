@@ -1,0 +1,60 @@
+@{
+    var allRoles = (List<AppRole>)ViewBag.AllRoles;
+}
+
+<div class="mb-4">
+    <a asp-action="Index" style="color: var(--admin-accent); text-decoration: none; font-weight: 600; font-size: 0.9rem;">
+        <i class="bi bi-arrow-left"></i> Kullanıcı Listesine Dön
+    </a>
+    <h4 style="font-family: 'Outfit', sans-serif; font-weight: 700; margin: 8px 0 4px;">
+        <i class="bi bi-person-plus-fill text-warning me-2"></i> Yeni Kullanıcı Oluştur
+    </h4>
+    <p style="color: var(--admin-text-muted); font-size: 0.85rem;">
+        Sisteme yeni bir kullanıcı ekleyin ve rol atayın.
+    </p>
+</div>
+
+<div class="form-card" style="max-width: 600px;">
+    <h6 class="form-card-title"><i class="bi bi-person-badge-fill"></i> Kullanıcı Bilgileri</h6>
+    <form asp-action="CreateUser" method="post">
+        @Html.AntiForgeryToken()
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="admin-form-label">Ad</label>
+                <input type="text" name="firstName" class="admin-form-control" placeholder="Örn: Kadir" required />
+            </div>
+            <div class="col-md-6">
+                <label class="admin-form-label">Soyad</label>
+                <input type="text" name="lastName" class="admin-form-control" placeholder="Örn: Yılmaz" required />
+            </div>
+            <div class="col-12">
+                <label class="admin-form-label">E-posta Adresi</label>
+                <input type="email" name="email" class="admin-form-control" placeholder="user@example.com" required />
+            </div>
+            <div class="col-12">
+                <label class="admin-form-label">Şifre</label>
+                <input type="password" name="password" class="admin-form-control" placeholder="Minimum 8 karakter" required />
+                <small style="color: var(--admin-text-muted); font-size: 0.7rem;">
+                    En az 1 büyük harf, 1 küçük harf, 1 rakam ve 1 özel karakter gereklidir.
+                </small>
+            </div>
+            <div class="col-12">
+                <label class="admin-form-label">Rol</label>
+                <select name="role" class="admin-form-control">
+                    @foreach (var role in allRoles)
+                    {
+                        <option value="@role.Name">@role.Name — @role.Description</option>
+                    }
+                </select>
+            </div>
+            <div class="col-12 mt-4">
+                <div class="d-flex gap-3">
+                    <a asp-action="Index" class="btn-admin-outline px-4 py-2">İptal</a>
+                    <button type="submit" class="btn-admin-primary px-4 py-2">
+                        <i class="bi bi-person-plus-fill"></i> Kullanıcı Oluştur
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
