@@ -62,65 +62,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Resim Yükleme -->
-                <div class="card mt-4 border-warning">
-                    <div class="card-header bg-warning text-dark fw-bold">
-                        <i class="bi bi-images me-1"></i> Ürün Resimleri
-                    </div>
-                    <div class="card-body">
-                        @if(Model.Images != null && Model.Images.Any())
-                        {
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <p class="text-muted small mb-0" id="imageCountText">Mevcut Resimler (@Model.Images.Count / 10)</p>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="form-check m-0">
-                                        <input class="form-check-input" type="checkbox" id="selectAllImages" style="cursor: pointer;">
-                                        <label class="form-check-label small fw-semibold" for="selectAllImages" style="cursor: pointer;">
-                                            Tümünü Seç
-                                        </label>
-                                    </div>
-                                    <button type="button" class="btn btn-sm btn-outline-danger d-none" id="deleteSelectedImagesBtn">
-                                        <i class="bi bi-trash"></i> Seçilileri Sil (<span id="selectedImageCount">0</span>)
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="d-flex flex-wrap gap-2 mb-4">
-                                @foreach(var img in Model.Images)
-                                {
-                                    <div class="position-relative" id="img-container-@img.Id">
-                                        <!-- Toplu seçim checkbox -->
-                                        <div class="position-absolute bottom-0 end-0 m-1" style="z-index: 10;">
-                                            <input type="checkbox" class="form-check-input image-select-cb" value="@img.Id" style="width: 1.25rem; height: 1.25rem; cursor: pointer; box-shadow: 0 0 5px rgba(0,0,0,0.8); border: 1px solid #fff;" />
-                                        </div>
-
-                                        <img src="@img.ImagePath" class="img-thumbnail border img-thumb-main @(img.IsMainImage ? "border-primary border-3" : "")" style="width: 100px; height: 100px; object-fit: cover;" />
-                                        
-                                        <!-- Ana Resim Seçme Butonu (Sol Üst) -->
-                                        <button type="button" class="btn btn-sm position-absolute top-0 start-0 m-1 p-0 px-1 set-main-btn" 
-                                                data-id="@img.Id" 
-                                                title="@(img.IsMainImage ? "Kapak Fotoğrafı" : "Kapak Fotoğrafı Yap")"
-                                                style="background: @(img.IsMainImage ? "#fbbf24" : "rgba(15, 23, 42, 0.7)"); border: 1px solid @(img.IsMainImage ? "#d97706" : "rgba(255, 255, 255, 0.2)"); color: @(img.IsMainImage ? "#1e293b" : "#ffffff"); z-index: 5;">
-                                            <i class="bi @(img.IsMainImage ? "bi-star-fill text-dark" : "bi-star")"></i>
-                                        </button>
-
-                                        <!-- Silme Butonu (Sağ Üst) -->
-                                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 p-0 px-1 delete-img-btn" data-id="@img.Id" title="Sil">
-                                            <i class="bi bi-x"></i>
-                                        </button>
-                                    </div>
-                                }
-                            </div>
-                        }
-
-                        <p class="text-muted small">Yeni Resim Ekle (Maksimum 10 adet olabilir. İlk yüklenen resim kapak fotoğrafı olacaktır.)</p>
-                        <input type="file" name="UploadedImages" id="imageUpload" multiple accept="image/*" class="form-control" />
-                        
-                        <div id="imagePreviewContainer" class="d-flex flex-wrap gap-2 mt-3">
-                            <!-- JS ile önizlemeler buraya eklenecek -->
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Tipe Özel Özellikler (Reflection) -->
@@ -275,21 +216,88 @@
                     </div>
                 </div>
 
-                <div class="card mt-4 border-secondary shadow-sm">
-                    <div class="card-header bg-secondary text-white d-flex align-items-center justify-content-between py-2">
+            </div>
+        </div>
+
+        <!-- Resim Yükleme (Tam Genişlik) -->
+        <div class="row mt-4">
+            <div class="col-12 animate-in" style="animation-delay: 0.15s;">
+                <div class="card border-warning shadow-sm">
+                    <div class="card-header bg-warning text-dark fw-bold">
+                        <i class="bi bi-images me-1"></i> Ürün Resimleri
+                    </div>
+                    <div class="card-body">
+                        @if(Model.Images != null && Model.Images.Any())
+                        {
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <p class="text-muted small mb-0" id="imageCountText">Mevcut Resimler (@Model.Images.Count / 10)</p>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="form-check m-0">
+                                        <input class="form-check-input" type="checkbox" id="selectAllImages" style="cursor: pointer;">
+                                        <label class="form-check-label small fw-semibold" for="selectAllImages" style="cursor: pointer;">
+                                            Tümünü Seç
+                                        </label>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger d-none" id="deleteSelectedImagesBtn">
+                                        <i class="bi bi-trash"></i> Seçilileri Sil (<span id="selectedImageCount">0</span>)
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 mb-4">
+                                @foreach(var img in Model.Images)
+                                {
+                                    <div class="position-relative" id="img-container-@img.Id">
+                                        <!-- Toplu seçim checkbox -->
+                                        <div class="position-absolute bottom-0 end-0 m-1" style="z-index: 10;">
+                                            <input type="checkbox" class="form-check-input image-select-cb" value="@img.Id" style="width: 1.25rem; height: 1.25rem; cursor: pointer; box-shadow: 0 0 5px rgba(0,0,0,0.8); border: 1px solid #fff;" />
+                                        </div>
+
+                                        <img src="@img.ImagePath" class="img-thumbnail border img-thumb-main @(img.IsMainImage ? "border-primary border-3" : "")" style="width: 100px; height: 100px; object-fit: cover;" />
+                                        
+                                        <!-- Ana Resim Seçme Butonu (Sol Üst) -->
+                                        <button type="button" class="btn btn-sm position-absolute top-0 start-0 m-1 p-0 px-1 set-main-btn" 
+                                                data-id="@img.Id" 
+                                                title="@(img.IsMainImage ? "Kapak Fotoğrafı" : "Kapak Fotoğrafı Yap")"
+                                                style="background: @(img.IsMainImage ? "#fbbf24" : "rgba(15, 23, 42, 0.7)"); border: 1px solid @(img.IsMainImage ? "#d97706" : "rgba(255, 255, 255, 0.2)"); color: @(img.IsMainImage ? "#1e293b" : "#ffffff"); z-index: 5;">
+                                            <i class="bi @(img.IsMainImage ? "bi-star-fill text-dark" : "bi-star")"></i>
+                                        </button>
+
+                                        <!-- Silme Butonu (Sağ Üst) -->
+                                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 p-0 px-1 delete-img-btn" data-id="@img.Id" title="Sil">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        <p class="text-muted small">Yeni Resim Ekle (Maksimum 10 adet olabilir. İlk yüklenen resim kapak fotoğrafı olacaktır.)</p>
+                        <input type="file" name="UploadedImages" id="imageUpload" multiple accept="image/*" class="form-control" />
+                        
+                        <div id="imagePreviewContainer" class="d-flex flex-wrap gap-2 mt-3">
+                            <!-- JS ile önizlemeler buraya eklenecek -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Açıklama / Detaylı Bilgi (Tam Genişlik) -->
+        <div class="row mt-4">
+            <div class="col-12 animate-in" style="animation-delay: 0.2s;">
+                <div class="card border-primary shadow-sm">
+                    <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between py-2">
                         <div>
                             <i class="bi bi-text-paragraph me-2"></i> Açıklama / Detaylı Bilgi
                         </div>
                         <button type="button" class="btn btn-sm btn-light text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#mdTableGeneratorModal">
-                            <i class="bi bi-table me-1 text-warning"></i> Tablo Ekle
+                            <i class="bi bi-table me-1 text-primary"></i> Tablo Ekle
                         </button>
                     </div>
                     <div class="card-body p-0">
-                        <textarea asp-for="Description" class="form-control border-0 p-3" rows="12" style="resize: vertical;" placeholder="Ürün hakkında detaylı bilgi, tarihçe, kullanım alanları gibi verileri buraya girebilirsiniz... Markdown tabloları vb. desteklenir."></textarea>
+                        <textarea asp-for="Description" class="form-control border-0 p-3" rows="10" style="resize: vertical;" placeholder="Ürün hakkında detaylı bilgi, tarihçe, kullanım alanları gibi verileri buraya girebilirsiniz... Markdown tabloları vb. desteklenir."></textarea>
                     </div>
                 </div>
-                
-                <button type="submit" class="btn btn-warning mt-4 w-100 fw-bold py-2 fs-5"><i class="bi bi-save me-2"></i> Değişiklikleri Kaydet</button>
             </div>
         </div>
         
@@ -301,146 +309,194 @@
                             <i class="bi bi-link-45deg fs-4 text-warning"></i>
                             <h5 class="m-0 fw-bold font-outfit text-white">Bağlantılı Ürünler ve Ekipmanlar (Opsiyonel)</h5>
                         </div>
-                        <span class="badge bg-warning text-dark font-monospace px-3 py-2 fw-bold">DİNAMİK İLİŞKİ AJANI</span>
                     </div>
                     <div class="card-body p-4" style="background-color: var(--admin-surface);">
                         <p class="text-muted small mb-4">Bu platformun kullandığı, entegre olduğu veya uyumlu çalıştığı diğer radar, füze, silah sistemlerini veya platformları aşağıdan seçebilirsiniz. Arama kutusunu kullanarak hızlıca filtreleme yapabilirsiniz.</p>
                         
                         <!-- Search & Filter bar -->
-                        <div class="row mb-4 align-items-center">
-                            <div class="col-md-6 col-lg-4">
-                                <div class="input-group shadow-sm">
-                                    <span class="input-group-text border-end-0" style="background-color: var(--admin-bg-secondary); border-color: var(--admin-border) !important; color: var(--admin-text-muted) !important;"><i class="bi bi-search"></i></span>
-                                    <input type="text" id="relationSearch" class="form-control border-start-0" placeholder="Ekipman veya ürün adıyla ara..." style="background-color: var(--admin-bg-secondary); border-color: var(--admin-border) !important; color: var(--admin-text) !important;" />
-                                </div>
-                            </div>
-                            <div class="col-md-6 text-md-end mt-2 mt-md-0">
-                                <button type="button" class="btn btn-sm btn-outline-secondary me-2" onclick="clearAllSelections()"><i class="bi bi-eraser me-1"></i> Tüm Seçimleri Kaldır</button>
-                            </div>
+                        <div class="mb-3 d-flex justify-content-between align-items-center">
+                            <p class="text-muted small mb-0">Bu platforma bağlı donanımları veya mühimmatları ekleyin.</p>
+                            <button type="button" class="btn btn-sm btn-success fw-bold text-white shadow-sm" data-bs-toggle="modal" data-bs-target="#addRelationModal">
+                                <i class="bi bi-plus-circle me-1"></i> Bağlantılı Ürün Ekle
+                            </button>
                         </div>
 
                         <style>
-                            .relation-card {
-                                border: 1px solid var(--admin-border) !important;
-                                border-radius: var(--radius);
-                                transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-                                background: var(--admin-surface);
-                                box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+                            .selected-relations-container {
+                                display: flex;
+                                overflow-x: auto;
+                                gap: 12px;
+                                padding: 10px 4px;
+                                scrollbar-width: thin;
+                                scrollbar-color: var(--admin-accent) var(--admin-surface);
                             }
-                            .relation-card:hover {
-                                border-color: var(--admin-accent) !important;
-                                box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12);
-                                transform: translateY(-2px);
+                            .selected-relations-container::-webkit-scrollbar {
+                                height: 6px;
                             }
-                            .relation-item-container {
-                                max-height: 280px;
-                                overflow-y: auto;
-                                padding-right: 4px;
+                            .selected-relations-container::-webkit-scrollbar-thumb {
+                                background-color: var(--admin-accent);
+                                border-radius: 4px;
                             }
-                            .relation-item {
-                                border-radius: var(--radius-sm);
-                                padding: 10px 14px;
-                                transition: all 0.2s ease;
-                                border: 1px solid var(--admin-border);
+                            .relation-selected-card {
+                                min-width: 140px;
+                                max-width: 140px;
                                 background: var(--admin-bg-secondary);
+                                border: 1px solid var(--admin-border);
+                                border-radius: 8px;
+                                padding: 8px;
+                                position: relative;
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                text-align: center;
+                                transition: all 0.2s ease;
+                            }
+                            .relation-selected-card:hover {
+                                border-color: var(--admin-accent);
+                                transform: translateY(-2px);
+                                box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+                            }
+                            .relation-selected-card img {
+                                width: 70px;
+                                height: 70px;
+                                object-fit: cover;
+                                border-radius: 6px;
                                 margin-bottom: 8px;
-                                cursor: pointer;
+                                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
                             }
-                            .relation-item:hover {
-                                background: var(--admin-surface);
-                                border-color: var(--admin-border-hover);
-                                transform: translateX(3px);
-                            }
-                            .relation-item.checked-item {
-                                background: var(--admin-accent-glow) !important;
-                                border-color: var(--admin-accent) !important;
-                            }
-                            .relation-item.checked-item label {
-                                color: var(--admin-accent) !important;
-                                font-weight: 700 !important;
-                            }
-                            .category-badge {
-                                font-size: 0.72rem;
-                                background: rgba(37, 99, 235, 0.08);
-                                border: 1px solid rgba(37, 99, 235, 0.15);
-                                color: var(--admin-accent);
-                                padding: 3px 10px;
-                                border-radius: 20px;
-                                font-weight: 600;
-                            }
-                            .select-all-btn {
+                            .relation-selected-card .product-name {
                                 font-size: 0.75rem;
                                 font-weight: 600;
-                                color: var(--admin-accent);
-                                text-decoration: none;
-                                cursor: pointer;
-                                transition: all 0.2s;
+                                line-height: 1.2;
+                                color: var(--admin-text);
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                display: -webkit-box;
+                                -webkit-line-clamp: 2;
+                                -webkit-box-orient: vertical;
                             }
-                            .select-all-btn:hover {
-                                color: var(--admin-accent-hover);
-                                text-decoration: underline;
-                            }
-                            .cursor-pointer {
+                            .relation-selected-card .remove-btn {
+                                position: absolute;
+                                top: -8px;
+                                right: -8px;
+                                background: #ef4444;
+                                color: white;
+                                border: none;
+                                border-radius: 50%;
+                                width: 24px;
+                                height: 24px;
+                                font-size: 12px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
                                 cursor: pointer;
+                                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                                z-index: 10;
+                                transition: all 0.2s ease;
+                            }
+                            .relation-selected-card .remove-btn:hover {
+                                background: #dc2626;
+                                transform: scale(1.1);
+                            }
+
+                            /* Modal Product Items */
+                            .modal-product-label {
+                                border: 2px solid var(--admin-border);
+                                background: var(--admin-surface);
+                                border-radius: 8px;
+                                padding: 8px 12px;
+                                cursor: pointer;
+                                transition: all 0.2s ease;
+                                display: flex;
+                                align-items: center;
+                                width: 100%;
+                            }
+                            .modal-product-label:hover {
+                                border-color: var(--admin-border-hover);
+                                background: var(--admin-surface-hover);
+                            }
+                            .modal-product-cb:checked + .modal-product-label {
+                                border-color: var(--admin-accent) !important;
+                                background: rgba(245, 158, 11, 0.1) !important; /* accent glow */
+                            }
+                            .modal-product-cb:disabled + .modal-product-label {
+                                opacity: 0.5;
+                                cursor: not-allowed;
+                            }
+                            .modal-product-cb {
+                                display: none;
+                            }
+                            .custom-check-icon {
+                                width: 20px;
+                                height: 20px;
+                                border-radius: 4px;
+                                border: 2px solid var(--admin-border);
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                margin-right: 12px;
+                                transition: all 0.2s ease;
+                                background: var(--admin-bg-secondary);
+                            }
+                            .custom-check-icon i {
+                                color: transparent;
+                                font-size: 14px;
+                                transition: color 0.2s ease;
+                            }
+                            .modal-product-cb:checked + .modal-product-label .custom-check-icon {
+                                background: var(--admin-accent);
+                                border-color: var(--admin-accent);
+                            }
+                            .modal-product-cb:checked + .modal-product-label .custom-check-icon i {
+                                color: #000;
                             }
                         </style>
                         
-                        @{
-                            var existingRelIds = Model.SourceRelationships?.Select(r => r.TargetProductId).ToList() ?? new List<int>();
-                            if (Model.TargetRelationships != null)
-                            {
-                                existingRelIds.AddRange(Model.TargetRelationships.Select(r => r.SourceProductId));
-                            }
-                            existingRelIds = existingRelIds.Distinct().ToList();
-                        }
                         
-                        <div class="row g-4">
-                            @if (ViewBag.AllProducts != null)
-                            {
-                                var groupedProducts = ((IEnumerable<DefenceDB.EL.Models.DefenseProduct>)ViewBag.AllProducts)
-                                    .Where(p => p.Id != Model.Id)
-                                    .GroupBy(p => p.Category?.Name ?? "Diğer Ekipmanlar")
-                                    .OrderBy(g => g.Key);
-                                    
-                                foreach (var group in groupedProducts)
-                                {
-                                    var catIcon = group.FirstOrDefault()?.Category?.IconClass ?? "bi bi-cpu";
-                                    <div class="col-md-4">
-                                        <div class="card relation-card h-100 border-0">
-                                            <div class="card-body p-3 d-flex flex-column h-100">
-                                                <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-3">
-                                                    <h6 class="m-0 fw-bold d-flex align-items-center gap-2 text-white" style="color: var(--admin-text) !important;">
-                                                        <i class="@catIcon text-warning" style="font-size: 1.1rem;"></i> @group.Key
-                                                    </h6>
-                                                    <div class="d-flex align-items-center gap-2">
-                                                        <span class="category-badge">@group.Count()</span>
-                                                        <span class="select-all-btn" onclick="toggleSelectAllCategory(this)">Tümünü Seç</span>
-                                                    </div>
-                                                </div>
-                                                <div class="relation-item-container d-flex flex-column gap-1 flex-grow-1">
-                                                    @foreach (var prod in group)
-                                                    {
-                                                        var isChecked = existingRelIds.Contains(prod.Id);
-                                                        <div class="relation-item d-flex align-items-center justify-content-between @(isChecked ? "checked-item" : "")" onclick="toggleItemClick(this, event)">
-                                                            <div class="form-check m-0 d-flex align-items-center gap-1 cursor-pointer">
-                                                                <input class="form-check-input relation-checkbox cursor-pointer" type="checkbox" name="RelatedProductIds" value="@prod.Id" id="radar-@prod.Id" @(isChecked ? "checked" : "") onchange="toggleItemChecked(this)" />
-                                                                <label class="form-check-label fw-semibold ms-1 cursor-pointer text-start" for="radar-@prod.Id" style="font-size:0.85rem; color: var(--admin-text-secondary);">
-                                                                    @prod.Name
-                                                                </label>
-                                                            </div>
-                                                            @if (!string.IsNullOrEmpty(prod.Country))
-                                                            {
-                                                                <span class="badge bg-dark border border-secondary text-white-50 font-monospace fs-9 py-1 px-2 rounded">@prod.Country</span>
-                                                            }
-                                                        </div>
-                                                    }
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                            }
+
+                        <div class="selected-relations-container" id="selectedRelationsList">
+                            <!-- Seçili ürünler JS ile buraya gelecek -->
+                            <div id="noRelationsMsg" class="text-muted small w-100 text-center py-4" style="font-style: italic; background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px dashed var(--admin-border);">
+                                Henüz bağlantılı bir ürün eklenmedi. Eklemek için "Bağlantılı Ürün Ekle" butonuna tıklayın.
+                            </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Markdown Table Generator Partial -->
+        @await Html.PartialAsync("_MarkdownTableGenerator")
+        
+        <!-- Add Relation Modal -->
+        <div class="modal fade" id="addRelationModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="background-color: var(--admin-surface); border: 1px solid var(--admin-border);">
+                    <div class="modal-header border-bottom" style="border-color: var(--admin-border) !important;">
+                        <h5 class="modal-title fw-bold text-white"><i class="bi bi-link-45deg text-warning"></i> Bağlantılı Ürün Seç</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                    </div>
+                    <div class="modal-body pt-3">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-semibold">1. Kategori Seçin</label>
+                            <select id="modalCategorySelect" class="form-select shadow-sm" style="background-color: var(--admin-bg-secondary); color: var(--admin-text); border-color: var(--admin-border);">
+                                <option value="">-- Kategori Seçin --</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="modalSearchContainer" style="display:none;">
+                            <label class="form-label text-muted small fw-semibold">2. Ürün Ara</label>
+                            <input type="text" id="modalProductSearch" class="form-control form-control-sm" placeholder="Ürün adıyla hızlıca filtrele..." style="background-color: var(--admin-bg-secondary); color: var(--admin-text); border-color: var(--admin-border);" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-semibold">3. Eklenecek Ürünleri Seçin</label>
+                            <div id="modalProductsContainer" class="border rounded p-2 shadow-inner" style="max-height: 300px; overflow-y: auto; background-color: var(--admin-bg-secondary); border-color: var(--admin-border) !important;">
+                                <div class="text-muted small text-center py-4"><i class="bi bi-arrow-up-circle fs-4 d-block mb-2 text-secondary"></i> Önce yukarıdan bir kategori seçin.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top" style="border-color: var(--admin-border) !important;">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">İptal</button>
+                        <button type="button" class="btn btn-warning btn-sm text-dark fw-bold" id="btnAddSelectedRelations"><i class="bi bi-plus-lg"></i> Seçilenleri Ekle</button>
                     </div>
                 </div>
             </div>
@@ -448,6 +504,15 @@
 
         <!-- Markdown Table Generator Partial -->
         @await Html.PartialAsync("_MarkdownTableGenerator")
+        
+        <!-- Kaydet Butonu (En Altta Tam Genişlik) -->
+        <div class="row mt-4 mb-5">
+            <div class="col-12 animate-in" style="animation-delay: 0.3s;">
+                <button type="submit" class="btn btn-warning w-100 fw-bold py-3 fs-5 shadow-sm" style="border-radius: 8px;">
+                    <i class="bi bi-save me-2"></i> Değişiklikleri Kaydet
+                </button>
+            </div>
+        </div>
     </form>
 </div>
 
@@ -713,79 +778,135 @@
                 }
             });
 
-            // --- İLİŞKİLİ ÜRÜN SEÇİM FONKSİYONLARI ---
-            window.toggleItemChecked = function(checkbox) {
-                var container = $(checkbox).closest('.relation-item');
-                if (checkbox.checked) {
-                    container.addClass('checked-item');
-                } else {
-                    container.removeClass('checked-item');
-                }
-            };
+            // --- YENİ İLİŞKİLİ ÜRÜN SEÇİM MANTIĞI ---
+            var allProductsData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(((IEnumerable<DefenceDB.EL.Models.DefenseProduct>)ViewBag.AllProducts)
+                .Where(p => p.Id != Model.Id)
+                .Select(p => new {
+                    id = p.Id,
+                    name = p.Name,
+                    categoryName = p.Category?.Name ?? "Diğer Ekipmanlar",
+                    imagePath = p.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? p.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg",
+                    country = p.Country
+                }).ToList()));
 
-            window.toggleItemClick = function(item, event) {
-                if (event.target.tagName.toLowerCase() === 'input' || event.target.tagName.toLowerCase() === 'label') {
+            var initialRelationIds = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Model.SourceRelationships?.Select(r => r.TargetProductId) ?? Enumerable.Empty<int>()).Concat(Model.TargetRelationships?.Select(r => r.SourceProductId) ?? Enumerable.Empty<int>()).Distinct().ToList()));
+            var selectedRelationIds = [];
+
+            // Kategorileri doldur
+            var categories = [...new Set(allProductsData.map(p => p.categoryName))].sort();
+            var catSelect = $('#modalCategorySelect');
+            categories.forEach(function(cat) {
+                catSelect.append(new Option(cat, cat));
+            });
+
+            // Kategori değişince ürünleri getir
+            catSelect.on('change', function() {
+                var cat = $(this).val();
+                var container = $('#modalProductsContainer');
+                container.empty();
+
+                if (!cat) {
+                    $('#modalSearchContainer').hide();
+                    container.append('<div class="text-muted small text-center py-4"><i class="bi bi-arrow-up-circle fs-4 d-block mb-2 text-secondary"></i> Önce yukarıdan bir kategori seçin.</div>');
                     return;
                 }
-                var checkbox = $(item).find('.relation-checkbox')[0];
-                if (checkbox) {
-                    checkbox.checked = !checkbox.checked;
-                    window.toggleItemChecked(checkbox);
+
+                $('#modalSearchContainer').show();
+                $('#modalProductSearch').val('');
+
+                var catProducts = allProductsData.filter(p => p.categoryName === cat);
+                if (catProducts.length === 0) {
+                    container.append('<div class="text-muted small text-center py-4">Bu kategoride ürün bulunamadı.</div>');
+                    return;
                 }
-            };
 
-            window.toggleSelectAllCategory = function(btn) {
-                var card = $(btn).closest('.relation-card');
-                var checkboxes = card.find('.relation-checkbox');
-                var allChecked = true;
-                checkboxes.each(function() {
-                    if (!this.checked) allChecked = false;
+                catProducts.forEach(function(p) {
+                    // Zaten seçiliyse
+                    var isChecked = selectedRelationIds.includes(p.id) ? 'checked disabled' : '';
+                    
+                    var html = `
+                        <div class="mb-2 modal-product-item" data-name="${p.name.toLowerCase()}">
+                            <input class="modal-product-cb" type="checkbox" value="${p.id}" id="cb_mod_${p.id}" ${isChecked}>
+                            <label class="modal-product-label" for="cb_mod_${p.id}">
+                                <div class="custom-check-icon"><i class="bi bi-check-lg"></i></div>
+                                <img src="${p.imagePath}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; margin-right:12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <span style="font-size:0.95rem; font-weight: 600; color:var(--admin-text);">${p.name}</span>
+                            </label>
+                        </div>
+                    `;
+                    container.append(html);
                 });
-                
-                checkboxes.each(function() {
-                    this.checked = !allChecked;
-                    window.toggleItemChecked(this);
-                });
-                
-                $(btn).text(allChecked ? "Tümünü Seç" : "Seçimi Kaldır");
-            };
+            });
 
-            window.clearAllSelections = function() {
-                if (confirm('Tüm bağlantılı ekipman seçimlerini kaldırmak istediğinize emin misiniz?')) {
-                    $('.relation-checkbox').each(function() {
-                        this.checked = false;
-                        window.toggleItemChecked(this);
-                    });
-                    $('.select-all-btn').text('Tümünü Seç');
-                }
-            };
-
-            // Canlı Arama Filtresi
-            $('#relationSearch').on('keyup', function() {
+            // Canlı Arama (Modal İçi)
+            $('#modalProductSearch').on('keyup', function() {
                 var query = $(this).val().toLowerCase();
-                
-                $('.relation-card').each(function() {
-                    var card = $(this);
-                    var visibleItems = 0;
-                    
-                    card.find('.relation-item').each(function() {
-                        var item = $(this);
-                        var text = item.find('label').text().toLowerCase();
-                        if (text.indexOf(query) > -1) {
-                            item.show();
-                            visibleItems++;
-                        } else {
-                            item.hide();
-                        }
-                    });
-                    
-                    if (visibleItems > 0 || query === '') {
-                        card.closest('.col-md-4').fadeIn(200);
+                $('#modalProductsContainer .modal-product-item').each(function() {
+                    var name = $(this).data('name');
+                    if (name.indexOf(query) > -1) {
+                        $(this).show();
                     } else {
-                        card.closest('.col-md-4').fadeOut(150);
+                        $(this).hide();
                     }
                 });
             });
+
+            // Ekle butonuna tıklandığında
+            $('#btnAddSelectedRelations').on('click', function() {
+                $('.modal-product-cb:checked:not(:disabled)').each(function() {
+                    var id = parseInt($(this).val());
+                    if (!selectedRelationIds.includes(id)) {
+                        selectedRelationIds.push(id);
+                        addRelationToHorizontalList(id);
+                    }
+                });
+                $('#addRelationModal').modal('hide');
+                
+                // Seçimleri temizle ki modal tekrar açıldığında temiz gelsin
+                $('#modalCategorySelect').val('').trigger('change');
+            });
+
+            window.removeRelation = function(id) {
+                selectedRelationIds = selectedRelationIds.filter(x => x !== id);
+                $('#rel_card_' + id).remove();
+                $('#rel_input_' + id).remove();
+                checkEmptyRelations();
+            };
+
+            function addRelationToHorizontalList(id) {
+                var product = allProductsData.find(p => p.id === id);
+                if (!product) return;
+
+                $('#noRelationsMsg').hide();
+
+                var cardHtml = `
+                    <div class="relation-selected-card" id="rel_card_${id}">
+                        <button type="button" class="remove-btn" onclick="removeRelation(${id})" title="Kaldır"><i class="bi bi-x"></i></button>
+                        <img src="${product.imagePath}" alt="${product.name}" onerror="this.src='/images/default.jpg'">
+                        <div class="product-name" title="${product.name}">${product.name}</div>
+                    </div>
+                `;
+                $('#selectedRelationsList').append(cardHtml);
+
+                // Forma eklenecek hidden input
+                $('form').append(`<input type="hidden" name="RelatedProductIds" value="${id}" id="rel_input_${id}">`);
+            }
+
+            function checkEmptyRelations() {
+                if (selectedRelationIds.length === 0) {
+                    $('#noRelationsMsg').show();
+                }
+            }
+
+            // Sayfa yüklendiğinde mevcut ilişkileri listeye ekle
+            if (initialRelationIds && initialRelationIds.length > 0) {
+                initialRelationIds.forEach(function(id) {
+                    if (!selectedRelationIds.includes(id)) {
+                        selectedRelationIds.push(id);
+                        addRelationToHorizontalList(id);
+                    }
+                });
+            }
             // Combine GuidanceType and Manufacturer before submit
             $('form').on('submit', function() {
                 if ($('.guidance-checkbox').length > 0) {

@@ -5,8 +5,8 @@
     var activeProducts = (int)ViewBag.ActiveProducts;
     var recentProducts = (List<DefenseProduct>)ViewBag.RecentProducts;
     var currentUser = (AppUser?)ViewBag.CurrentUser;
+    var showcaseProducts = (List<DefenseProduct>)ViewBag.ShowcaseProducts ?? new List<DefenseProduct>();
 }
-
 <!-- Welcome Section -->
 <div class="welcome-section animate-in">
     <div class="welcome-title">
@@ -133,3 +133,107 @@
         </table>
     </div>
 </div>
+
+<!-- Showcase Products Table -->
+<div class="table-wrapper animate-in mt-4">
+    <div class="table-header">
+        <h6 class="table-header-title">
+            <i class="bi bi-star-fill text-warning"></i> Vitrin Ürünleri (Showcase)
+        </h6>
+    </div>
+    <div class="table-body">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Görsel</th>
+                    <th>Platform Adı</th>
+                    <th>Kategori</th>
+                    <th>Durum</th>
+                    <th>Vitrin İşlemi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (showcaseProducts != null && showcaseProducts.Any())
+                {
+                    @foreach (var product in showcaseProducts)
+                    {
+                        <tr id="showcase-row-@product.Id">
+                            <td>
+                                @{
+                                    var mainImage = product.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? product.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
+                                }
+                                <img src="@mainImage" alt="@product.Name" class="product-thumb"
+                                     onerror="this.onerror=null; this.src='/images/default.jpg';" />
+                            </td>
+                            <td>
+                                <div style="font-weight: 600;">@product.Name</div>
+                            </td>
+                            <td>
+                                <span class="admin-badge info">
+                                    @product.Category?.Name
+                                </span>
+                            </td>
+                            <td>
+                                @if (product.Status == "Active")
+                                {
+                                    <span class="admin-badge active"><i class="bi bi-check-circle-fill"></i> Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="admin-badge warning"><i class="bi bi-exclamation-circle-fill"></i> @product.Status</span>
+                                }
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="toggleShowcase(@product.Id, false)">
+                                    <i class="bi bi-star-half"></i> Vitrinden Kaldır
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center py-5" style="color: var(--admin-text-muted);">
+                            <i class="bi bi-star" style="font-size: 2rem; display: block; margin-bottom: 8px;"></i>
+                            Vitrinde hiç ürün bulunmamaktadır.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@Html.AntiForgeryToken()
+
+@section Scripts {
+    <script>
+        function toggleShowcase(productId, state) {
+            if (confirm('Bu ürünü vitrinden kaldırmak istediğinize emin misiniz?')) {
+                var token = $('input[name="__RequestVerificationToken"]').val();
+                $.ajax({
+                    url: '@Url.Action("ToggleShowcase", "ProductManagement", new { area = "Admin" })',
+                    type: 'POST',
+                    data: {
+                        id: productId,
+                        state: state,
+                        __RequestVerificationToken: token
+                    },
+                    success: function (res) {
+                        if (res.success) {
+                            $('#showcase-row-' + productId).fadeOut(300, function() {
+                                $(this).remove();
+                            });
+                        } else {
+                            alert(res.message || 'Bir hata oluştu!');
+                        }
+                    },
+                    error: function () {
+                        alert('Sistem hatası oluştu!');
+                    }
+                });
+            }
+        }
+    </script>
+}

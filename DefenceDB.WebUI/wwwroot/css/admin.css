@@ -531,6 +531,29 @@ body {
     box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
 }
 
+.btn-admin-success {
+    background: #198754;
+    color: #ffffff;
+    border: none;
+    padding: 10px 24px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.btn-admin-success:hover {
+    background: #157347;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(25, 135, 84, 0.3);
+}
+
 .btn-admin-outline {
     background: transparent;
     color: var(--admin-text-secondary);

@@ -35,6 +35,7 @@ public class DashboardController : Controller
         ViewBag.TotalUsers = users.Count;
         ViewBag.ActiveProducts = products.Count(p => p.Status == "Active");
         ViewBag.RecentProducts = products.OrderByDescending(p => p.Id).Take(5).ToList();
+        ViewBag.ShowcaseProducts = products.Where(p => p.IsShowcase).OrderByDescending(p => p.Id).ToList();
 
         var currentUser = await _userManager.GetUserAsync(User);
         ViewBag.CurrentUser = currentUser;

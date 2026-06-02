@@ -9,20 +9,48 @@
             Tüm savunma platformlarını buradan yönetebilirsiniz.
         </p>
     </div>
-    <a asp-action="Create" class="btn-admin-primary">
+    <a asp-action="Create" class="btn-admin-success">
         <i class="bi bi-plus-circle-fill"></i> Yeni Ürün Ekle
     </a>
 </div>
 
 <style>
+    /* Scroll Wrapper for categories */
+    .cat-scroll-wrapper {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        gap: 6px;
+    }
+    .cat-scroll-btn {
+        flex-shrink: 0;
+        z-index: 10;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--admin-surface);
+        border: 1px solid var(--admin-border);
+        color: var(--admin-text-secondary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        transition: all 0.2s;
+    }
+    .cat-scroll-btn:hover {
+        background: var(--admin-accent-glow);
+        color: var(--admin-accent);
+        border-color: var(--admin-accent);
+    }
+
     .admin-category-filter {
         display: flex;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: 10px;
-        overflow-x: visible;
+        overflow-x: auto;
         padding-bottom: 12px;
         margin-bottom: 24px;
-        border-bottom: 1px solid var(--admin-border);
         scrollbar-width: none;
         -ms-overflow-style: none;
     }
@@ -223,25 +251,29 @@
     }
 }
 
-<div class="d-flex align-items-center border-bottom mb-4 pb-2" style="border-color: var(--admin-border) !important;">
-    <div class="admin-category-filter flex-grow-1 border-bottom-0 mb-0 pb-1" style="position: relative; z-index: 1;">
-        <a href="@Url.Action("Index", "ProductManagement", new { country = selectedCountry })" class="admin-filter-pill @(!selectedId.HasValue ? "active" : "")">
-            <i class="bi bi-grid-fill"></i> Tüm Ürünler (@ViewBag.TotalProductCount)
-        </a>
-        
-        @foreach (var cat in ViewBag.Categories as List<Category> ?? new List<Category>())
-        {
-            var rootCount = (cat.Products?.Count ?? 0) + (cat.SubCategories?.Sum(sc => sc.Products?.Count ?? 0) ?? 0);
-            var isRootActive = selectedId == cat.Id || (currentCategory != null && currentCategory.ParentCategoryId == cat.Id);
-            
-            <a href="@Url.Action("Index", "ProductManagement", new { categoryId = cat.Id, country = selectedCountry })" class="admin-filter-pill @(isRootActive ? "active" : "")">
-                @if (!string.IsNullOrEmpty(cat.IconClass))
-                {
-                    <i class="@cat.IconClass"></i>
-                }
-                @cat.Name (@rootCount)
+<div class="d-flex align-items-center mb-3 pb-1">
+    <div class="cat-scroll-wrapper flex-grow-1" style="min-width: 0; position: relative; z-index: 1;">
+        <button class="cat-scroll-btn left" type="button" style="opacity: 0; pointer-events: none;"><i class="bi bi-chevron-left"></i></button>
+        <div class="admin-category-filter border-bottom-0 mb-0 pb-1 w-100">
+            <a href="@Url.Action("Index", "ProductManagement", new { country = selectedCountry })" class="admin-filter-pill @(!selectedId.HasValue ? "active" : "")">
+                <i class="bi bi-grid-fill"></i> Tüm Ürünler (@ViewBag.TotalProductCount)
             </a>
-        }
+            
+            @foreach (var cat in ViewBag.Categories as List<Category> ?? new List<Category>())
+            {
+                var rootCount = (cat.Products?.Count ?? 0) + (cat.SubCategories?.Sum(sc => sc.Products?.Count ?? 0) ?? 0);
+                var isRootActive = selectedId == cat.Id || (currentCategory != null && currentCategory.ParentCategoryId == cat.Id);
+                
+                <a href="@Url.Action("Index", "ProductManagement", new { categoryId = cat.Id, country = selectedCountry })" class="admin-filter-pill @(isRootActive ? "active" : "")">
+                    @if (!string.IsNullOrEmpty(cat.IconClass))
+                    {
+                        <i class="@cat.IconClass"></i>
+                    }
+                    @cat.Name (@rootCount)
+                </a>
+            }
+        </div>
+        <button class="cat-scroll-btn right" type="button" style="opacity: 0; pointer-events: none;"><i class="bi bi-chevron-right"></i></button>
     </div>
 
     <div class="dropdown ms-3 flex-shrink-0" style="z-index: 1050;">
@@ -297,20 +329,24 @@
 
 @if (subCategoriesToShow != null && subCategoriesToShow.Any())
 {
-    <div class="admin-subcategory-filter">
-        <a href="@Url.Action("Index", "ProductManagement", new { categoryId = parentId, country = selectedCountry })" class="admin-sub-filter-pill @(selectedId == parentId ? "active" : "")">
-            <i class="bi bi-list-nested"></i> Tümü
-        </a>
-        @foreach (var sub in subCategoriesToShow)
-        {
-            <a href="@Url.Action("Index", "ProductManagement", new { categoryId = sub.Id, country = selectedCountry })" class="admin-sub-filter-pill @(selectedId == sub.Id ? "active" : "")">
-                @if (!string.IsNullOrEmpty(sub.IconClass))
-                {
-                    <i class="@sub.IconClass"></i>
-                }
-                @sub.Name
+    <div class="cat-scroll-wrapper mb-4" style="margin-top:-12px; min-width: 0;">
+        <button class="cat-scroll-btn left" type="button" style="opacity: 0; pointer-events: none;"><i class="bi bi-chevron-left"></i></button>
+        <div class="admin-subcategory-filter mb-0 w-100">
+            <a href="@Url.Action("Index", "ProductManagement", new { categoryId = parentId, country = selectedCountry })" class="admin-sub-filter-pill @(selectedId == parentId ? "active" : "")">
+                <i class="bi bi-list-nested"></i> Tümü
             </a>
-        }
+            @foreach (var sub in subCategoriesToShow)
+            {
+                <a href="@Url.Action("Index", "ProductManagement", new { categoryId = sub.Id, country = selectedCountry })" class="admin-sub-filter-pill @(selectedId == sub.Id ? "active" : "")">
+                    @if (!string.IsNullOrEmpty(sub.IconClass))
+                    {
+                        <i class="@sub.IconClass"></i>
+                    }
+                    @sub.Name
+                </a>
+            }
+        </div>
+        <button class="cat-scroll-btn right" type="button" style="opacity: 0; pointer-events: none;"><i class="bi bi-chevron-right"></i></button>
     </div>
 }
 
@@ -439,4 +475,49 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="~/js/admin-products.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const wrappers = document.querySelectorAll('.cat-scroll-wrapper');
+            wrappers.forEach(wrapper => {
+                const container = wrapper.querySelector('.admin-category-filter, .admin-subcategory-filter');
+                const btnLeft = wrapper.querySelector('.cat-scroll-btn.left');
+                const btnRight = wrapper.querySelector('.cat-scroll-btn.right');
+                
+                if(!container || !btnLeft || !btnRight) return;
+
+                function updateButtons() {
+                    // Show/hide left button
+                    if (container.scrollLeft > 0) {
+                        btnLeft.style.opacity = '1';
+                        btnLeft.style.pointerEvents = 'auto';
+                    } else {
+                        btnLeft.style.opacity = '0';
+                        btnLeft.style.pointerEvents = 'none';
+                    }
+
+                    // Show/hide right button
+                    if (Math.ceil(container.scrollLeft + container.clientWidth) >= container.scrollWidth) {
+                        btnRight.style.opacity = '0';
+                        btnRight.style.pointerEvents = 'none';
+                    } else {
+                        btnRight.style.opacity = '1';
+                        btnRight.style.pointerEvents = 'auto';
+                    }
+                }
+
+                container.addEventListener('scroll', updateButtons);
+                window.addEventListener('resize', updateButtons);
+                
+                // Initial check after font load
+                setTimeout(updateButtons, 150);
+
+                btnLeft.addEventListener('click', () => {
+                    container.scrollBy({ left: -300, behavior: 'smooth' });
+                });
+                btnRight.addEventListener('click', () => {
+                    container.scrollBy({ left: 300, behavior: 'smooth' });
+                });
+            });
+        });
+    </script>
 }
