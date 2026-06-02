@@ -12,7 +12,7 @@
 
 <div class="container mt-4">
     <h2>@Model.GetType().Name Düzenle</h2>
-    <form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
+    <form id="productForm" asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
         <input type="hidden" name="ModelTypeFullName" value="@Model.GetType().FullName" />
         <input type="hidden" asp-for="Id" />
         <input type="hidden" asp-for="CategoryId" />
@@ -990,7 +990,7 @@
                 $('#selectedRelationsList').append(cardHtml);
 
                 // Forma eklenecek hidden input
-                $('form').append(`<input type="hidden" name="RelatedProductIds" value="${id}" id="rel_input_${id}">`);
+                $('#productForm').append(`<input type="hidden" name="RelatedProductIds" value="${id}" id="rel_input_${id}">`);
             }
 
             function checkEmptyRelations() {
@@ -1009,7 +1009,7 @@
                 });
             }
             // Combine GuidanceType and Manufacturer before submit
-            $('form').on('submit', function() {
+            $('#productForm').on('submit', function() {
                 if ($('.guidance-checkbox').length > 0) {
                     var selected = [];
                     $('.guidance-checkbox:checked').each(function() {
