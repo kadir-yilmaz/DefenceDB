@@ -4,16 +4,19 @@ using DefenceDB.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace DefenceDB.DAL.Migrations
+namespace DefenceDB.DAL.update.sql
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260602170057_AddEngineSystems")]
+    partial class AddEngineSystems
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -469,50 +472,10 @@ namespace DefenceDB.DAL.Migrations
                         {
                             Id = 31,
                             CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModelTypeName = "DefenceDB.EL.Models.Products.TurbofanEngine",
-                            Name = "Turbofan Motorlar",
+                            ModelTypeName = "DefenceDB.EL.Models.Products.GasTurbineEngine",
+                            Name = "Gaz Türbinli Motorlar",
                             ParentCategoryId = 30,
-                            Slug = "turbofan-motorlar",
-                            SortOrder = 0
-                        },
-                        new
-                        {
-                            Id = 35,
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModelTypeName = "DefenceDB.EL.Models.Products.TurbojetEngine",
-                            Name = "Turbojet Motorlar",
-                            ParentCategoryId = 30,
-                            Slug = "turbojet-motorlar",
-                            SortOrder = 0
-                        },
-                        new
-                        {
-                            Id = 36,
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModelTypeName = "DefenceDB.EL.Models.Products.TurbopropEngine",
-                            Name = "Turboprop Motorlar",
-                            ParentCategoryId = 30,
-                            Slug = "turboprop-motorlar",
-                            SortOrder = 0
-                        },
-                        new
-                        {
-                            Id = 38,
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModelTypeName = "DefenceDB.EL.Models.Products.TurboshaftEngine",
-                            Name = "Turboshaft Motorlar",
-                            ParentCategoryId = 30,
-                            Slug = "turboshaft-motorlar",
-                            SortOrder = 0
-                        },
-                        new
-                        {
-                            Id = 37,
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModelTypeName = "DefenceDB.EL.Models.Products.MarineGasTurbine",
-                            Name = "Deniz Gaz Türbinleri",
-                            ParentCategoryId = 30,
-                            Slug = "deniz-gaz-turbinleri",
+                            Slug = "gaz-turbinli-motorlar",
                             SortOrder = 0
                         },
                         new
@@ -1683,6 +1646,99 @@ namespace DefenceDB.DAL.Migrations
                         });
                 });
 
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.GasTurbineEngine", b =>
+                {
+                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
+
+                    b.Property<double?>("BypassRatio")
+                        .HasColumnType("float");
+
+                    b.Property<bool>("HasAfterburner")
+                        .HasColumnType("bit");
+
+                    b.Property<double?>("ThrustKn")
+                        .HasColumnType("float");
+
+                    b.ToTable("GasTurbineEngines", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 301,
+                            CategoryId = 31,
+                            Country = "Türkiye",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "TEI",
+                            Name = "TEI-TF6000",
+                            Slug = "tei-tf6000",
+                            BypassRatio = 1.0800000000000001,
+                            HasAfterburner = false,
+                            ThrustKn = 26.699999999999999
+                        },
+                        new
+                        {
+                            Id = 302,
+                            CategoryId = 31,
+                            Country = "Türkiye",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "TEI",
+                            Name = "TEI-TF10000",
+                            Slug = "tei-tf10000",
+                            BypassRatio = 1.0800000000000001,
+                            HasAfterburner = true,
+                            ThrustKn = 44.5
+                        },
+                        new
+                        {
+                            Id = 303,
+                            CategoryId = 31,
+                            Country = "ABD",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "Pratt & Whitney",
+                            Name = "F135-PW-100",
+                            Slug = "f135-pw-100",
+                            BypassRatio = 0.56999999999999995,
+                            HasAfterburner = true,
+                            ThrustKn = 191.0
+                        },
+                        new
+                        {
+                            Id = 304,
+                            CategoryId = 31,
+                            Country = "ABD",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "General Electric",
+                            Name = "F110-GE-129",
+                            Slug = "f110-ge-129",
+                            BypassRatio = 0.76000000000000001,
+                            HasAfterburner = true,
+                            ThrustKn = 131.0
+                        },
+                        new
+                        {
+                            Id = 305,
+                            CategoryId = 31,
+                            Country = "Rusya",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "NPO Saturn",
+                            Name = "AL-31F",
+                            Slug = "al-31f",
+                            BypassRatio = 0.58999999999999997,
+                            HasAfterburner = true,
+                            ThrustKn = 123.0
+                        });
+                });
+
             modelBuilder.Entity("DefenceDB.EL.Models.Products.HypersonicGlideVehicle", b =>
                 {
                     b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
@@ -1732,31 +1788,6 @@ namespace DefenceDB.DAL.Migrations
                         .HasColumnType("float");
 
                     b.ToTable("KamikazeUSVs", (string)null);
-                });
-
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.MarineGasTurbine", b =>
-                {
-                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
-
-                    b.Property<double?>("ShaftHorsePowerHp")
-                        .HasColumnType("float");
-
-                    b.ToTable("MarineGasTurbines", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 309,
-                            CategoryId = 37,
-                            Country = "ABD",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = false,
-                            Manufacturer = "General Electric",
-                            Name = "GE LM2500",
-                            Slug = "ge-lm2500",
-                            ShaftHorsePowerHp = 33600.0
-                        });
                 });
 
             modelBuilder.Entity("DefenceDB.EL.Models.Products.Minehunter", b =>
@@ -2220,190 +2251,6 @@ namespace DefenceDB.DAL.Migrations
                         .HasColumnType("int");
 
                     b.ToTable("TrainerAircrafts", (string)null);
-                });
-
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.TurbofanEngine", b =>
-                {
-                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
-
-                    b.Property<double?>("BypassRatio")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("DryThrustLbf")
-                        .HasColumnType("float");
-
-                    b.Property<bool>("HasAfterburner")
-                        .HasColumnType("bit");
-
-                    b.Property<double?>("MaxThrustLbf")
-                        .HasColumnType("float");
-
-                    b.ToTable("TurbofanEngines", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 301,
-                            CategoryId = 31,
-                            Country = "Türkiye",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = true,
-                            Manufacturer = "TEI",
-                            Name = "TEI-TF6000",
-                            Slug = "tei-tf6000",
-                            BypassRatio = 1.0800000000000001,
-                            DryThrustLbf = 6000.0,
-                            HasAfterburner = false,
-                            MaxThrustLbf = 6000.0
-                        },
-                        new
-                        {
-                            Id = 302,
-                            CategoryId = 31,
-                            Country = "Türkiye",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = false,
-                            Manufacturer = "TEI",
-                            Name = "TEI-TF10000",
-                            Slug = "tei-tf10000",
-                            BypassRatio = 1.0800000000000001,
-                            DryThrustLbf = 6000.0,
-                            HasAfterburner = true,
-                            MaxThrustLbf = 10000.0
-                        },
-                        new
-                        {
-                            Id = 303,
-                            CategoryId = 31,
-                            Country = "ABD",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = false,
-                            Manufacturer = "Pratt & Whitney",
-                            Name = "F135-PW-100",
-                            Slug = "f135-pw-100",
-                            BypassRatio = 0.56999999999999995,
-                            DryThrustLbf = 28000.0,
-                            HasAfterburner = true,
-                            MaxThrustLbf = 43000.0
-                        },
-                        new
-                        {
-                            Id = 304,
-                            CategoryId = 31,
-                            Country = "ABD",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = false,
-                            Manufacturer = "General Electric",
-                            Name = "F110-GE-129",
-                            Slug = "f110-ge-129",
-                            BypassRatio = 0.76000000000000001,
-                            DryThrustLbf = 17155.0,
-                            HasAfterburner = true,
-                            MaxThrustLbf = 29500.0
-                        },
-                        new
-                        {
-                            Id = 305,
-                            CategoryId = 31,
-                            Country = "Rusya",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = false,
-                            Manufacturer = "NPO Saturn",
-                            Name = "AL-31F",
-                            Slug = "al-31f",
-                            BypassRatio = 0.58999999999999997,
-                            DryThrustLbf = 17130.0,
-                            HasAfterburner = true,
-                            MaxThrustLbf = 27560.0
-                        });
-                });
-
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.TurbojetEngine", b =>
-                {
-                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
-
-                    b.Property<double?>("DryThrustLbf")
-                        .HasColumnType("float");
-
-                    b.Property<bool>("HasAfterburner")
-                        .HasColumnType("bit");
-
-                    b.Property<double?>("MaxThrustLbf")
-                        .HasColumnType("float");
-
-                    b.ToTable("TurbojetEngines", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 306,
-                            CategoryId = 35,
-                            Country = "Türkiye",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = true,
-                            Manufacturer = "Kale Arge",
-                            Name = "Kale KTJ-3200",
-                            Slug = "kale-ktj-3200",
-                            DryThrustLbf = 720.0,
-                            HasAfterburner = false,
-                            MaxThrustLbf = 720.0
-                        });
-                });
-
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.TurbopropEngine", b =>
-                {
-                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
-
-                    b.Property<double?>("ShaftHorsePowerHp")
-                        .HasColumnType("float");
-
-                    b.ToTable("TurbopropEngines", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 308,
-                            CategoryId = 36,
-                            Country = "Kanada",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = false,
-                            Manufacturer = "Pratt & Whitney Canada",
-                            Name = "PT6A-67A",
-                            Slug = "pt6a-67a",
-                            ShaftHorsePowerHp = 1200.0
-                        });
-                });
-
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.TurboshaftEngine", b =>
-                {
-                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
-
-                    b.Property<double?>("ShaftHorsePowerHp")
-                        .HasColumnType("float");
-
-                    b.ToTable("TurboshaftEngines", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 307,
-                            CategoryId = 38,
-                            Country = "Türkiye",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = true,
-                            Manufacturer = "TEI",
-                            Name = "TEI-TS1400",
-                            Slug = "tei-ts1400",
-                            ShaftHorsePowerHp = 1400.0
-                        });
                 });
 
             modelBuilder.Entity("DefenceDB.EL.Models.Products.UAV", b =>
@@ -2918,6 +2765,15 @@ namespace DefenceDB.DAL.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.GasTurbineEngine", b =>
+                {
+                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
+                        .WithOne()
+                        .HasForeignKey("DefenceDB.EL.Models.Products.GasTurbineEngine", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("DefenceDB.EL.Models.Products.HypersonicGlideVehicle", b =>
                 {
                     b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
@@ -2941,15 +2797,6 @@ namespace DefenceDB.DAL.Migrations
                     b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
                         .WithOne()
                         .HasForeignKey("DefenceDB.EL.Models.Products.KamikazeUSV", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.MarineGasTurbine", b =>
-                {
-                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
-                        .WithOne()
-                        .HasForeignKey("DefenceDB.EL.Models.Products.MarineGasTurbine", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -3013,42 +2860,6 @@ namespace DefenceDB.DAL.Migrations
                     b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
                         .WithOne()
                         .HasForeignKey("DefenceDB.EL.Models.Products.TrainerAircraft", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.TurbofanEngine", b =>
-                {
-                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
-                        .WithOne()
-                        .HasForeignKey("DefenceDB.EL.Models.Products.TurbofanEngine", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.TurbojetEngine", b =>
-                {
-                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
-                        .WithOne()
-                        .HasForeignKey("DefenceDB.EL.Models.Products.TurbojetEngine", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.TurbopropEngine", b =>
-                {
-                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
-                        .WithOne()
-                        .HasForeignKey("DefenceDB.EL.Models.Products.TurbopropEngine", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.TurboshaftEngine", b =>
-                {
-                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
-                        .WithOne()
-                        .HasForeignKey("DefenceDB.EL.Models.Products.TurboshaftEngine", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

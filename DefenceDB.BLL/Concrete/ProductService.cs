@@ -55,6 +55,8 @@ public class ProductService : IProductService
     public async Task<DefenseProduct?> GetProductByIdAsync(int id)
     {
         return await _context.DefenseProducts
+            .AsNoTracking()
+            .AsSplitQuery()
             .Include(p => p.Category)
             .Include(p => p.Images)
             .Include(p => p.SourceRelationships)
@@ -75,6 +77,8 @@ public class ProductService : IProductService
     public async Task<DefenseProduct?> GetProductBySlugAsync(string slug)
     {
         return await _context.DefenseProducts
+            .AsNoTracking()
+            .AsSplitQuery()
             .Include(p => p.Category)
             .Include(p => p.Images)
             .Include(p => p.SourceRelationships)

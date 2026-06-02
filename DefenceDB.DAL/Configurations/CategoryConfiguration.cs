@@ -62,7 +62,17 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             new Category { Id = 26, Name = "İKA (UGV)", Slug = "ika-ugv", ParentCategoryId = 23, ModelTypeName = "DefenceDB.EL.Models.Products.UGV", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
             new Category { Id = 27, Name = "Kamikaze İHA", Slug = "kamikaze-iha", ParentCategoryId = 23, ModelTypeName = "DefenceDB.EL.Models.Products.KamikazeUAV", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
             new Category { Id = 28, Name = "Kamikaze İDA", Slug = "kamikaze-ida", ParentCategoryId = 23, ModelTypeName = "DefenceDB.EL.Models.Products.KamikazeUSV", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
-            new Category { Id = 29, Name = "Kamikaze İKA", Slug = "kamikaze-ika", ParentCategoryId = 23, ModelTypeName = "DefenceDB.EL.Models.Products.KamikazeUGV", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
+            
+            // Motor ve Güç Sistemleri (30) ve Alt Kategorileri
+            new Category { Id = 30, Name = "Motor ve Güç Sistemleri", Slug = "motor-ve-guc-sistemleri", IconClass = "bi bi-gear-wide-connected", SortOrder = 7, CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Category { Id = 31, Name = "Turbofan Motorlar", Slug = "turbofan-motorlar", ParentCategoryId = 30, ModelTypeName = "DefenceDB.EL.Models.Products.TurbofanEngine", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Category { Id = 35, Name = "Turbojet Motorlar", Slug = "turbojet-motorlar", ParentCategoryId = 30, ModelTypeName = "DefenceDB.EL.Models.Products.TurbojetEngine", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Category { Id = 36, Name = "Turboprop Motorlar", Slug = "turboprop-motorlar", ParentCategoryId = 30, ModelTypeName = "DefenceDB.EL.Models.Products.TurbopropEngine", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Category { Id = 38, Name = "Turboshaft Motorlar", Slug = "turboshaft-motorlar", ParentCategoryId = 30, ModelTypeName = "DefenceDB.EL.Models.Products.TurboshaftEngine", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Category { Id = 37, Name = "Deniz Gaz Türbinleri", Slug = "deniz-gaz-turbinleri", ParentCategoryId = 30, ModelTypeName = "DefenceDB.EL.Models.Products.MarineGasTurbine", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Category { Id = 32, Name = "Pistonlu/İçten Yanmalı Motorlar", Slug = "pistonlu-motorlar", ParentCategoryId = 30, ModelTypeName = "DefenceDB.EL.Models.Products.PistonEngine", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Category { Id = 33, Name = "Roket Motorları", Slug = "roket-motorlari", ParentCategoryId = 30, ModelTypeName = "DefenceDB.EL.Models.Products.RocketMotor", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Category { Id = 34, Name = "Elektrik ve Nükleer Güç", Slug = "elektrik-ve-nukleer-guc", ParentCategoryId = 30, ModelTypeName = "DefenceDB.EL.Models.Products.ElectricNuclearPower", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
         );
     }
 }

@@ -52,7 +52,17 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
     public DbSet<UGV> UGVs { get; set; } = null!;
     public DbSet<KamikazeUAV> KamikazeUAVs { get; set; } = null!;
     public DbSet<KamikazeUSV> KamikazeUSVs { get; set; } = null!;
-    public DbSet<KamikazeUGV> KamikazeUGVs { get; set; } = null!;
+
+    // Engines and Propulsion Systems
+    public DbSet<PistonEngine> PistonEngines { get; set; }
+    public DbSet<RocketMotor> RocketMotors { get; set; }
+    public DbSet<ElectricNuclearPower> ElectricNuclearPowers { get; set; }
+    
+    public DbSet<TurbofanEngine> TurbofanEngines { get; set; }
+    public DbSet<TurbojetEngine> TurbojetEngines { get; set; }
+    public DbSet<TurbopropEngine> TurbopropEngines { get; set; }
+    public DbSet<TurboshaftEngine> TurboshaftEngines { get; set; }
+    public DbSet<MarineGasTurbine> MarineGasTurbines { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -93,7 +103,16 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
         modelBuilder.Entity<UGV>().ToTable("UGVs");
         modelBuilder.Entity<KamikazeUAV>().ToTable("KamikazeUAVs");
         modelBuilder.Entity<KamikazeUSV>().ToTable("KamikazeUSVs");
-        modelBuilder.Entity<KamikazeUGV>().ToTable("KamikazeUGVs");
+
+        modelBuilder.Entity<PistonEngine>().ToTable("PistonEngines");
+        modelBuilder.Entity<RocketMotor>().ToTable("RocketMotors");
+        modelBuilder.Entity<ElectricNuclearPower>().ToTable("ElectricNuclearPowers");
+        
+        modelBuilder.Entity<TurbofanEngine>().ToTable("TurbofanEngines");
+        modelBuilder.Entity<TurbojetEngine>().ToTable("TurbojetEngines");
+        modelBuilder.Entity<TurbopropEngine>().ToTable("TurbopropEngines");
+        modelBuilder.Entity<TurboshaftEngine>().ToTable("TurboshaftEngines");
+        modelBuilder.Entity<MarineGasTurbine>().ToTable("MarineGasTurbines");
 
         // Apply Product Seeds
         modelBuilder.SeedProducts();
