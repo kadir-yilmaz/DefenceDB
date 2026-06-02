@@ -40,6 +40,16 @@ jobs:
     - name: Build and Publish
       run: dotnet publish DefenceDB.WebUI/DefenceDB.WebUI.csproj -c Release -o "${{ github.workspace }}\publish"
 
+    - name: Install EF Core Tools
+      run: dotnet tool install --global dotnet-ef --version 8.0.*
+      shell: powershell
+
+    - name: Apply Database Migrations
+      env:
+        CONNECTION_STRING: ${{ secrets.CONNECTION_STRING }}
+      run: dotnet ef database update --project DefenceDB.DAL/DefenceDB.DAL.csproj --startup-project DefenceDB.WebUI/DefenceDB.WebUI.csproj --connection "$env:CONNECTION_STRING"
+      shell: powershell
+
     - name: Deploy via MSDeploy
       env:
         WD_SERVER: ${{ secrets.WEBDEPLOY_SERVER }}

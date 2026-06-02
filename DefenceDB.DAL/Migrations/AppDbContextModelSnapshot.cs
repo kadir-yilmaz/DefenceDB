@@ -477,46 +477,6 @@ namespace DefenceDB.DAL.Migrations
                         },
                         new
                         {
-                            Id = 35,
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModelTypeName = "DefenceDB.EL.Models.Products.TurbojetEngine",
-                            Name = "Turbojet Motorlar",
-                            ParentCategoryId = 30,
-                            Slug = "turbojet-motorlar",
-                            SortOrder = 0
-                        },
-                        new
-                        {
-                            Id = 36,
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModelTypeName = "DefenceDB.EL.Models.Products.TurbopropEngine",
-                            Name = "Turboprop Motorlar",
-                            ParentCategoryId = 30,
-                            Slug = "turboprop-motorlar",
-                            SortOrder = 0
-                        },
-                        new
-                        {
-                            Id = 38,
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModelTypeName = "DefenceDB.EL.Models.Products.TurboshaftEngine",
-                            Name = "Turboshaft Motorlar",
-                            ParentCategoryId = 30,
-                            Slug = "turboshaft-motorlar",
-                            SortOrder = 0
-                        },
-                        new
-                        {
-                            Id = 37,
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModelTypeName = "DefenceDB.EL.Models.Products.MarineGasTurbine",
-                            Name = "Deniz Gaz Türbinleri",
-                            ParentCategoryId = 30,
-                            Slug = "deniz-gaz-turbinleri",
-                            SortOrder = 0
-                        },
-                        new
-                        {
                             Id = 32,
                             CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             ModelTypeName = "DefenceDB.EL.Models.Products.PistonEngine",
@@ -544,6 +504,56 @@ namespace DefenceDB.DAL.Migrations
                             ParentCategoryId = 30,
                             Slug = "elektrik-ve-nukleer-guc",
                             SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 35,
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModelTypeName = "DefenceDB.EL.Models.Products.TurbojetEngine",
+                            Name = "Turbojet Motorlar",
+                            ParentCategoryId = 30,
+                            Slug = "turbojet-motorlar",
+                            SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 36,
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModelTypeName = "DefenceDB.EL.Models.Products.TurbopropEngine",
+                            Name = "Turboprop Motorlar",
+                            ParentCategoryId = 30,
+                            Slug = "turboprop-motorlar",
+                            SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 37,
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModelTypeName = "DefenceDB.EL.Models.Products.MarineGasTurbine",
+                            Name = "Deniz Gaz Türbinleri",
+                            ParentCategoryId = 30,
+                            Slug = "deniz-gaz-turbinleri",
+                            SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 38,
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModelTypeName = "DefenceDB.EL.Models.Products.TurboshaftEngine",
+                            Name = "Turboshaft Motorlar",
+                            ParentCategoryId = 30,
+                            Slug = "turboshaft-motorlar",
+                            SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 39,
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IconClass = "bi bi-shield-fill-check",
+                            ModelTypeName = "DefenceDB.EL.Models.Products.AirDefenseSystem",
+                            Name = "Hava Savunma Sistemleri",
+                            Slug = "hava-savunma-sistemleri",
+                            SortOrder = 8
                         });
                 });
 
@@ -879,6 +889,337 @@ namespace DefenceDB.DAL.Migrations
                             MaxRangeKm = 600.0,
                             RadarType = "AESA",
                             TargetTrackingCapacity = 300
+                        });
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.AirDefenseSystem", b =>
+                {
+                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
+
+                    b.Property<bool>("HasAntiBallisticCapability")
+                        .HasColumnType("bit");
+
+                    b.Property<double?>("MaxEngagementAltitudeFt")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("MaxSearchRangeKm")
+                        .HasColumnType("float");
+
+                    b.Property<int?>("MaxTrackedTargets")
+                        .HasColumnType("int");
+
+                    b.Property<double?>("MaxTrackingRangeKm")
+                        .HasColumnType("float");
+
+                    b.Property<int?>("MissilesPerLauncher")
+                        .HasColumnType("int");
+
+                    b.ToTable("AirDefenseSystems", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 401,
+                            CategoryId = 39,
+                            Country = "Rusya",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Rusya yapımı orta ve uzun menzilli uçaksavar ve füze savunma sistemi.",
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "Almaz-Antey",
+                            Name = "S-400 Triumf",
+                            Slug = "s-400-triumf",
+                            HasAntiBallisticCapability = true,
+                            MaxEngagementAltitudeFt = 100000.0,
+                            MaxSearchRangeKm = 600.0,
+                            MaxTrackedTargets = 300,
+                            MaxTrackingRangeKm = 400.0,
+                            MissilesPerLauncher = 4
+                        },
+                        new
+                        {
+                            Id = 402,
+                            CategoryId = 39,
+                            Country = "Rusya",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Uzay ve kıtalararası balistik füze savunması odaklı yeni nesil uzun menzilli hava savunma sistemi.",
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "Almaz-Antey",
+                            Name = "S-500 Prometey",
+                            Slug = "s-500-prometey",
+                            HasAntiBallisticCapability = true,
+                            MaxEngagementAltitudeFt = 650000.0,
+                            MaxSearchRangeKm = 800.0,
+                            MaxTrackedTargets = 100,
+                            MaxTrackingRangeKm = 600.0,
+                            MissilesPerLauncher = 4
+                        },
+                        new
+                        {
+                            Id = 403,
+                            CategoryId = 39,
+                            Country = "ABD",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Amerika Birleşik Devletleri ordusunun ana taktik hava ve balistik füze savunma sistemi.",
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "Raytheon / Lockheed Martin",
+                            Name = "MIM-104 Patriot (PAC-3)",
+                            Slug = "mim-104-patriot-pac-3",
+                            HasAntiBallisticCapability = true,
+                            MaxEngagementAltitudeFt = 80000.0,
+                            MaxSearchRangeKm = 150.0,
+                            MaxTrackedTargets = 100,
+                            MaxTrackingRangeKm = 100.0,
+                            MissilesPerLauncher = 16
+                        },
+                        new
+                        {
+                            Id = 404,
+                            CategoryId = 39,
+                            Country = "ABD",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Atmosfer içi ve atmosfer dışı (Terminal aşamada) kısa, orta ve ara menzilli balistik füzeleri önleme sistemi.",
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "Lockheed Martin",
+                            Name = "THAAD",
+                            Slug = "thaad",
+                            HasAntiBallisticCapability = true,
+                            MaxEngagementAltitudeFt = 490000.0,
+                            MaxSearchRangeKm = 1000.0,
+                            MaxTrackedTargets = 100,
+                            MaxTrackingRangeKm = 800.0,
+                            MissilesPerLauncher = 8
+                        },
+                        new
+                        {
+                            Id = 405,
+                            CategoryId = 39,
+                            Country = "Fransa",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Aster 30 füzelerini kullanan, uçak ve seyir füzelerine ek olarak balistik füzelere karşı da etkili Avrupa menşeili hava savunma sistemi.",
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "Eurosam",
+                            Name = "SAMP/T Mamba",
+                            Slug = "samp-t-mamba",
+                            HasAntiBallisticCapability = true,
+                            MaxEngagementAltitudeFt = 65000.0,
+                            MaxSearchRangeKm = 150.0,
+                            MaxTrackedTargets = 100,
+                            MaxTrackingRangeKm = 100.0,
+                            MissilesPerLauncher = 8
+                        },
+                        new
+                        {
+                            Id = 406,
+                            CategoryId = 39,
+                            Country = "Çin",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Çin Halk Kurtuluş Ordusu'nun ana uzun menzilli hava ve füze savunma sistemi.",
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "CASIC",
+                            Name = "HQ-9",
+                            Slug = "hq-9",
+                            HasAntiBallisticCapability = true,
+                            MaxEngagementAltitudeFt = 98000.0,
+                            MaxSearchRangeKm = 250.0,
+                            MaxTrackedTargets = 100,
+                            MaxTrackingRangeKm = 180.0,
+                            MissilesPerLauncher = 4
+                        },
+                        new
+                        {
+                            Id = 408,
+                            CategoryId = 39,
+                            Country = "Türkiye",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Türkiye tarafından milli imkanlarla geliştirilen, savaş uçakları, helikopterler, seyir füzeleri ve İHA'lara karşı etkili alçak irtifa hava savunma sistemi.",
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "Aselsan / Roketsan",
+                            Name = "HİSAR-A+",
+                            Slug = "hisar-a-plus",
+                            HasAntiBallisticCapability = false,
+                            MaxEngagementAltitudeFt = 26000.0,
+                            MaxSearchRangeKm = 35.0,
+                            MaxTrackedTargets = 60,
+                            MaxTrackingRangeKm = 25.0,
+                            MissilesPerLauncher = 4
+                        },
+                        new
+                        {
+                            Id = 409,
+                            CategoryId = 39,
+                            Country = "Türkiye",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Türkiye tarafından yerli imkanlarla tasarlanan ve geliştirilen, savaş uçakları, İHA'lar, seyir füzeleri ve helikopterler gibi hedefleri imha etmek üzere tasarlanmış orta irtifa hava savunma sistemi.",
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "Aselsan / Roketsan",
+                            Name = "HİSAR-O+",
+                            Slug = "hisar-o-plus",
+                            HasAntiBallisticCapability = false,
+                            MaxEngagementAltitudeFt = 49000.0,
+                            MaxSearchRangeKm = 80.0,
+                            MaxTrackedTargets = 60,
+                            MaxTrackingRangeKm = 60.0,
+                            MissilesPerLauncher = 6
+                        },
+                        new
+                        {
+                            Id = 411,
+                            CategoryId = 39,
+                            Country = "Güney Kore",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Güney Kore ordusunun kritik tesislerini ve birliklerini korumak için tasarlanmış mobil alçak irtifa hava savunma sistemi.",
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "Hanwha Defense / LIG Nex1",
+                            Name = "K-SAM Chunma (Pegasus)",
+                            Slug = "k-sam-chunma-pegasus",
+                            HasAntiBallisticCapability = false,
+                            MaxEngagementAltitudeFt = 16000.0,
+                            MaxSearchRangeKm = 20.0,
+                            MaxTrackedTargets = 20,
+                            MaxTrackingRangeKm = 16.0,
+                            MissilesPerLauncher = 8
+                        },
+                        new
+                        {
+                            Id = 412,
+                            CategoryId = 39,
+                            Country = "Güney Kore",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Güney Kore yapımı, orta irtifadaki hava tehditlerine (uçaklar ve seyir füzeleri) karşı geliştirilmiş ilk nesil Cheongung hava savunma sistemi.",
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "LIG Nex1 / Hanwha Systems",
+                            Name = "Cheongung I (M-SAM)",
+                            Slug = "cheongung-i-m-sam",
+                            HasAntiBallisticCapability = false,
+                            MaxEngagementAltitudeFt = 49000.0,
+                            MaxSearchRangeKm = 100.0,
+                            MaxTrackedTargets = 40,
+                            MaxTrackingRangeKm = 80.0,
+                            MissilesPerLauncher = 8
+                        },
+                        new
+                        {
+                            Id = 413,
+                            CategoryId = 39,
+                            Country = "Güney Kore",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Güney Kore'nin katmanlı füze savunma kalkanı (KAMD) kapsamında geliştirdiği, üst irtifadaki balistik füzeleri ve hava tehditlerini önleme amaçlı uzun menzilli hava savunma sistemi.",
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "LIG Nex1 / Hanwha Systems",
+                            Name = "L-SAM",
+                            Slug = "l-sam",
+                            HasAntiBallisticCapability = true,
+                            MaxEngagementAltitudeFt = 190000.0,
+                            MaxSearchRangeKm = 300.0,
+                            MaxTrackedTargets = 100,
+                            MaxTrackingRangeKm = 250.0,
+                            MissilesPerLauncher = 6
+                        },
+                        new
+                        {
+                            Id = 414,
+                            CategoryId = 39,
+                            Country = "Güney Kore",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Cheongung I'in geliştirilmiş versiyonu olan orta irtifa hava savunma sistemi. Daha gelişmiş radar, artırılmış menzil ve çoklu hedef takip yeteneği sunar.",
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "LIG Nex1 / Hanwha Systems",
+                            Name = "Cheongung II (M-SAM Block II)",
+                            Slug = "cheongung-ii-m-sam-block-ii",
+                            HasAntiBallisticCapability = false,
+                            MaxEngagementAltitudeFt = 60000.0,
+                            MaxSearchRangeKm = 150.0,
+                            MaxTrackedTargets = 50,
+                            MaxTrackingRangeKm = 120.0,
+                            MissilesPerLauncher = 8
+                        },
+                        new
+                        {
+                            Id = 415,
+                            CategoryId = 39,
+                            Country = "Güney Kore",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Güney Kore'nin taşınabilir hava savunma sistemi (MANPADS). Helikopterler, İHA'lar ve alçak uçan uçaklara karşı etkili.",
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "LIG Nex1",
+                            Name = "KP-SAM (Shin-Gung)",
+                            Slug = "kp-sam-shin-gung",
+                            HasAntiBallisticCapability = false,
+                            MaxEngagementAltitudeFt = 12000.0,
+                            MaxSearchRangeKm = 8.0,
+                            MaxTrackedTargets = 2,
+                            MaxTrackingRangeKm = 6.0,
+                            MissilesPerLauncher = 1
+                        },
+                        new
+                        {
+                            Id = 416,
+                            CategoryId = 39,
+                            Country = "Güney Kore",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Güney Kore yapımı kendinden tahrikli uçaksavar topu (SPAAG). 30mm çift namlulu top ve kısa menzilli füzelerle donatılmıştır.",
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "Doosan DST / S&T Dynamics",
+                            Name = "Biho (K30)",
+                            Slug = "biho-k30",
+                            HasAntiBallisticCapability = false,
+                            MaxEngagementAltitudeFt = 10000.0,
+                            MaxSearchRangeKm = 15.0,
+                            MaxTrackedTargets = 10,
+                            MaxTrackingRangeKm = 12.0,
+                            MissilesPerLauncher = 4
+                        },
+                        new
+                        {
+                            Id = 417,
+                            CategoryId = 39,
+                            Country = "Güney Kore",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "K-SAM Chunma'nın geliştirilmiş versiyonu olan alçak irtifa hava savunma sistemi. Daha modern radar ve geliştirilmiş füze teknolojisi kullanır.",
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "Hanwha Defense / LIG Nex1",
+                            Name = "Cheonma (K-SAM Block II)",
+                            Slug = "cheonma-k-sam-block-ii",
+                            HasAntiBallisticCapability = false,
+                            MaxEngagementAltitudeFt = 20000.0,
+                            MaxSearchRangeKm = 25.0,
+                            MaxTrackedTargets = 25,
+                            MaxTrackingRangeKm = 20.0,
+                            MissilesPerLauncher = 8
+                        },
+                        new
+                        {
+                            Id = 418,
+                            CategoryId = 39,
+                            Country = "ABD",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Patriot sisteminin PAC-2 konfigürasyonu. Öncelikle geleneksel hava tehditlerine (uçaklar, helikopterler, seyir füzeleri) karşı etkili, sınırlı balistik füze savunma yeteneği vardır.",
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "Raytheon / Lockheed Martin",
+                            Name = "MIM-104 Patriot (PAC-2)",
+                            Slug = "mim-104-patriot-pac-2",
+                            HasAntiBallisticCapability = false,
+                            MaxEngagementAltitudeFt = 60000.0,
+                            MaxSearchRangeKm = 100.0,
+                            MaxTrackedTargets = 100,
+                            MaxTrackingRangeKm = 90.0,
+                            MissilesPerLauncher = 4
                         });
                 });
 
@@ -2797,6 +3138,15 @@ namespace DefenceDB.DAL.Migrations
                     b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
                         .WithOne()
                         .HasForeignKey("DefenceDB.EL.Models.Products.AirDefenseRadar", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.AirDefenseSystem", b =>
+                {
+                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
+                        .WithOne()
+                        .HasForeignKey("DefenceDB.EL.Models.Products.AirDefenseSystem", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

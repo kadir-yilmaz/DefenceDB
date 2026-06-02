@@ -13,6 +13,7 @@ TestResults/
 # Sensitive Settings
 appsettings.Development.json
 appsettings.json
+appsettings.Production.json
 
 # Static Assets (Videos & Uploaded Images)
 DefenceDB.WebUI/wwwroot/images/products/*

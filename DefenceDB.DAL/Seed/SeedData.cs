@@ -5,6 +5,10 @@ using DefenceDB.EL.Models;
 
 namespace DefenceDB.DAL.Seed;
 
+/// <summary>
+/// Runtime seed data initialization for AppUser and AppRole.
+/// Note: Categories and Products are seeded via EF Core HasData in Config files.
+/// </summary>
 public static class SeedData
 {
     public static async Task InitializeAsync(IServiceProvider serviceProvider, IConfiguration configuration)
@@ -76,7 +80,7 @@ public static class SeedData
                 await userManager.AddToRoleAsync(adminUser, "Admin");
             }
         }
-
-        // Seed catalog categories and products (Now handled by EF Core HasData)
+        
+        // Note: Categories and Products are now seeded via Config files using HasData
     }
 }

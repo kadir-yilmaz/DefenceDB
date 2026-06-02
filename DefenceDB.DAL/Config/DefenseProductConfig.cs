@@ -2,9 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using DefenceDB.EL.Models;
 
-namespace DefenceDB.DAL.Configurations;
+namespace DefenceDB.DAL.Config;
 
-public class DefenseProductConfiguration : IEntityTypeConfiguration<DefenseProduct>
+public class DefenseProductConfig : IEntityTypeConfiguration<DefenseProduct>
 {
     public void Configure(EntityTypeBuilder<DefenseProduct> builder)
     {
@@ -24,5 +24,8 @@ public class DefenseProductConfiguration : IEntityTypeConfiguration<DefenseProdu
             .WithMany(c => c.Products)
             .HasForeignKey(p => p.CategoryId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Seed data buraya eklenebilir
+        // builder.HasData(...);
     }
 }

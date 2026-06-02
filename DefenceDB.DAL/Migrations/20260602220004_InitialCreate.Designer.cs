@@ -9,11 +9,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace DefenceDB.DAL.update.sql
+namespace DefenceDB.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260602160744_AddCategoryModelTypeName")]
-    partial class AddCategoryModelTypeName
+    [Migration("20260602220004_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -399,6 +399,164 @@ namespace DefenceDB.DAL.update.sql
                             Name = "Tanklar",
                             Slug = "tanklar",
                             SortOrder = 5
+                        },
+                        new
+                        {
+                            Id = 23,
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IconClass = "bi bi-robot",
+                            Name = "İnsansız Platformlar",
+                            Slug = "insansiz-platformlar",
+                            SortOrder = 6
+                        },
+                        new
+                        {
+                            Id = 24,
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModelTypeName = "DefenceDB.EL.Models.Products.UAV",
+                            Name = "İHA (UAV)",
+                            ParentCategoryId = 23,
+                            Slug = "iha-uav",
+                            SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 25,
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModelTypeName = "DefenceDB.EL.Models.Products.USV",
+                            Name = "İDA (USV)",
+                            ParentCategoryId = 23,
+                            Slug = "ida-usv",
+                            SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 26,
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModelTypeName = "DefenceDB.EL.Models.Products.UGV",
+                            Name = "İKA (UGV)",
+                            ParentCategoryId = 23,
+                            Slug = "ika-ugv",
+                            SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 27,
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModelTypeName = "DefenceDB.EL.Models.Products.KamikazeUAV",
+                            Name = "Kamikaze İHA",
+                            ParentCategoryId = 23,
+                            Slug = "kamikaze-iha",
+                            SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 28,
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModelTypeName = "DefenceDB.EL.Models.Products.KamikazeUSV",
+                            Name = "Kamikaze İDA",
+                            ParentCategoryId = 23,
+                            Slug = "kamikaze-ida",
+                            SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 30,
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IconClass = "bi bi-gear-wide-connected",
+                            Name = "Motor ve Güç Sistemleri",
+                            Slug = "motor-ve-guc-sistemleri",
+                            SortOrder = 7
+                        },
+                        new
+                        {
+                            Id = 31,
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModelTypeName = "DefenceDB.EL.Models.Products.TurbofanEngine",
+                            Name = "Turbofan Motorlar",
+                            ParentCategoryId = 30,
+                            Slug = "turbofan-motorlar",
+                            SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 32,
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModelTypeName = "DefenceDB.EL.Models.Products.PistonEngine",
+                            Name = "Pistonlu/İçten Yanmalı Motorlar",
+                            ParentCategoryId = 30,
+                            Slug = "pistonlu-motorlar",
+                            SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 33,
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModelTypeName = "DefenceDB.EL.Models.Products.RocketMotor",
+                            Name = "Roket Motorları",
+                            ParentCategoryId = 30,
+                            Slug = "roket-motorlari",
+                            SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 34,
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModelTypeName = "DefenceDB.EL.Models.Products.ElectricNuclearPower",
+                            Name = "Elektrik ve Nükleer Güç",
+                            ParentCategoryId = 30,
+                            Slug = "elektrik-ve-nukleer-guc",
+                            SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 35,
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModelTypeName = "DefenceDB.EL.Models.Products.TurbojetEngine",
+                            Name = "Turbojet Motorlar",
+                            ParentCategoryId = 30,
+                            Slug = "turbojet-motorlar",
+                            SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 36,
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModelTypeName = "DefenceDB.EL.Models.Products.TurbopropEngine",
+                            Name = "Turboprop Motorlar",
+                            ParentCategoryId = 30,
+                            Slug = "turboprop-motorlar",
+                            SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 37,
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModelTypeName = "DefenceDB.EL.Models.Products.MarineGasTurbine",
+                            Name = "Deniz Gaz Türbinleri",
+                            ParentCategoryId = 30,
+                            Slug = "deniz-gaz-turbinleri",
+                            SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 38,
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModelTypeName = "DefenceDB.EL.Models.Products.TurboshaftEngine",
+                            Name = "Turboshaft Motorlar",
+                            ParentCategoryId = 30,
+                            Slug = "turboshaft-motorlar",
+                            SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 39,
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IconClass = "bi bi-shield-fill-check",
+                            ModelTypeName = "DefenceDB.EL.Models.Products.AirDefenseSystem",
+                            Name = "Hava Savunma Sistemleri",
+                            Slug = "hava-savunma-sistemleri",
+                            SortOrder = 8
                         });
                 });
 
@@ -734,6 +892,337 @@ namespace DefenceDB.DAL.update.sql
                             MaxRangeKm = 600.0,
                             RadarType = "AESA",
                             TargetTrackingCapacity = 300
+                        });
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.AirDefenseSystem", b =>
+                {
+                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
+
+                    b.Property<bool>("HasAntiBallisticCapability")
+                        .HasColumnType("bit");
+
+                    b.Property<double?>("MaxEngagementAltitudeFt")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("MaxSearchRangeKm")
+                        .HasColumnType("float");
+
+                    b.Property<int?>("MaxTrackedTargets")
+                        .HasColumnType("int");
+
+                    b.Property<double?>("MaxTrackingRangeKm")
+                        .HasColumnType("float");
+
+                    b.Property<int?>("MissilesPerLauncher")
+                        .HasColumnType("int");
+
+                    b.ToTable("AirDefenseSystems", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 401,
+                            CategoryId = 39,
+                            Country = "Rusya",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Rusya yapımı orta ve uzun menzilli uçaksavar ve füze savunma sistemi.",
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "Almaz-Antey",
+                            Name = "S-400 Triumf",
+                            Slug = "s-400-triumf",
+                            HasAntiBallisticCapability = true,
+                            MaxEngagementAltitudeFt = 100000.0,
+                            MaxSearchRangeKm = 600.0,
+                            MaxTrackedTargets = 300,
+                            MaxTrackingRangeKm = 400.0,
+                            MissilesPerLauncher = 4
+                        },
+                        new
+                        {
+                            Id = 402,
+                            CategoryId = 39,
+                            Country = "Rusya",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Uzay ve kıtalararası balistik füze savunması odaklı yeni nesil uzun menzilli hava savunma sistemi.",
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "Almaz-Antey",
+                            Name = "S-500 Prometey",
+                            Slug = "s-500-prometey",
+                            HasAntiBallisticCapability = true,
+                            MaxEngagementAltitudeFt = 650000.0,
+                            MaxSearchRangeKm = 800.0,
+                            MaxTrackedTargets = 100,
+                            MaxTrackingRangeKm = 600.0,
+                            MissilesPerLauncher = 4
+                        },
+                        new
+                        {
+                            Id = 403,
+                            CategoryId = 39,
+                            Country = "ABD",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Amerika Birleşik Devletleri ordusunun ana taktik hava ve balistik füze savunma sistemi.",
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "Raytheon / Lockheed Martin",
+                            Name = "MIM-104 Patriot (PAC-3)",
+                            Slug = "mim-104-patriot-pac-3",
+                            HasAntiBallisticCapability = true,
+                            MaxEngagementAltitudeFt = 80000.0,
+                            MaxSearchRangeKm = 150.0,
+                            MaxTrackedTargets = 100,
+                            MaxTrackingRangeKm = 100.0,
+                            MissilesPerLauncher = 16
+                        },
+                        new
+                        {
+                            Id = 404,
+                            CategoryId = 39,
+                            Country = "ABD",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Atmosfer içi ve atmosfer dışı (Terminal aşamada) kısa, orta ve ara menzilli balistik füzeleri önleme sistemi.",
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "Lockheed Martin",
+                            Name = "THAAD",
+                            Slug = "thaad",
+                            HasAntiBallisticCapability = true,
+                            MaxEngagementAltitudeFt = 490000.0,
+                            MaxSearchRangeKm = 1000.0,
+                            MaxTrackedTargets = 100,
+                            MaxTrackingRangeKm = 800.0,
+                            MissilesPerLauncher = 8
+                        },
+                        new
+                        {
+                            Id = 405,
+                            CategoryId = 39,
+                            Country = "Fransa",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Aster 30 füzelerini kullanan, uçak ve seyir füzelerine ek olarak balistik füzelere karşı da etkili Avrupa menşeili hava savunma sistemi.",
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "Eurosam",
+                            Name = "SAMP/T Mamba",
+                            Slug = "samp-t-mamba",
+                            HasAntiBallisticCapability = true,
+                            MaxEngagementAltitudeFt = 65000.0,
+                            MaxSearchRangeKm = 150.0,
+                            MaxTrackedTargets = 100,
+                            MaxTrackingRangeKm = 100.0,
+                            MissilesPerLauncher = 8
+                        },
+                        new
+                        {
+                            Id = 406,
+                            CategoryId = 39,
+                            Country = "Çin",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Çin Halk Kurtuluş Ordusu'nun ana uzun menzilli hava ve füze savunma sistemi.",
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "CASIC",
+                            Name = "HQ-9",
+                            Slug = "hq-9",
+                            HasAntiBallisticCapability = true,
+                            MaxEngagementAltitudeFt = 98000.0,
+                            MaxSearchRangeKm = 250.0,
+                            MaxTrackedTargets = 100,
+                            MaxTrackingRangeKm = 180.0,
+                            MissilesPerLauncher = 4
+                        },
+                        new
+                        {
+                            Id = 408,
+                            CategoryId = 39,
+                            Country = "Türkiye",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Türkiye tarafından milli imkanlarla geliştirilen, savaş uçakları, helikopterler, seyir füzeleri ve İHA'lara karşı etkili alçak irtifa hava savunma sistemi.",
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "Aselsan / Roketsan",
+                            Name = "HİSAR-A+",
+                            Slug = "hisar-a-plus",
+                            HasAntiBallisticCapability = false,
+                            MaxEngagementAltitudeFt = 26000.0,
+                            MaxSearchRangeKm = 35.0,
+                            MaxTrackedTargets = 60,
+                            MaxTrackingRangeKm = 25.0,
+                            MissilesPerLauncher = 4
+                        },
+                        new
+                        {
+                            Id = 409,
+                            CategoryId = 39,
+                            Country = "Türkiye",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Türkiye tarafından yerli imkanlarla tasarlanan ve geliştirilen, savaş uçakları, İHA'lar, seyir füzeleri ve helikopterler gibi hedefleri imha etmek üzere tasarlanmış orta irtifa hava savunma sistemi.",
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "Aselsan / Roketsan",
+                            Name = "HİSAR-O+",
+                            Slug = "hisar-o-plus",
+                            HasAntiBallisticCapability = false,
+                            MaxEngagementAltitudeFt = 49000.0,
+                            MaxSearchRangeKm = 80.0,
+                            MaxTrackedTargets = 60,
+                            MaxTrackingRangeKm = 60.0,
+                            MissilesPerLauncher = 6
+                        },
+                        new
+                        {
+                            Id = 411,
+                            CategoryId = 39,
+                            Country = "Güney Kore",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Güney Kore ordusunun kritik tesislerini ve birliklerini korumak için tasarlanmış mobil alçak irtifa hava savunma sistemi.",
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "Hanwha Defense / LIG Nex1",
+                            Name = "K-SAM Chunma (Pegasus)",
+                            Slug = "k-sam-chunma-pegasus",
+                            HasAntiBallisticCapability = false,
+                            MaxEngagementAltitudeFt = 16000.0,
+                            MaxSearchRangeKm = 20.0,
+                            MaxTrackedTargets = 20,
+                            MaxTrackingRangeKm = 16.0,
+                            MissilesPerLauncher = 8
+                        },
+                        new
+                        {
+                            Id = 412,
+                            CategoryId = 39,
+                            Country = "Güney Kore",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Güney Kore yapımı, orta irtifadaki hava tehditlerine (uçaklar ve seyir füzeleri) karşı geliştirilmiş ilk nesil Cheongung hava savunma sistemi.",
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "LIG Nex1 / Hanwha Systems",
+                            Name = "Cheongung I (M-SAM)",
+                            Slug = "cheongung-i-m-sam",
+                            HasAntiBallisticCapability = false,
+                            MaxEngagementAltitudeFt = 49000.0,
+                            MaxSearchRangeKm = 100.0,
+                            MaxTrackedTargets = 40,
+                            MaxTrackingRangeKm = 80.0,
+                            MissilesPerLauncher = 8
+                        },
+                        new
+                        {
+                            Id = 413,
+                            CategoryId = 39,
+                            Country = "Güney Kore",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Güney Kore'nin katmanlı füze savunma kalkanı (KAMD) kapsamında geliştirdiği, üst irtifadaki balistik füzeleri ve hava tehditlerini önleme amaçlı uzun menzilli hava savunma sistemi.",
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "LIG Nex1 / Hanwha Systems",
+                            Name = "L-SAM",
+                            Slug = "l-sam",
+                            HasAntiBallisticCapability = true,
+                            MaxEngagementAltitudeFt = 190000.0,
+                            MaxSearchRangeKm = 300.0,
+                            MaxTrackedTargets = 100,
+                            MaxTrackingRangeKm = 250.0,
+                            MissilesPerLauncher = 6
+                        },
+                        new
+                        {
+                            Id = 414,
+                            CategoryId = 39,
+                            Country = "Güney Kore",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Cheongung I'in geliştirilmiş versiyonu olan orta irtifa hava savunma sistemi. Daha gelişmiş radar, artırılmış menzil ve çoklu hedef takip yeteneği sunar.",
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "LIG Nex1 / Hanwha Systems",
+                            Name = "Cheongung II (M-SAM Block II)",
+                            Slug = "cheongung-ii-m-sam-block-ii",
+                            HasAntiBallisticCapability = false,
+                            MaxEngagementAltitudeFt = 60000.0,
+                            MaxSearchRangeKm = 150.0,
+                            MaxTrackedTargets = 50,
+                            MaxTrackingRangeKm = 120.0,
+                            MissilesPerLauncher = 8
+                        },
+                        new
+                        {
+                            Id = 415,
+                            CategoryId = 39,
+                            Country = "Güney Kore",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Güney Kore'nin taşınabilir hava savunma sistemi (MANPADS). Helikopterler, İHA'lar ve alçak uçan uçaklara karşı etkili.",
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "LIG Nex1",
+                            Name = "KP-SAM (Shin-Gung)",
+                            Slug = "kp-sam-shin-gung",
+                            HasAntiBallisticCapability = false,
+                            MaxEngagementAltitudeFt = 12000.0,
+                            MaxSearchRangeKm = 8.0,
+                            MaxTrackedTargets = 2,
+                            MaxTrackingRangeKm = 6.0,
+                            MissilesPerLauncher = 1
+                        },
+                        new
+                        {
+                            Id = 416,
+                            CategoryId = 39,
+                            Country = "Güney Kore",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Güney Kore yapımı kendinden tahrikli uçaksavar topu (SPAAG). 30mm çift namlulu top ve kısa menzilli füzelerle donatılmıştır.",
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "Doosan DST / S&T Dynamics",
+                            Name = "Biho (K30)",
+                            Slug = "biho-k30",
+                            HasAntiBallisticCapability = false,
+                            MaxEngagementAltitudeFt = 10000.0,
+                            MaxSearchRangeKm = 15.0,
+                            MaxTrackedTargets = 10,
+                            MaxTrackingRangeKm = 12.0,
+                            MissilesPerLauncher = 4
+                        },
+                        new
+                        {
+                            Id = 417,
+                            CategoryId = 39,
+                            Country = "Güney Kore",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "K-SAM Chunma'nın geliştirilmiş versiyonu olan alçak irtifa hava savunma sistemi. Daha modern radar ve geliştirilmiş füze teknolojisi kullanır.",
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "Hanwha Defense / LIG Nex1",
+                            Name = "Cheonma (K-SAM Block II)",
+                            Slug = "cheonma-k-sam-block-ii",
+                            HasAntiBallisticCapability = false,
+                            MaxEngagementAltitudeFt = 20000.0,
+                            MaxSearchRangeKm = 25.0,
+                            MaxTrackedTargets = 25,
+                            MaxTrackingRangeKm = 20.0,
+                            MissilesPerLauncher = 8
+                        },
+                        new
+                        {
+                            Id = 418,
+                            CategoryId = 39,
+                            Country = "ABD",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Patriot sisteminin PAC-2 konfigürasyonu. Öncelikle geleneksel hava tehditlerine (uçaklar, helikopterler, seyir füzeleri) karşı etkili, sınırlı balistik füze savunma yeteneği vardır.",
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "Raytheon / Lockheed Martin",
+                            Name = "MIM-104 Patriot (PAC-2)",
+                            Slug = "mim-104-patriot-pac-2",
+                            HasAntiBallisticCapability = false,
+                            MaxEngagementAltitudeFt = 60000.0,
+                            MaxSearchRangeKm = 100.0,
+                            MaxTrackedTargets = 100,
+                            MaxTrackingRangeKm = 90.0,
+                            MissilesPerLauncher = 4
                         });
                 });
 
@@ -1230,6 +1719,50 @@ namespace DefenceDB.DAL.update.sql
                     b.ToTable("Destroyers", (string)null);
                 });
 
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.ElectricNuclearPower", b =>
+                {
+                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
+
+                    b.Property<double?>("PowerOutputMw")
+                        .HasColumnType("float");
+
+                    b.Property<string>("SystemType")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.ToTable("ElectricNuclearPowers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 331,
+                            CategoryId = 34,
+                            Country = "ABD",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "General Electric",
+                            Name = "S9G Nükleer Reaktör",
+                            Slug = "s9g-nuclear-reactor",
+                            PowerOutputMw = 30.0,
+                            SystemType = "Nükleer Reaktör"
+                        },
+                        new
+                        {
+                            Id = 332,
+                            CategoryId = 34,
+                            Country = "Almanya",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "Siemens",
+                            Name = "Siemens PEM Yakıt Hücresi (AIP)",
+                            Slug = "siemens-pem-aip",
+                            PowerOutputMw = 0.23999999999999999,
+                            SystemType = "AIP (Hava Bağımsız Tahrik)"
+                        });
+                });
+
             modelBuilder.Entity("DefenceDB.EL.Models.Products.FastAttackCraft", b =>
                 {
                     b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
@@ -1510,6 +2043,66 @@ namespace DefenceDB.DAL.update.sql
                     b.ToTable("HypersonicGlideVehicles", (string)null);
                 });
 
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.KamikazeUAV", b =>
+                {
+                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
+
+                    b.Property<double?>("EnduranceHours")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("MaxSpeedKmh")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("RangeKm")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("WarheadWeightKg")
+                        .HasColumnType("float");
+
+                    b.ToTable("KamikazeUAVs", (string)null);
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.KamikazeUSV", b =>
+                {
+                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
+
+                    b.Property<double?>("MaxSpeedKnots")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("RangeNauticalMiles")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("WarheadWeightKg")
+                        .HasColumnType("float");
+
+                    b.ToTable("KamikazeUSVs", (string)null);
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.MarineGasTurbine", b =>
+                {
+                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
+
+                    b.Property<double?>("ShaftHorsePowerHp")
+                        .HasColumnType("float");
+
+                    b.ToTable("MarineGasTurbines", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 309,
+                            CategoryId = 37,
+                            Country = "ABD",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "General Electric",
+                            Name = "GE LM2500",
+                            Slug = "ge-lm2500",
+                            ShaftHorsePowerHp = 33600.0
+                        });
+                });
+
             modelBuilder.Entity("DefenceDB.EL.Models.Products.Minehunter", b =>
                 {
                     b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
@@ -1552,6 +2145,119 @@ namespace DefenceDB.DAL.update.sql
                         .HasColumnType("int");
 
                     b.ToTable("NavalRadars", (string)null);
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.PistonEngine", b =>
+                {
+                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
+
+                    b.Property<int?>("Cylinders")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FuelType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<double?>("HorsePower")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("TorqueNm")
+                        .HasColumnType("float");
+
+                    b.ToTable("PistonEngines", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 311,
+                            CategoryId = 32,
+                            Country = "Türkiye",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "TEI",
+                            Name = "TEI-PD170",
+                            Slug = "tei-pd170",
+                            Cylinders = 4,
+                            FuelType = "Dizel / JP-8",
+                            HorsePower = 170.0
+                        },
+                        new
+                        {
+                            Id = 312,
+                            CategoryId = 32,
+                            Country = "Türkiye",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "BMC Power",
+                            Name = "BATU",
+                            Slug = "batu",
+                            Cylinders = 12,
+                            FuelType = "Dizel",
+                            HorsePower = 1500.0
+                        },
+                        new
+                        {
+                            Id = 313,
+                            CategoryId = 32,
+                            Country = "Almanya",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "MTU",
+                            Name = "MTU MB 873 Ka-501",
+                            Slug = "mtu-mb-873",
+                            Cylinders = 12,
+                            FuelType = "Dizel",
+                            HorsePower = 1500.0
+                        });
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.RocketMotor", b =>
+                {
+                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
+
+                    b.Property<double?>("BurnTimeSeconds")
+                        .HasColumnType("float");
+
+                    b.Property<string>("PropellantType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<double?>("ThrustKn")
+                        .HasColumnType("float");
+
+                    b.ToTable("RocketMotors", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 321,
+                            CategoryId = 33,
+                            Country = "Türkiye",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "Roketsan",
+                            Name = "Roketsan Katı Yakıtlı Roket Motoru",
+                            Slug = "roketsan-kati-yakitli-motor",
+                            PropellantType = "Katı"
+                        },
+                        new
+                        {
+                            Id = 322,
+                            CategoryId = 33,
+                            Country = "ABD",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "SpaceX",
+                            Name = "Raptor",
+                            Slug = "raptor-engine",
+                            PropellantType = "Sıvı (Metan/LOX)",
+                            ThrustKn = 2200.0
+                        });
                 });
 
             modelBuilder.Entity("DefenceDB.EL.Models.Products.Submarine", b =>
@@ -1860,6 +2566,474 @@ namespace DefenceDB.DAL.update.sql
                     b.ToTable("TrainerAircrafts", (string)null);
                 });
 
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.TurbofanEngine", b =>
+                {
+                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
+
+                    b.Property<double?>("BypassRatio")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("DryThrustLbf")
+                        .HasColumnType("float");
+
+                    b.Property<bool>("HasAfterburner")
+                        .HasColumnType("bit");
+
+                    b.Property<double?>("MaxThrustLbf")
+                        .HasColumnType("float");
+
+                    b.ToTable("TurbofanEngines", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 301,
+                            CategoryId = 31,
+                            Country = "Türkiye",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "TEI",
+                            Name = "TEI-TF6000",
+                            Slug = "tei-tf6000",
+                            BypassRatio = 1.0800000000000001,
+                            DryThrustLbf = 6000.0,
+                            HasAfterburner = false,
+                            MaxThrustLbf = 6000.0
+                        },
+                        new
+                        {
+                            Id = 302,
+                            CategoryId = 31,
+                            Country = "Türkiye",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "TEI",
+                            Name = "TEI-TF10000",
+                            Slug = "tei-tf10000",
+                            BypassRatio = 1.0800000000000001,
+                            DryThrustLbf = 6000.0,
+                            HasAfterburner = true,
+                            MaxThrustLbf = 10000.0
+                        },
+                        new
+                        {
+                            Id = 303,
+                            CategoryId = 31,
+                            Country = "ABD",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "Pratt & Whitney",
+                            Name = "F135-PW-100",
+                            Slug = "f135-pw-100",
+                            BypassRatio = 0.56999999999999995,
+                            DryThrustLbf = 28000.0,
+                            HasAfterburner = true,
+                            MaxThrustLbf = 43000.0
+                        },
+                        new
+                        {
+                            Id = 304,
+                            CategoryId = 31,
+                            Country = "ABD",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "General Electric",
+                            Name = "F110-GE-129",
+                            Slug = "f110-ge-129",
+                            BypassRatio = 0.76000000000000001,
+                            DryThrustLbf = 17155.0,
+                            HasAfterburner = true,
+                            MaxThrustLbf = 29500.0
+                        },
+                        new
+                        {
+                            Id = 305,
+                            CategoryId = 31,
+                            Country = "Rusya",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "NPO Saturn",
+                            Name = "AL-31F",
+                            Slug = "al-31f",
+                            BypassRatio = 0.58999999999999997,
+                            DryThrustLbf = 17130.0,
+                            HasAfterburner = true,
+                            MaxThrustLbf = 27560.0
+                        });
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.TurbojetEngine", b =>
+                {
+                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
+
+                    b.Property<double?>("DryThrustLbf")
+                        .HasColumnType("float");
+
+                    b.Property<bool>("HasAfterburner")
+                        .HasColumnType("bit");
+
+                    b.Property<double?>("MaxThrustLbf")
+                        .HasColumnType("float");
+
+                    b.ToTable("TurbojetEngines", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 306,
+                            CategoryId = 35,
+                            Country = "Türkiye",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "Kale Arge",
+                            Name = "Kale KTJ-3200",
+                            Slug = "kale-ktj-3200",
+                            DryThrustLbf = 720.0,
+                            HasAfterburner = false,
+                            MaxThrustLbf = 720.0
+                        });
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.TurbopropEngine", b =>
+                {
+                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
+
+                    b.Property<double?>("ShaftHorsePowerHp")
+                        .HasColumnType("float");
+
+                    b.ToTable("TurbopropEngines", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 308,
+                            CategoryId = 36,
+                            Country = "Kanada",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "Pratt & Whitney Canada",
+                            Name = "PT6A-67A",
+                            Slug = "pt6a-67a",
+                            ShaftHorsePowerHp = 1200.0
+                        });
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.TurboshaftEngine", b =>
+                {
+                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
+
+                    b.Property<double?>("ShaftHorsePowerHp")
+                        .HasColumnType("float");
+
+                    b.ToTable("TurboshaftEngines", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 307,
+                            CategoryId = 38,
+                            Country = "Türkiye",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "TEI",
+                            Name = "TEI-TS1400",
+                            Slug = "tei-ts1400",
+                            ShaftHorsePowerHp = 1400.0
+                        });
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.UAV", b =>
+                {
+                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
+
+                    b.Property<double?>("CruisingSpeedKmh")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("EnduranceHours")
+                        .HasColumnType("float");
+
+                    b.Property<int?>("MaxAltitudeFeet")
+                        .HasColumnType("int");
+
+                    b.Property<double?>("PayloadCapacityKg")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("WingSpanMeters")
+                        .HasColumnType("float");
+
+                    b.ToTable("UAVs", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 201,
+                            CategoryId = 24,
+                            Country = "Türkiye",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "Baykar",
+                            Name = "Bayraktar TB2",
+                            Slug = "bayraktar-tb2",
+                            CruisingSpeedKmh = 130.0,
+                            EnduranceHours = 27.0,
+                            MaxAltitudeFeet = 25000,
+                            PayloadCapacityKg = 150.0,
+                            WingSpanMeters = 12.0
+                        },
+                        new
+                        {
+                            Id = 202,
+                            CategoryId = 24,
+                            Country = "Türkiye",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "Baykar",
+                            Name = "Bayraktar TB3",
+                            Slug = "bayraktar-tb3",
+                            CruisingSpeedKmh = 160.0,
+                            EnduranceHours = 24.0,
+                            MaxAltitudeFeet = 25000,
+                            PayloadCapacityKg = 280.0,
+                            WingSpanMeters = 14.0
+                        },
+                        new
+                        {
+                            Id = 203,
+                            CategoryId = 24,
+                            Country = "Türkiye",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "Baykar",
+                            Name = "Bayraktar Akıncı",
+                            Slug = "bayraktar-akinci",
+                            CruisingSpeedKmh = 277.0,
+                            EnduranceHours = 24.0,
+                            MaxAltitudeFeet = 40000,
+                            PayloadCapacityKg = 1500.0,
+                            WingSpanMeters = 20.0
+                        },
+                        new
+                        {
+                            Id = 204,
+                            CategoryId = 24,
+                            Country = "Türkiye",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "Baykar",
+                            Name = "Bayraktar Kızılelma",
+                            Slug = "bayraktar-kizilelma",
+                            CruisingSpeedKmh = 735.0,
+                            EnduranceHours = 5.0,
+                            MaxAltitudeFeet = 45000,
+                            PayloadCapacityKg = 1500.0,
+                            WingSpanMeters = 10.0
+                        },
+                        new
+                        {
+                            Id = 205,
+                            CategoryId = 24,
+                            Country = "ABD",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "General Atomics",
+                            Name = "MQ-9 Reaper",
+                            Slug = "mq-9-reaper",
+                            CruisingSpeedKmh = 313.0,
+                            EnduranceHours = 27.0,
+                            MaxAltitudeFeet = 50000,
+                            PayloadCapacityKg = 1700.0,
+                            WingSpanMeters = 20.0
+                        },
+                        new
+                        {
+                            Id = 206,
+                            CategoryId = 24,
+                            Country = "ABD",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "Northrop Grumman",
+                            Name = "RQ-4 Global Hawk",
+                            Slug = "rq-4-global-hawk",
+                            CruisingSpeedKmh = 575.0,
+                            EnduranceHours = 34.0,
+                            MaxAltitudeFeet = 60000,
+                            PayloadCapacityKg = 1360.0,
+                            WingSpanMeters = 39.899999999999999
+                        },
+                        new
+                        {
+                            Id = 207,
+                            CategoryId = 24,
+                            Country = "Çin",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "Chengdu",
+                            Name = "Wing Loong II",
+                            Slug = "wing-loong-ii",
+                            CruisingSpeedKmh = 370.0,
+                            EnduranceHours = 32.0,
+                            MaxAltitudeFeet = 32500,
+                            PayloadCapacityKg = 480.0,
+                            WingSpanMeters = 20.5
+                        },
+                        new
+                        {
+                            Id = 208,
+                            CategoryId = 24,
+                            Country = "Çin",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "CASC",
+                            Name = "CH-4 Rainbow",
+                            Slug = "ch-4-rainbow",
+                            CruisingSpeedKmh = 235.0,
+                            EnduranceHours = 40.0,
+                            MaxAltitudeFeet = 23600,
+                            PayloadCapacityKg = 345.0,
+                            WingSpanMeters = 18.0
+                        },
+                        new
+                        {
+                            Id = 209,
+                            CategoryId = 24,
+                            Country = "Rusya",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "Kronshtadt Group",
+                            Name = "Orion",
+                            Slug = "orion",
+                            CruisingSpeedKmh = 120.0,
+                            EnduranceHours = 24.0,
+                            MaxAltitudeFeet = 24600,
+                            PayloadCapacityKg = 250.0,
+                            WingSpanMeters = 16.300000000000001
+                        },
+                        new
+                        {
+                            Id = 210,
+                            CategoryId = 24,
+                            Country = "Rusya",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "Sukhoi",
+                            Name = "S-70 Okhotnik",
+                            Slug = "s-70-okhotnik",
+                            CruisingSpeedKmh = 1000.0,
+                            EnduranceHours = 12.0,
+                            MaxAltitudeFeet = 34400,
+                            PayloadCapacityKg = 2800.0,
+                            WingSpanMeters = 20.0
+                        },
+                        new
+                        {
+                            Id = 211,
+                            CategoryId = 24,
+                            Country = "Türkiye",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = false,
+                            Manufacturer = "TUSAŞ",
+                            Name = "Anka-S",
+                            Slug = "anka-s",
+                            CruisingSpeedKmh = 200.0,
+                            EnduranceHours = 30.0,
+                            MaxAltitudeFeet = 30000,
+                            PayloadCapacityKg = 350.0,
+                            WingSpanMeters = 17.5
+                        },
+                        new
+                        {
+                            Id = 212,
+                            CategoryId = 24,
+                            Country = "Türkiye",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "TUSAŞ",
+                            Name = "Aksungur",
+                            Slug = "aksungur",
+                            CruisingSpeedKmh = 250.0,
+                            EnduranceHours = 50.0,
+                            MaxAltitudeFeet = 40000,
+                            PayloadCapacityKg = 750.0,
+                            WingSpanMeters = 24.0
+                        },
+                        new
+                        {
+                            Id = 213,
+                            CategoryId = 24,
+                            Country = "Türkiye",
+                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            IsShowcase = true,
+                            Manufacturer = "TUSAŞ",
+                            Name = "Anka-3",
+                            Slug = "anka-3",
+                            CruisingSpeedKmh = 800.0,
+                            EnduranceHours = 10.0,
+                            MaxAltitudeFeet = 40000,
+                            PayloadCapacityKg = 1200.0,
+                            WingSpanMeters = 12.0
+                        });
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.UGV", b =>
+                {
+                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
+
+                    b.Property<string>("DriveType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<double?>("MaxSpeedKmh")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("OperationalRangeKm")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("WeightKg")
+                        .HasColumnType("float");
+
+                    b.ToTable("UGVs", (string)null);
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.USV", b =>
+                {
+                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
+
+                    b.Property<double?>("DisplacementTons")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("EnduranceHours")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("MaxSpeedKnots")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("OperationalRangeNauticalMiles")
+                        .HasColumnType("float");
+
+                    b.ToTable("USVs", (string)null);
+                });
+
             modelBuilder.Entity("DefenceDB.EL.Models.Category", b =>
                 {
                     b.HasOne("DefenceDB.EL.Models.Category", "ParentCategory")
@@ -1971,6 +3145,15 @@ namespace DefenceDB.DAL.update.sql
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.AirDefenseSystem", b =>
+                {
+                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
+                        .WithOne()
+                        .HasForeignKey("DefenceDB.EL.Models.Products.AirDefenseSystem", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("DefenceDB.EL.Models.Products.AirToAirMissile", b =>
                 {
                     b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
@@ -2052,6 +3235,15 @@ namespace DefenceDB.DAL.update.sql
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.ElectricNuclearPower", b =>
+                {
+                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
+                        .WithOne()
+                        .HasForeignKey("DefenceDB.EL.Models.Products.ElectricNuclearPower", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("DefenceDB.EL.Models.Products.FastAttackCraft", b =>
                 {
                     b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
@@ -2088,6 +3280,33 @@ namespace DefenceDB.DAL.update.sql
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.KamikazeUAV", b =>
+                {
+                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
+                        .WithOne()
+                        .HasForeignKey("DefenceDB.EL.Models.Products.KamikazeUAV", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.KamikazeUSV", b =>
+                {
+                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
+                        .WithOne()
+                        .HasForeignKey("DefenceDB.EL.Models.Products.KamikazeUSV", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.MarineGasTurbine", b =>
+                {
+                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
+                        .WithOne()
+                        .HasForeignKey("DefenceDB.EL.Models.Products.MarineGasTurbine", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("DefenceDB.EL.Models.Products.Minehunter", b =>
                 {
                     b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
@@ -2102,6 +3321,24 @@ namespace DefenceDB.DAL.update.sql
                     b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
                         .WithOne()
                         .HasForeignKey("DefenceDB.EL.Models.Products.NavalRadar", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.PistonEngine", b =>
+                {
+                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
+                        .WithOne()
+                        .HasForeignKey("DefenceDB.EL.Models.Products.PistonEngine", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.RocketMotor", b =>
+                {
+                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
+                        .WithOne()
+                        .HasForeignKey("DefenceDB.EL.Models.Products.RocketMotor", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -2129,6 +3366,69 @@ namespace DefenceDB.DAL.update.sql
                     b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
                         .WithOne()
                         .HasForeignKey("DefenceDB.EL.Models.Products.TrainerAircraft", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.TurbofanEngine", b =>
+                {
+                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
+                        .WithOne()
+                        .HasForeignKey("DefenceDB.EL.Models.Products.TurbofanEngine", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.TurbojetEngine", b =>
+                {
+                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
+                        .WithOne()
+                        .HasForeignKey("DefenceDB.EL.Models.Products.TurbojetEngine", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.TurbopropEngine", b =>
+                {
+                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
+                        .WithOne()
+                        .HasForeignKey("DefenceDB.EL.Models.Products.TurbopropEngine", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.TurboshaftEngine", b =>
+                {
+                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
+                        .WithOne()
+                        .HasForeignKey("DefenceDB.EL.Models.Products.TurboshaftEngine", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.UAV", b =>
+                {
+                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
+                        .WithOne()
+                        .HasForeignKey("DefenceDB.EL.Models.Products.UAV", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.UGV", b =>
+                {
+                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
+                        .WithOne()
+                        .HasForeignKey("DefenceDB.EL.Models.Products.UGV", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DefenceDB.EL.Models.Products.USV", b =>
+                {
+                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
+                        .WithOne()
+                        .HasForeignKey("DefenceDB.EL.Models.Products.USV", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

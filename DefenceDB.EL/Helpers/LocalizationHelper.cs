@@ -70,7 +70,15 @@ public static class LocalizationHelper
         { "EngagementRangeKm", "Angajman Menzili (km)" },
         { "MaxAltitudeKm", "Maksimum İrtifa (km)" },
         { "BallisticType", "Balistik Füze Tipi" },
-        { "PayloadKg", "Taşıma Kapasitesi (Faydalı Yük) (kg)" }
+        { "PayloadKg", "Taşıma Kapasitesi (Faydalı Yük) (kg)" },
+
+        // Hava Savunma Sistemleri
+        { "MaxSearchRangeKm", "Maksimum Arama Menzili (km)" },
+        { "MaxTrackingRangeKm", "Maksimum Takip Menzili (km)" },
+        { "MaxEngagementAltitudeFt", "Maksimum Angajman İrtifası (feet)" },
+        { "MaxTrackedTargets", "Eşzamanlı Takip Edilen Hedef Sayısı" },
+        { "MissilesPerLauncher", "Fırlatıcı Başına Füze Sayısı" },
+        { "HasAntiBallisticCapability", "Anti-Balistik Yeteneği" }
     };
 
     private static readonly Dictionary<string, string> EnNames = new()
@@ -139,7 +147,15 @@ public static class LocalizationHelper
         { "EngagementRangeKm", "Engagement Range (km)" },
         { "MaxAltitudeKm", "Max Altitude (km)" },
         { "BallisticType", "Ballistic Type" },
-        { "PayloadKg", "Payload (kg)" }
+        { "PayloadKg", "Payload (kg)" },
+
+        // Air Defense Systems
+        { "MaxSearchRangeKm", "Maximum Search Range (km)" },
+        { "MaxTrackingRangeKm", "Maximum Tracking Range (km)" },
+        { "MaxEngagementAltitudeFt", "Maximum Engagement Altitude (feet)" },
+        { "MaxTrackedTargets", "Max Tracked Targets" },
+        { "MissilesPerLauncher", "Missiles per Launcher" },
+        { "HasAntiBallisticCapability", "Anti-Ballistic Capability" }
     };
 
     public static string GetDisplayName(string propertyName, string lang = "tr")

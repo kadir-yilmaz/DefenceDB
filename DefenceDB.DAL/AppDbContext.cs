@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using DefenceDB.EL.Models;
 using DefenceDB.EL.Models.Products;
-using DefenceDB.DAL.Seed;
 
 namespace DefenceDB.DAL;
 
@@ -46,6 +45,9 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
     // Land Vehicles
     public DbSet<Tank> Tanks { get; set; } = null!;
 
+    // Air Defense Systems
+    public DbSet<AirDefenseSystem> AirDefenseSystems { get; set; } = null!;
+
     // Unmanned Platforms
     public DbSet<UAV> UAVs { get; set; } = null!;
     public DbSet<USV> USVs { get; set; } = null!;
@@ -68,7 +70,7 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
     {
         base.OnModelCreating(modelBuilder);
 
-        // Apply Configurations
+        // Apply Configurations from Config folder
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
         // TPT Configuration
@@ -97,6 +99,7 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
         modelBuilder.Entity<AirDefenseRadar>().ToTable("AirDefenseRadars");
 
         modelBuilder.Entity<Tank>().ToTable("Tanks");
+        modelBuilder.Entity<AirDefenseSystem>().ToTable("AirDefenseSystems");
 
         modelBuilder.Entity<UAV>().ToTable("UAVs");
         modelBuilder.Entity<USV>().ToTable("USVs");
@@ -113,8 +116,5 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
         modelBuilder.Entity<TurbopropEngine>().ToTable("TurbopropEngines");
         modelBuilder.Entity<TurboshaftEngine>().ToTable("TurboshaftEngines");
         modelBuilder.Entity<MarineGasTurbine>().ToTable("MarineGasTurbines");
-
-        // Apply Product Seeds
-        modelBuilder.SeedProducts();
     }
 }
