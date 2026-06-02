@@ -28,6 +28,10 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
     public DbSet<BomberAircraft> BomberAircrafts { get; set; } = null!;
     public DbSet<FighterAircraft> FighterAircrafts { get; set; } = null!;
     public DbSet<TrainerAircraft> TrainerAircrafts { get; set; } = null!;
+    public DbSet<AirSojAircraft> AirSojAircrafts { get; set; } = null!;
+    public DbSet<CargoAircraft> CargoAircrafts { get; set; } = null!;
+    public DbSet<MaritimePatrolAircraft> MaritimePatrolAircrafts { get; set; } = null!;
+    public DbSet<AwacsAircraft> AwacsAircrafts { get; set; } = null!;
 
     // Ships
     public DbSet<FastAttackCraft> FastAttackCrafts { get; set; } = null!;
@@ -86,6 +90,10 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
         modelBuilder.Entity<BomberAircraft>().ToTable("BomberAircrafts");
         modelBuilder.Entity<FighterAircraft>().ToTable("FighterAircrafts");
         modelBuilder.Entity<TrainerAircraft>().ToTable("TrainerAircrafts");
+        modelBuilder.Entity<AirSojAircraft>().ToTable("AirSojAircrafts");
+        modelBuilder.Entity<CargoAircraft>().ToTable("CargoAircrafts");
+        modelBuilder.Entity<MaritimePatrolAircraft>().ToTable("MaritimePatrolAircrafts");
+        modelBuilder.Entity<AwacsAircraft>().ToTable("AwacsAircrafts");
 
         modelBuilder.Entity<FastAttackCraft>().ToTable("FastAttackCrafts");
         modelBuilder.Entity<Corvette>().ToTable("Corvettes");

@@ -36,10 +36,14 @@ public class CategoryConfig : IEntityTypeConfiguration<Category>
             new Category { Id = 9, Name = "Anti-Radyasyon Füzeleri", Slug = "anti-radyasyon", ParentCategoryId = 1, ModelTypeName = "DefenceDB.EL.Models.Products.AntiRadiationMissile", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
             new Category { Id = 10, Name = "Hipersonik Süzülme Araçları", Slug = "hgv", ParentCategoryId = 1, ModelTypeName = "DefenceDB.EL.Models.Products.HypersonicGlideVehicle", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
 
-            // Uçak Alt Kategorileri (11-13)
+            // Uçak Alt Kategorileri (11-13, 40-43)
             new Category { Id = 11, Name = "Avcı (Fighter)", Slug = "avci-ucaklari", ParentCategoryId = 2, ModelTypeName = "DefenceDB.EL.Models.Products.FighterAircraft", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
             new Category { Id = 12, Name = "Bombardıman", Slug = "bombardiman", ParentCategoryId = 2, ModelTypeName = "DefenceDB.EL.Models.Products.BomberAircraft", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
             new Category { Id = 13, Name = "Eğitim", Slug = "egitim", ParentCategoryId = 2, ModelTypeName = "DefenceDB.EL.Models.Products.TrainerAircraft", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Category { Id = 40, Name = "Hava SOJ", Slug = "hava-soj-ucaklari", ParentCategoryId = 2, ModelTypeName = "DefenceDB.EL.Models.Products.AirSojAircraft", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Category { Id = 41, Name = "Askeri Kargo", Slug = "askeri-kargo-ucaklari", ParentCategoryId = 2, ModelTypeName = "DefenceDB.EL.Models.Products.CargoAircraft", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Category { Id = 42, Name = "Deniz Karakol", Slug = "deniz-karakol-ucaklari", ParentCategoryId = 2, ModelTypeName = "DefenceDB.EL.Models.Products.MaritimePatrolAircraft", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Category { Id = 43, Name = "AWACS", Slug = "awacs-ucaklari", ParentCategoryId = 2, ModelTypeName = "DefenceDB.EL.Models.Products.AwacsAircraft", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
 
             // Gemi Alt Kategorileri (14-18)
             new Category { Id = 14, Name = "Hücumbot", Slug = "hucumbot", ParentCategoryId = 3, ModelTypeName = "DefenceDB.EL.Models.Products.FastAttackCraft", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
