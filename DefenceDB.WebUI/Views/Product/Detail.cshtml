@@ -631,57 +631,6 @@
                 }
             </div>
 
-            <!-- Related Equipment -->
-            @if (Model.SourceRelationships.Any())
-            {
-                <h4 class="text-primary-theme fw-bold mb-4 d-flex align-items-center gap-2">
-                    <i class="bi bi-link-45deg text-warning"></i> Bağlantılı Sistemler & Entegre Donanımlar
-                </h4>
-                <div class="row g-3 mb-4">
-                    @foreach (var rel in Model.SourceRelationships)
-                    {
-                        var targetMainImage = rel.TargetProduct?.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? rel.TargetProduct?.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
-                        
-                        <div class="col-sm-6">
-                            <a href="/Product/Detail/@(rel.TargetProduct?.Id)-@(rel.TargetProduct?.Slug)" class="text-decoration-none">
-                                <div class="card-premium d-flex align-items-center p-3 h-100 gap-3" style="cursor: pointer;">
-                                    <img src="@targetMainImage" alt="@rel.TargetProduct?.Name" class="rounded-3" style="width: 60px; height: 60px; object-fit: cover;" onerror="handleImageError(this, '@(rel.TargetProduct?.Name?.Replace("'", "\\'") ?? "")')" />
-                                    <div>
-                                        <div class="text-secondary-theme fs-8 mb-1">@rel.RelationType</div>
-                                        <h6 class="text-primary-theme fw-bold mb-0">@rel.TargetProduct?.Name</h6>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                    }
-                </div>
-            }
-
-            <!-- Reverse Related Equipment (Bağlantılı Platformlar) -->
-            @if (Model.TargetRelationships.Any())
-            {
-                <h4 class="text-primary-theme fw-bold mb-4 d-flex align-items-center gap-2">
-                    <i class="bi bi-airplane text-warning"></i> Bağlantılı Platformlar
-                </h4>
-                <div class="row g-3 mb-4">
-                    @foreach (var rel in Model.TargetRelationships)
-                    {
-                        var sourceMainImage = rel.SourceProduct?.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? rel.SourceProduct?.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
-                        
-                        <div class="col-sm-6">
-                            <a href="/Product/Detail/@(rel.SourceProduct?.Id)-@(rel.SourceProduct?.Slug)" class="text-decoration-none">
-                                <div class="card-premium d-flex align-items-center p-3 h-100 gap-3" style="cursor: pointer;">
-                                    <img src="@sourceMainImage" alt="@rel.SourceProduct?.Name" class="rounded-3" style="width: 60px; height: 60px; object-fit: cover;" onerror="handleImageError(this, '@(rel.SourceProduct?.Name?.Replace("'", "\\'") ?? "")')" />
-                                    <div>
-                                        <div class="text-secondary-theme fs-8 mb-1">Bu sistemin kullanıldığı platform</div>
-                                        <h6 class="text-primary-theme fw-bold mb-0">@rel.SourceProduct?.Name</h6>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                    }
-                </div>
-            }
         </div>
 
         <!-- Right Column: Specs -->
@@ -792,6 +741,83 @@
             </div>
         </div>
     </div>
+
+    @{
+        var allRelations = new List<dynamic>();
+        if (Model.SourceRelationships != null)
+        {
+            foreach (var r in Model.SourceRelationships)
+            {
+                allRelations.Add(new {
+                    Id = r.TargetProduct?.Id,
+                    Slug = r.TargetProduct?.Slug,
+                    Name = r.TargetProduct?.Name,
+                    Image = r.TargetProduct?.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? r.TargetProduct?.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg",
+                    RelationLabel = r.RelationType ?? "Bağlantılı Donanım/Mühimmat"
+                });
+            }
+        }
+        if (Model.TargetRelationships != null)
+        {
+            foreach (var r in Model.TargetRelationships)
+            {
+                allRelations.Add(new {
+                    Id = r.SourceProduct?.Id,
+                    Slug = r.SourceProduct?.Slug,
+                    Name = r.SourceProduct?.Name,
+                    Image = r.SourceProduct?.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? r.SourceProduct?.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg",
+                    RelationLabel = "Bağlantılı Donanım/Mühimmat"
+                });
+            }
+        }
+    }
+
+    @if (allRelations.Any())
+    {
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="d-flex align-items-end justify-content-between gap-3 mb-3">
+                    <div>
+                        <h4 class="text-primary-theme fw-bold mb-1 d-flex align-items-center gap-2">
+                            <i class="bi bi-link-45deg text-warning"></i> Bağlantılı Platformlar
+                        </h4>
+                        <p class="text-secondary-theme mb-0">Bu sistemle ilişkili olan mühimmat, radar ve diğer platformlar</p>
+                    </div>
+                    @if (allRelations.Count > 4)
+                    {
+                        <div class="d-none d-md-flex gap-2">
+                            <button class="btn btn-outline-secondary rounded-circle" style="width: 40px; height: 40px;" onclick="document.getElementById('relationsRail').scrollBy({left:-300, behavior:'smooth'})">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary rounded-circle" style="width: 40px; height: 40px;" onclick="document.getElementById('relationsRail').scrollBy({left:300, behavior:'smooth'})">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                    }
+                </div>
+                
+                <div class="position-relative">
+                    <div class="rivals-rail" id="relationsRail" style="padding-bottom: 20px;">
+                        @foreach (var rel in allRelations)
+                        {
+                            <div class="rival-card">
+                                <a href="/Product/Detail/@(rel.Id)-@(rel.Slug)" class="text-decoration-none">
+                                    <div class="card-premium h-100 overflow-hidden d-flex flex-column" style="cursor: pointer; transition: transform 0.2s;">
+                                        <div class="card-img-wrapper" style="height: 140px;">
+                                            <img src="@rel.Image" class="card-img-top w-100 h-100" style="object-fit: cover;" alt="@rel.Name" loading="lazy" onerror="handleImageError(this, '@(rel.Name?.Replace("'", "\\'") ?? "")')" />
+                                        </div>
+                                        <div class="p-3 d-flex align-items-center justify-content-center flex-grow-1 text-center">
+                                            <h6 class="fw-bold mb-0 text-primary-theme" style="font-size: 1rem;">@rel.Name</h6>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 
     @if (!string.IsNullOrEmpty(Model.VideoUrl))
     {
