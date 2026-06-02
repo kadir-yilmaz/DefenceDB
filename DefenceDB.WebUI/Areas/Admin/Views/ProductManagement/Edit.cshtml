@@ -138,7 +138,7 @@
                             var propValue = prop.GetValue(Model);
                             
                             <div class="mb-3">
-                                <label class="form-label">@prop.Name</label>
+                                <label class="form-label">@DefenceDB.EL.Helpers.LocalizationHelper.GetDisplayName(prop.Name, "tr")</label>
                                 
                                 @if (prop.Name == "FighterGeneration")
                                 {
@@ -168,6 +168,41 @@
                                 else if (prop.PropertyType == typeof(double) || prop.PropertyType == typeof(double?))
                                 {
                                     <input type="text" name="@prop.Name" value="@(propValue?.ToString()?.Replace(",", "."))" class="form-control" />
+                                }
+                                else if (prop.Name == "FrequencyBand")
+                                {
+                                    string[] availableBands = new[] { "L-Band", "S-Band", "C-Band", "X-Band", "Ku-Band", "Ka-Band", "UHF", "VHF" };
+                                    var currentValStr = (propValue?.ToString() ?? "");
+                                    
+                                    <div class="d-flex flex-wrap gap-3 mb-2">
+                                        @foreach(var band in availableBands)
+                                        {
+                                            bool isChecked = currentValStr.Contains(band);
+                                            <div class="form-check custom-checkbox">
+                                                <input class="form-check-input freq-checkbox" type="checkbox" value="@band" id="freq_@band" @(isChecked ? "checked" : "")>
+                                                <label class="form-check-label fw-bold" for="freq_@band">@band</label>
+                                            </div>
+                                        }
+                                    </div>
+                                    <input type="hidden" name="FrequencyBand" id="FrequencyBandHidden" value="@currentValStr" />
+                                }
+                                else if (prop.Name == "CoolingSystem")
+                                {
+                                    string[] availableCooling = new[] { "Sıvı Soğutma (Liquid)", "Hava Soğutma (Air)" };
+                                    var currentValStr = (propValue?.ToString() ?? "");
+                                    
+                                    <div class="d-flex flex-wrap gap-3 mb-2">
+                                        @foreach(var sys in availableCooling)
+                                        {
+                                            var sysId = sys.Split(' ')[0];
+                                            bool isChecked = currentValStr.Contains(sysId);
+                                            <div class="form-check custom-checkbox">
+                                                <input class="form-check-input cooling-checkbox" type="checkbox" value="@sys" id="cooling_@sysId" @(isChecked ? "checked" : "")>
+                                                <label class="form-check-label" for="cooling_@sysId">@sys</label>
+                                            </div>
+                                        }
+                                    </div>
+                                    <input type="hidden" name="CoolingSystem" id="CoolingSystemHidden" value="@currentValStr" />
                                 }
                                 else if (prop.Name == "GuidanceType")
                                 {
@@ -762,6 +797,22 @@
                         selectedFoxes.push($(this).val());
                     });
                     $('#FoxCodeHidden').val(selectedFoxes.join(' / '));
+                }
+
+                if ($('.freq-checkbox').length > 0) {
+                    var selectedFreqs = [];
+                    $('.freq-checkbox:checked').each(function() {
+                        selectedFreqs.push($(this).val());
+                    });
+                    $('#FrequencyBandHidden').val(selectedFreqs.join(' / '));
+                }
+
+                if ($('.cooling-checkbox').length > 0) {
+                    var selectedCooling = [];
+                    $('.cooling-checkbox:checked').each(function() {
+                        selectedCooling.push($(this).val());
+                    });
+                    $('#CoolingSystemHidden').val(selectedCooling.join(' / '));
                 }
                 
                 var mfgs = $('#manufacturerSelect').val();

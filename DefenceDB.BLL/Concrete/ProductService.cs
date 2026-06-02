@@ -59,8 +59,10 @@ public class ProductService : IProductService
             .Include(p => p.Images)
             .Include(p => p.SourceRelationships)
                 .ThenInclude(r => r.TargetProduct)
+                    .ThenInclude(tp => tp.Images)
             .Include(p => p.TargetRelationships)
                 .ThenInclude(r => r.SourceProduct)
+                    .ThenInclude(sp => sp.Images)
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
@@ -71,8 +73,10 @@ public class ProductService : IProductService
             .Include(p => p.Images)
             .Include(p => p.SourceRelationships)
                 .ThenInclude(r => r.TargetProduct)
+                    .ThenInclude(tp => tp.Images)
             .Include(p => p.TargetRelationships)
                 .ThenInclude(r => r.SourceProduct)
+                    .ThenInclude(sp => sp.Images)
             .FirstOrDefaultAsync(p => p.Slug == slug);
     }
 

@@ -31,24 +31,6 @@ public static class StringExtensions
         return str;
     }
 
-    public static string ToUserFriendlyName(this string text)
-    {
-        if (string.IsNullOrWhiteSpace(text)) return text;
-        
-        // Split camel case: HasAesaRadar -> Has Aesa Radar
-        var result = Regex.Replace(text, "([a-z])([A-Z])", "$1 $2");
-        
-        // Temizlemeler
-        if (result.StartsWith("Has ")) result = result.Substring(4);
-        if (result.StartsWith("Is ")) result = result.Substring(3);
-
-        result = result.Replace(" Km", " (km)")
-                       .Replace(" Kg", " (kg)")
-                       .Replace(" Mach", " (Mach)");
-                       
-        return result;
-    }
-
     public static string? GetYouTubeVideoId(this string url)
     {
         if (string.IsNullOrWhiteSpace(url)) return null;

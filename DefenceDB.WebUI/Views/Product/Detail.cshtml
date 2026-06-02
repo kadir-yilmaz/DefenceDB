@@ -637,7 +637,7 @@
                 <h4 class="text-primary-theme fw-bold mb-4 d-flex align-items-center gap-2">
                     <i class="bi bi-link-45deg text-warning"></i> Bağlantılı Sistemler & Entegre Donanımlar
                 </h4>
-                <div class="row g-3">
+                <div class="row g-3 mb-4">
                     @foreach (var rel in Model.SourceRelationships)
                     {
                         var targetMainImage = rel.TargetProduct?.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? rel.TargetProduct?.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
@@ -649,6 +649,32 @@
                                     <div>
                                         <div class="text-secondary-theme fs-8 mb-1">@rel.RelationType</div>
                                         <h6 class="text-primary-theme fw-bold mb-0">@rel.TargetProduct?.Name</h6>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    }
+                </div>
+            }
+
+            <!-- Reverse Related Equipment (Bağlantılı Platformlar) -->
+            @if (Model.TargetRelationships.Any())
+            {
+                <h4 class="text-primary-theme fw-bold mb-4 d-flex align-items-center gap-2">
+                    <i class="bi bi-airplane text-warning"></i> Bağlantılı Platformlar
+                </h4>
+                <div class="row g-3 mb-4">
+                    @foreach (var rel in Model.TargetRelationships)
+                    {
+                        var sourceMainImage = rel.SourceProduct?.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? rel.SourceProduct?.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
+                        
+                        <div class="col-sm-6">
+                            <a href="/Product/Detail/@(rel.SourceProduct?.Id)-@(rel.SourceProduct?.Slug)" class="text-decoration-none">
+                                <div class="card-premium d-flex align-items-center p-3 h-100 gap-3" style="cursor: pointer;">
+                                    <img src="@sourceMainImage" alt="@rel.SourceProduct?.Name" class="rounded-3" style="width: 60px; height: 60px; object-fit: cover;" onerror="handleImageError(this, '@(rel.SourceProduct?.Name?.Replace("'", "\\'") ?? "")')" />
+                                    <div>
+                                        <div class="text-secondary-theme fs-8 mb-1">Bu sistemin kullanıldığı platform</div>
+                                        <h6 class="text-primary-theme fw-bold mb-0">@rel.SourceProduct?.Name</h6>
                                     </div>
                                 </div>
                             </a>
@@ -705,7 +731,7 @@
                         {
                             var value = prop.GetValue(Model);
                             <li class="spec-item d-flex align-items-center">
-                                <div class="spec-label">@prop.Name.ToUserFriendlyName()</div>
+                                <div class="spec-label">@DefenceDB.EL.Helpers.LocalizationHelper.GetDisplayName(prop.Name, "tr")</div>
                                 @if (prop.PropertyType == typeof(bool) || prop.PropertyType == typeof(bool?))
                                 {
                                     if (value is bool bVal)
