@@ -473,7 +473,7 @@ public class ProductManagementController : Controller
 
     private static async Task<string> SaveOptimizedProductImageAsync(IFormFile file, string uploadsFolder, string slug)
     {
-        string uniqueFileName = $"{slug}-{Guid.NewGuid().ToString()[..8]}.jpg";
+        string uniqueFileName = $"{slug}-{Guid.NewGuid().ToString()[..8]}.webp";
         string filePath = Path.Combine(uploadsFolder, uniqueFileName);
         string thumbsFolder = Path.Combine(uploadsFolder, "thumbs");
         string thumbPath = Path.Combine(thumbsFolder, uniqueFileName);
@@ -495,9 +495,9 @@ public class ProductManagementController : Controller
 
         image.Metadata.ExifProfile = null;
 
-        await image.SaveAsJpegAsync(filePath, new JpegEncoder
+        await image.SaveAsWebpAsync(filePath, new SixLabors.ImageSharp.Formats.Webp.WebpEncoder
         {
-            Quality = 82
+            Quality = 80
         });
 
         using var thumb = image.Clone(x => x.Resize(new ResizeOptions
@@ -506,9 +506,9 @@ public class ProductManagementController : Controller
             Mode = ResizeMode.Crop
         }));
 
-        await thumb.SaveAsJpegAsync(thumbPath, new JpegEncoder
+        await thumb.SaveAsWebpAsync(thumbPath, new SixLabors.ImageSharp.Formats.Webp.WebpEncoder
         {
-            Quality = 76
+            Quality = 75
         });
 
         return uniqueFileName;

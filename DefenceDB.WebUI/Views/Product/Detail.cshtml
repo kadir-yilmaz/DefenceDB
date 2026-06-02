@@ -752,6 +752,7 @@
                     Id = r.TargetProduct?.Id,
                     Slug = r.TargetProduct?.Slug,
                     Name = r.TargetProduct?.Name,
+                    CategoryName = r.TargetProduct?.Category?.Name,
                     Image = r.TargetProduct?.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? r.TargetProduct?.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg",
                     RelationLabel = r.RelationType ?? "Bağlantılı Donanım/Mühimmat"
                 });
@@ -765,6 +766,7 @@
                     Id = r.SourceProduct?.Id,
                     Slug = r.SourceProduct?.Slug,
                     Name = r.SourceProduct?.Name,
+                    CategoryName = r.SourceProduct?.Category?.Name,
                     Image = r.SourceProduct?.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? r.SourceProduct?.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg",
                     RelationLabel = "Bağlantılı Donanım/Mühimmat"
                 });
@@ -809,7 +811,11 @@
                                         <div class="card-img-wrapper" style="height: 140px;">
                                             <img src="@rel.Image" class="card-img-top w-100 h-100" style="object-fit: cover;" alt="@rel.Name" loading="lazy" onerror="handleImageError(this, '@(rel.Name?.Replace("'", "\\'") ?? "")')" />
                                         </div>
-                                        <div class="p-3 d-flex align-items-center justify-content-center flex-grow-1 text-center">
+                                        <div class="p-3 d-flex flex-column align-items-center justify-content-center flex-grow-1 text-center">
+                                            @if (rel.CategoryName != null)
+                                            {
+                                                <span class="badge bg-warning text-dark mb-1" style="font-size: 0.65rem;">@rel.CategoryName</span>
+                                            }
                                             <h6 class="fw-bold mb-0 text-primary-theme" style="font-size: 1rem;">@rel.Name</h6>
                                         </div>
                                     </div>

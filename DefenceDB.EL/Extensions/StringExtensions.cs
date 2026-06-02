@@ -52,4 +52,15 @@ public static class StringExtensions
 
         return Markdig.Markdown.ToHtml(text, pipeline);
     }
+
+    public static string ToPlainText(this string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return text;
+
+        var pipeline = new Markdig.MarkdownPipelineBuilder()
+            .UseAdvancedExtensions()
+            .Build();
+
+        return Markdig.Markdown.ToPlainText(text, pipeline);
+    }
 }

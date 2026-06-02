@@ -58,7 +58,8 @@ jobs:
             "-source:contentPath=`"$publishPath`"",
             "-dest:$destArgs",
             "-allowUntrusted",
-            "-enableRule:AppOffline"
+            "-enableRule:AppOffline",
+            "-enableRule:DoNotDeleteRule"
         )
         
         & $msdeploy $arguments
