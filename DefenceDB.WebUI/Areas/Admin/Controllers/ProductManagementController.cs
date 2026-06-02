@@ -484,11 +484,11 @@ public class ProductManagementController : Controller
         await using var input = file.OpenReadStream();
         using var image = await Image.LoadAsync(input);
 
-        if (image.Width > 1600 || image.Height > 1600)
+        if (image.Width > 1080 || image.Height > 1080)
         {
             image.Mutate(x => x.Resize(new ResizeOptions
             {
-                Size = new Size(1600, 1600),
+                Size = new Size(1080, 1080),
                 Mode = ResizeMode.Max
             }));
         }
@@ -512,6 +512,19 @@ public class ProductManagementController : Controller
         });
 
         return uniqueFileName;
+    }
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleShowcase(int id, bool state)
+    {
+        var product = await _productService.GetProductByIdAsync(id);
+        if (product == null)
+            return Json(new { success = false, message = "Ürün bulunamadı." });
+
+        product.IsShowcase = state;
+        await _productService.UpdateProductAsync(product);
+
+        return Json(new { success = true, message = "Ürün vitrin durumu güncellendi." });
     }
 
 }

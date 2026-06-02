@@ -9,14 +9,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css?v=5" asp-append-version="true" />
 </head>
 <body>
     <!-- Sidebar -->
     <aside class="admin-sidebar" id="adminSidebar">
         <div class="sidebar-header">
             <div class="sidebar-brand">
-                <i class="bi bi-shield-fill-check"></i>
                 <span>DefenceDB</span>
             </div>
             <small class="sidebar-badge">ADMIN PANEL</small>
@@ -48,14 +47,6 @@
                     </a>
                 </div>
             }
-
-            <div class="nav-section">
-                <span class="nav-section-title">DİĞER</span>
-                <a href="/" class="nav-link" target="_blank">
-                    <i class="bi bi-globe2"></i>
-                    <span>Siteyi Görüntüle</span>
-                </a>
-            </div>
         </nav>
 
         <div class="sidebar-footer">
@@ -83,6 +74,39 @@
                     <i class="bi bi-box-arrow-right"></i>
                 </button>
             </form>
+            
+            <!-- Mobile Profile Dropdown -->
+            <div class="mobile-profile-btn" onclick="toggleMobileProfile(event)">
+                <i class="bi bi-person-fill"></i>
+            </div>
+            <div class="mobile-profile-dropdown" id="mobileProfileDropdown">
+                <div class="mobile-profile-header">
+                    <div class="mobile-profile-name">@User.Identity?.Name</div>
+                    <span class="user-role">
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <span class="badge-role badge-admin">Admin</span>
+                        }
+                        else if (User.IsInRole("Editor"))
+                        {
+                            <span class="badge-role badge-editor">Editor</span>
+                        }
+                    </span>
+                </div>
+                <div class="mobile-profile-menu">
+                    <a href="/" class="mobile-profile-item" target="_blank">
+                        <i class="bi bi-globe2"></i>
+                        <span>Siteyi Görüntüle</span>
+                    </a>
+                    <form asp-area="Admin" asp-controller="Account" asp-action="Logout" method="post" style="margin: 0;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="mobile-profile-item danger">
+                            <i class="bi bi-box-arrow-right"></i>
+                            <span>Çıkış Yap</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </aside>
 
@@ -124,19 +148,38 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Sidebar toggle
+        // Sidebar toggle (sadece desktop için)
         function toggleSidebar() {
-            document.querySelector('.admin-sidebar').classList.toggle('collapsed');
-            document.querySelector('.admin-main').classList.toggle('expanded');
+            if (window.innerWidth >= 992) {
+                document.querySelector('.admin-sidebar').classList.toggle('collapsed');
+                document.querySelector('.admin-main').classList.toggle('expanded');
+            }
         }
 
-
-
-        // Responsive sidebar
-        if (window.innerWidth < 992) {
-            document.querySelector('.admin-sidebar').classList.add('collapsed');
-            document.querySelector('.admin-main').classList.add('expanded');
+        // Mobile profile dropdown toggle
+        function toggleMobileProfile(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('mobileProfileDropdown');
+            dropdown.classList.toggle('show');
         }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('mobileProfileDropdown');
+            const profileBtn = document.querySelector('.mobile-profile-btn');
+            
+            if (dropdown && !dropdown.contains(event.target) && !profileBtn.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // Mobilde sidebar her zaman görünür, toggle butonu gizli
+        window.addEventListener('resize', function() {
+            if (window.innerWidth < 992) {
+                document.querySelector('.admin-sidebar').classList.remove('collapsed');
+                document.querySelector('.admin-main').classList.remove('expanded');
+            }
+        });
     </script>
     @await Component.InvokeAsync("NToastNotify")
     @await RenderSectionAsync("Scripts", required: false)

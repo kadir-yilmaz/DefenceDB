@@ -25,6 +25,8 @@ DefenceDB.WebUI/App_Data/
 Properties/PublishProfiles/
 *.pubxml
 *.pubxml.user
+publish/
+**/publish/
 
 # AI / Dev Temp Folders
 scratch/

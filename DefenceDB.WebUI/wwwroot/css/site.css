@@ -101,6 +101,35 @@ h1, h2, h3, h4, h5, h6, .brand-text {
 .nav-link:hover {
     color: var(--accent) !important;
 }
+/* Search Input Custom Tactical Dark Style */
+#searchInput {
+    background-color: #0b0f19 !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+#searchInput::placeholder {
+    color: rgba(255, 255, 255, 0.8) !important;
+    opacity: 1 !important; /* Firefox fallback override */
+}
+
+#searchInput:focus {
+    background-color: #0f172a !important;
+    border-color: var(--accent, #f59e0b) !important;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.25), 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+    color: #ffffff !important;
+}
+
+#searchContainer .bi-search {
+    color: rgba(255, 255, 255, 0.65) !important;
+    transition: color 0.3s ease;
+}
+
+#searchContainer:focus-within .bi-search {
+    color: var(--accent, #f59e0b) !important;
+}
 
 .dropdown-menu-dark {
     background-color: var(--bg-card);
@@ -214,6 +243,61 @@ h1, h2, h3, h4, h5, h6, .brand-text {
     -webkit-box-orient: vertical;
     overflow: hidden;
     line-height: 1.5;
+}
+
+/* Permanent Dark Slate Premium Card (for Tactical Contrast) */
+.card-premium-dark {
+    background-color: #0b0f19 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-premium-dark:hover {
+    border-color: var(--accent, #f59e0b) !important;
+    background-color: #0f172a !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(245, 158, 11, 0.15) !important;
+    transform: translateY(-4px);
+}
+
+.card-premium-dark .category-icon-wrapper {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: var(--accent, #f59e0b) !important;
+    transition: all 0.3s ease;
+}
+
+.card-premium-dark:hover .category-icon-wrapper {
+    background-color: rgba(245, 158, 11, 0.1) !important;
+    border-color: rgba(245, 158, 11, 0.3) !important;
+    color: #fbbf24 !important;
+    transform: scale(1.05) rotate(5deg);
+}
+
+.card-premium-dark .card-title {
+    color: #ffffff !important;
+    font-weight: 700;
+}
+
+.card-premium-dark .card-text {
+    color: #9ca3af !important;
+    font-size: 0.875rem;
+    line-height: 1.6;
+}
+
+.card-premium-dark .category-action-link {
+    color: var(--accent, #f59e0b) !important;
+    transition: all 0.2s ease;
+}
+
+.card-premium-dark:hover .category-action-link {
+    letter-spacing: 0.5px;
 }
 
 /* Wiki Detail Styles */

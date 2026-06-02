@@ -174,11 +174,16 @@
                 </div>
 
                 <div class="card mt-4 border-secondary shadow-sm">
-                    <div class="card-header bg-secondary text-white d-flex align-items-center">
-                        <i class="bi bi-text-paragraph me-2"></i> Açıklama / Detaylı Bilgi
+                    <div class="card-header bg-secondary text-white d-flex align-items-center justify-content-between py-2">
+                        <div>
+                            <i class="bi bi-text-paragraph me-2"></i> Açıklama / Detaylı Bilgi
+                        </div>
+                        <button type="button" class="btn btn-sm btn-light text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#mdTableGeneratorModal">
+                            <i class="bi bi-table me-1 text-warning"></i> Tablo Ekle
+                        </button>
                     </div>
                     <div class="card-body p-0">
-                        <textarea asp-for="Description" class="form-control border-0 p-3" rows="12" style="resize: vertical;" placeholder="Ürün hakkında detaylı bilgi, tarihçe, kullanım alanları gibi verileri buraya girebilirsiniz..."></textarea>
+                        <textarea asp-for="Description" class="form-control border-0 p-3" rows="12" style="resize: vertical;" placeholder="Ürün hakkında detaylı bilgi, tarihçe, kullanım alanları gibi verileri buraya girebilirsiniz... Markdown tabloları vb. desteklenir."></textarea>
                     </div>
                 </div>
                 
@@ -328,6 +333,8 @@
             </div>
         </div>
         
+        <!-- Markdown Table Generator Partial -->
+        @await Html.PartialAsync("_MarkdownTableGenerator")
     </form>
 </div>
 

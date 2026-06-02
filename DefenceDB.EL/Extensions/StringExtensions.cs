@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Markdig;
 
 namespace DefenceDB.EL.Extensions;
 
@@ -62,31 +63,11 @@ public static class StringExtensions
     {
         if (string.IsNullOrWhiteSpace(text)) return text;
 
-        // 1. Standartlaştırma
-        string normalized = text.Replace("\r\n", "\n");
+        // Markdig Pipeline oluştur ve Advanced Extensions (Tablo desteği vb.) ekle
+        var pipeline = new Markdig.MarkdownPipelineBuilder()
+            .UseAdvancedExtensions()
+            .Build();
 
-        // 2. Basit Markdown desteği (**kalın** -> <strong>kalın</strong>)
-        normalized = Regex.Replace(normalized, @"\*\*(.+?)\*\*", "<strong>$1</strong>");
-        normalized = Regex.Replace(normalized, @"\*(.+?)\*", "<em>$1</em>");
-
-        // 3. Kırık Paragraf Düzeltmesi: 
-        // Eğer bir paragraf boşluğu (\n\n) nokta, ünlem, soru işareti veya iki nokta ile BİTMEYEN bir cümlenin 
-        // ardına gelmişse, bu büyük ihtimalle PDF/Web kopyalama hatasıdır (sayfa sonuna denk gelmiştir vb.).
-        // Bunu tek bir boşluğa çevirelim.
-        normalized = Regex.Replace(normalized, @"([^\.\!\?\:\;\""\'])\n{2,}", "$1 ");
-
-        // 4. Kalan geçerli çift satır sonlarını (paragraf aralarını) belirteç yapalım
-        normalized = Regex.Replace(normalized, @"\n{2,}", "[[PARAGRAPH_BREAK]]");
-
-        // 5. Kalan tek satır sonlarını boşluğa çevirelim
-        normalized = normalized.Replace("\n", " ");
-
-        // 6. Çoklu boşlukları tek boşluğa indirelim (Kırık paragraf düzeltmesinden kaynaklanmış olabilir)
-        normalized = Regex.Replace(normalized, @" {2,}", " ");
-
-        // 7. Paragraf belirteçlerini HTML'e çevirelim
-        normalized = normalized.Replace("[[PARAGRAPH_BREAK]]", "<br /><br />");
-
-        return normalized;
+        return Markdig.Markdown.ToHtml(text, pipeline);
     }
 }

@@ -1,0 +1,94 @@
+<!-- Table Generator Modal -->
+<div class="modal fade" id="mdTableGeneratorModal" tabindex="-1" aria-labelledby="mdTableGeneratorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title font-outfit fw-bold" id="mdTableGeneratorModalLabel"><i class="bi bi-table me-2 text-warning"></i>Kolay Tablo Oluşturucu</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <label class="form-label fw-semibold">Sütun Sayısı</label>
+                        <input type="number" class="form-control" id="mdTableCols" value="4" min="1" max="10">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-semibold">Satır Sayısı (Başlık Hariç)</label>
+                        <input type="number" class="form-control" id="mdTableRows" value="4" min="1" max="50">
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <p class="text-muted small mb-0"><i class="bi bi-info-circle me-1 text-info"></i> Bu araç, belirttiğiniz boyutlarda hazır bir Markdown tablosu şablonu oluşturarak <b>Açıklama</b> alanına imlecin bulunduğu yere ekler. Ekledikten sonra içeriklerini rahatça değiştirebilirsiniz.</p>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-warning fw-bold" onclick="generateMarkdownTable()"><i class="bi bi-plus-circle me-1"></i> Tabloyu Ekle</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function generateMarkdownTable() {
+        const rowsEl = document.getElementById('mdTableRows');
+        const colsEl = document.getElementById('mdTableCols');
+        const rows = parseInt(rowsEl.value);
+        const cols = parseInt(colsEl.value);
+        
+        if(isNaN(rows) || isNaN(cols) || rows < 1 || cols < 1) {
+            alert('Lütfen geçerli satır ve sütun sayısı girin.');
+            return;
+        }
+
+        let md = '\n';
+        
+        // Header
+        for(let c = 1; c <= cols; c++) {
+            md += `| Başlık ${c} `;
+        }
+        md += '|\n';
+        
+        // Separator
+        for(let c = 1; c <= cols; c++) {
+            md += '|---';
+        }
+        md += '|\n';
+        
+        // Rows
+        for(let r = 1; r <= rows; r++) {
+            for(let c = 1; c <= cols; c++) {
+                md += `| Değer `;
+            }
+            md += '|\n';
+        }
+        
+        md += '\n';
+
+        // Get the textarea
+        const textarea = document.getElementById('Description');
+        if (textarea) {
+            // Insert at cursor
+            const startPos = textarea.selectionStart;
+            const endPos = textarea.selectionEnd;
+            textarea.value = textarea.value.substring(0, startPos)
+                + md
+                + textarea.value.substring(endPos, textarea.value.length);
+            
+            // Set cursor after the inserted table
+            const newPos = startPos + md.length;
+            textarea.selectionStart = newPos;
+            textarea.selectionEnd = newPos;
+            textarea.focus();
+        } else {
+            console.error("Description textarea bulunamadı!");
+        }
+
+        // Close modal safely (supports Bootstrap 5)
+        var modalEl = document.getElementById('mdTableGeneratorModal');
+        var modal = bootstrap.Modal.getInstance(modalEl);
+        if(modal) {
+            modal.hide();
+        }
+    }
+</script>

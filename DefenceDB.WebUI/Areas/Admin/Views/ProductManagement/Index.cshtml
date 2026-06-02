@@ -17,8 +17,9 @@
 <style>
     .admin-category-filter {
         display: flex;
+        flex-wrap: wrap;
         gap: 10px;
-        overflow-x: auto;
+        overflow-x: visible;
         padding-bottom: 12px;
         margin-bottom: 24px;
         border-bottom: 1px solid var(--admin-border);
@@ -324,7 +325,7 @@
                         <th style="width: 15%;">Kategori</th>
                         <th style="width: 15%;">Ülke</th>
                         <th style="width: 18%;">Üretici</th>
-                        <th style="width: 10%;">Durum</th>
+                        <th style="width: 10%;">Vitrin</th>
                         <th style="width: 12%;" class="text-end">İşlemler</th>
                     </tr>
                 </thead>
@@ -364,14 +365,11 @@
                             </td>
                             <td style="color: var(--admin-text-secondary);">@prod.Manufacturer</td>
                             <td>
-                                @if (prod.Status == "Active")
-                                {
-                                    <span class="admin-badge active"><i class="bi bi-check-circle-fill"></i> Aktif</span>
-                                }
-                                else
-                                {
-                                    <span class="admin-badge warning"><i class="bi bi-exclamation-circle-fill"></i> @prod.Status</span>
-                                }
+                                <div class="form-check form-switch" style="display:flex; align-items:center; height: 100%;">
+                                    <input class="form-check-input showcase-toggle" type="checkbox" 
+                                           role="switch" data-id="@prod.Id" 
+                                           @(prod.IsShowcase ? "checked" : "") style="cursor: pointer; width: 2.5em; height: 1.25em;">
+                                </div>
                             </td>
                             <td class="text-end">
                                 <div class="d-flex justify-content-end gap-2">
@@ -436,4 +434,9 @@
             </li>
         </ul>
     </div>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/js/admin-products.js"></script>
 }
