@@ -27,7 +27,7 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
                 MissilesPerLauncher = 4, 
                 HasAntiBallisticCapability = true, 
                 CreatedAt = now, 
-                IsShowcase = true 
+                IsShowcase = false 
             },
             new AirDefenseSystem 
             { 
@@ -45,7 +45,7 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
                 MissilesPerLauncher = 4, 
                 HasAntiBallisticCapability = true, 
                 CreatedAt = now, 
-                IsShowcase = true 
+                IsShowcase = false 
             },
             new AirDefenseSystem 
             { 
@@ -63,7 +63,7 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
                 MissilesPerLauncher = 16, 
                 HasAntiBallisticCapability = true, 
                 CreatedAt = now, 
-                IsShowcase = true 
+                IsShowcase = false 
             },
             new AirDefenseSystem 
             { 
@@ -81,7 +81,7 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
                 MissilesPerLauncher = 8, 
                 HasAntiBallisticCapability = true, 
                 CreatedAt = now, 
-                IsShowcase = true 
+                IsShowcase = false 
             },
             new AirDefenseSystem 
             { 
@@ -135,7 +135,7 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
                 MissilesPerLauncher = 4, 
                 HasAntiBallisticCapability = false, 
                 CreatedAt = now, 
-                IsShowcase = true 
+                IsShowcase = false 
             },
             new AirDefenseSystem 
             { 
@@ -153,7 +153,7 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
                 MissilesPerLauncher = 6, 
                 HasAntiBallisticCapability = false, 
                 CreatedAt = now, 
-                IsShowcase = true 
+                IsShowcase = false 
             },
             new AirDefenseSystem
             {
@@ -207,7 +207,7 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
                 MissilesPerLauncher = 6,
                 HasAntiBallisticCapability = true,
                 CreatedAt = now,
-                IsShowcase = true
+                IsShowcase = false
             },
             new AirDefenseSystem
             {
