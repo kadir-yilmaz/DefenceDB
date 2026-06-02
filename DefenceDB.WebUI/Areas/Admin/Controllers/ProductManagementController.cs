@@ -464,8 +464,8 @@ public class ProductManagementController : Controller
             "destroyer" => typeof(DefenceDB.EL.Models.Products.Destroyer),
             "mayin-avcisi" => typeof(DefenceDB.EL.Models.Products.Minehunter),
             "denizalti" => typeof(DefenceDB.EL.Models.Products.Submarine),
-            "ucak-radarlari" => typeof(DefenceDB.EL.Models.Products.AirborneRadar),
-            "gemi-radarlari" => typeof(DefenceDB.EL.Models.Products.NavalRadar),
+            "ucak-radarlari" or "hava-radarlari-airborne" => typeof(DefenceDB.EL.Models.Products.AirborneRadar),
+            "gemi-radarlari" or "deniz-radarlari-naval" => typeof(DefenceDB.EL.Models.Products.NavalRadar),
             "hava-savunma-radarlari" => typeof(DefenceDB.EL.Models.Products.AirDefenseRadar),
             _ => null
         };
