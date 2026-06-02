@@ -154,6 +154,18 @@ public class ProductService : IProductService
             _context.Entry(existing).CurrentValues.SetValues(product);
             existing.UpdatedAt = DateTime.UtcNow;
 
+            // Yeni eklenen resimleri (Id == 0 olanlar) kaydet
+            if (product.Images != null)
+            {
+                foreach (var img in product.Images)
+                {
+                    if (img.Id == 0)
+                    {
+                        _context.ProductImages.Add(img);
+                    }
+                }
+            }
+
             await _context.SaveChangesAsync();
         }
     }
