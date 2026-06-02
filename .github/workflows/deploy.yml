@@ -31,6 +31,25 @@ jobs:
       run: dotnet publish DefenceDB.WebUI/DefenceDB.WebUI.csproj -c Release -o "${{ github.workspace }}\publish"
 
     - name: Deploy via MSDeploy
+      env:
+        WD_SERVER: ${{ secrets.WEBDEPLOY_SERVER }}
+        WD_PORT: ${{ secrets.WEBDEPLOY_PORT }}
+        WD_SITE: ${{ secrets.WEBDEPLOY_SITE }}
+        WD_USERNAME: ${{ secrets.WEBDEPLOY_USERNAME }}
+        WD_PASSWORD: ${{ secrets.WEBDEPLOY_PASSWORD }}
       run: |
-        "C:\Program Files\IIS\Microsoft Web Deploy V3\msdeploy.exe" -verb:sync -source:contentPath="${{ github.workspace }}\publish" -dest:contentPath="${{ secrets.WEBDEPLOY_SITE }}",ComputerName="https://${{ secrets.WEBDEPLOY_SERVER }}:${{ secrets.WEBDEPLOY_PORT }}/msdeploy.axd?site=${{ secrets.WEBDEPLOY_SITE }}",UserName="${{ secrets.WEBDEPLOY_USERNAME }}",Password="${{ secrets.WEBDEPLOY_PASSWORD }}",AuthType="Basic" -allowUntrusted -enableRule:AppOffline
-      shell: cmd
+        $msdeploy = "C:\Program Files\IIS\Microsoft Web Deploy V3\msdeploy.exe"
+        $publishPath = Join-Path $env:GITHUB_WORKSPACE "publish"
+        
+        $destArgs = "contentPath='$env:WD_SITE',ComputerName='https://$env:WD_SERVER`:$env:WD_PORT/msdeploy.axd?site=$env:WD_SITE',UserName='$env:WD_USERNAME',Password='$env:WD_PASSWORD',AuthType='Basic'"
+        
+        $arguments = @(
+            "-verb:sync",
+            "-source:contentPath=`"$publishPath`"",
+            "-dest:$destArgs",
+            "-allowUntrusted",
+            "-enableRule:AppOffline"
+        )
+        
+        & $msdeploy $arguments
+      shell: powershell
