@@ -17,6 +17,16 @@ jobs:
       with:
         dotnet-version: '8.0.x'
 
+    - name: Create appsettings.json from Secret
+      env:
+        APPSETTINGS_SECRET: ${{ secrets.APPSETTINGS_JSON }}
+      run: |
+        $path = "DefenceDB.WebUI/appsettings.json"
+        if (![string]::IsNullOrWhiteSpace($env:APPSETTINGS_SECRET)) {
+            Set-Content -Path $path -Value $env:APPSETTINGS_SECRET -Encoding utf8
+        }
+      shell: powershell
+
     - name: Inject COMMIT_SHA to appsettings.json
       run: |
         $path = "DefenceDB.WebUI/appsettings.json"
