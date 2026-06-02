@@ -15,48 +15,6 @@
 </div>
 
 <style>
-    /* Scroll Wrapper for categories */
-    .cat-scroll-wrapper {
-        display: flex;
-        align-items: center;
-        width: 100%;
-        gap: 6px;
-    }
-    .cat-scroll-btn {
-        flex-shrink: 0;
-        z-index: 10;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: var(--admin-surface);
-        border: 1px solid var(--admin-border);
-        color: var(--admin-text-secondary);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        transition: all 0.2s;
-    }
-    .cat-scroll-btn:hover {
-        background: var(--admin-accent-glow);
-        color: var(--admin-accent);
-        border-color: var(--admin-accent);
-    }
-
-    .admin-category-filter {
-        display: flex;
-        flex-wrap: nowrap;
-        gap: 10px;
-        overflow-x: auto;
-        padding-bottom: 12px;
-        margin-bottom: 24px;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-    }
-    .admin-category-filter::-webkit-scrollbar {
-        display: none;
-    }
     .admin-filter-pill {
         display: inline-flex;
         align-items: center;
@@ -90,58 +48,6 @@
         padding: 0 38px 0 14px;
         border: 1px solid var(--admin-border);
         border-radius: 20px;
-        background-color: var(--admin-surface);
-        color: var(--admin-text-secondary);
-        font-size: 0.85rem;
-        font-weight: 600;
-        outline: none;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    .admin-filter-select:focus {
-        border-color: var(--admin-accent);
-        box-shadow: 0 0 0 3px var(--admin-accent-glow);
-    }
-
-    /* Subcategories filter styles */
-    .admin-subcategory-filter {
-        display: flex;
-        gap: 8px;
-        overflow-x: auto;
-        padding-bottom: 10px;
-        margin-top: -12px;
-        margin-bottom: 24px;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-    }
-    .admin-subcategory-filter::-webkit-scrollbar {
-        display: none;
-    }
-    .admin-sub-filter-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 6px 12px;
-        background-color: var(--admin-bg-secondary);
-        border: 1px solid var(--admin-border);
-        color: var(--admin-text-secondary);
-        text-decoration: none;
-        border-radius: 16px;
-        font-size: 0.78rem;
-        font-weight: 500;
-        transition: all 0.2s ease;
-        white-space: nowrap;
-    }
-    .admin-sub-filter-pill:hover {
-        background-color: var(--admin-accent-glow);
-        border-color: var(--admin-accent);
-        color: var(--admin-accent);
-    }
-    .admin-sub-filter-pill.active {
-        background-color: var(--admin-accent) !important;
-        border-color: var(--admin-accent) !important;
-        color: #ffffff !important;
-        font-weight: 600;
-    }
 
     /* Pagination CSS */
     .admin-pagination-wrapper {
@@ -251,32 +157,100 @@
     }
 }
 
-<div class="d-flex align-items-center mb-3 pb-1">
-    <div class="cat-scroll-wrapper flex-grow-1" style="min-width: 0; position: relative; z-index: 1;">
-        <button class="cat-scroll-btn left" type="button" style="opacity: 0; pointer-events: none;"><i class="bi bi-chevron-left"></i></button>
-        <div class="admin-category-filter border-bottom-0 mb-0 pb-1 w-100">
-            <a href="@Url.Action("Index", "ProductManagement", new { country = selectedCountry })" class="admin-filter-pill @(!selectedId.HasValue ? "active" : "")">
-                <i class="bi bi-grid-fill"></i> Tüm Ürünler (@ViewBag.TotalProductCount)
-            </a>
-            
-            @foreach (var cat in ViewBag.Categories as List<Category> ?? new List<Category>())
-            {
-                var rootCount = (cat.Products?.Count ?? 0) + (cat.SubCategories?.Sum(sc => sc.Products?.Count ?? 0) ?? 0);
-                var isRootActive = selectedId == cat.Id || (currentCategory != null && currentCategory.ParentCategoryId == cat.Id);
-                
-                <a href="@Url.Action("Index", "ProductManagement", new { categoryId = cat.Id, country = selectedCountry })" class="admin-filter-pill @(isRootActive ? "active" : "")">
-                    @if (!string.IsNullOrEmpty(cat.IconClass))
-                    {
-                        <i class="@cat.IconClass"></i>
-                    }
-                    @cat.Name (@rootCount)
-                </a>
-            }
+@{
+    string selectedParentName = "Tüm Ürünler";
+    string selectedParentIcon = "bi-grid-fill";
+    
+    if (parentId != null)
+    {
+        var allRootCategories = ViewBag.Categories as List<Category> ?? new List<Category>();
+        var pCat = allRootCategories.FirstOrDefault(c => c.Id == parentId);
+        if (pCat != null)
+        {
+            selectedParentName = pCat.Name;
+            selectedParentIcon = pCat.IconClass ?? "bi-grid";
+        }
+    }
+
+    string selectedSubName = "Tümü";
+    string selectedSubIcon = "bi-list-nested";
+    if (currentCategory != null && currentCategory.ParentCategoryId != null)
+    {
+        selectedSubName = currentCategory.Name;
+        selectedSubIcon = currentCategory.IconClass ?? "bi-list-nested";
+    }
+}
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <!-- Parent Categories Dropdown -->
+        <div class="dropdown" style="z-index: 1050;">
+            <button class="admin-filter-pill dropdown-toggle d-flex align-items-center justify-content-between" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="min-width: 220px; height: 42px; cursor: pointer; padding: 0 16px; border: 1px solid var(--admin-border); background-color: var(--admin-surface);">
+                <span class="d-flex align-items-center">
+                    <i class="bi @selectedParentIcon me-2 text-primary"></i> <span style="font-weight: 600;">@selectedParentName</span>
+                </span>
+            </button>
+            <ul class="dropdown-menu shadow border-0" style="border-radius: 12px; min-width: 260px; max-height: 400px; overflow-y: auto; padding: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;">
+                <li>
+                    <a class="dropdown-item rounded @(!parentId.HasValue ? "active" : "") d-flex align-items-center" href="@Url.Action("Index", "ProductManagement", new { country = selectedCountry })" style="padding: 10px 16px; margin-bottom: 4px; transition: all 0.2s;">
+                        <i class="bi bi-grid-fill me-3 @(!parentId.HasValue ? "text-white" : "text-muted")"></i> <span style="font-weight: 500;">Tüm Ürünler (@ViewBag.TotalProductCount)</span>
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider opacity-10" style="margin: 4px 0 8px 0;"></li>
+                @foreach (var cat in ViewBag.Categories as List<Category> ?? new List<Category>())
+                {
+                    var rootCount = (cat.Products?.Count ?? 0) + (cat.SubCategories?.Sum(sc => sc.Products?.Count ?? 0) ?? 0);
+                    var isRootActive = parentId == cat.Id;
+                    
+                    <li>
+                        <a class="dropdown-item rounded @(isRootActive ? "active" : "") d-flex align-items-center" href="@Url.Action("Index", "ProductManagement", new { categoryId = cat.Id, country = selectedCountry })" style="padding: 8px 16px; margin-bottom: 2px; transition: all 0.2s; font-weight: 500;">
+                            @if (!string.IsNullOrEmpty(cat.IconClass))
+                            {
+                                <i class="@cat.IconClass me-3 @(isRootActive ? "text-white" : "text-muted")"></i>
+                            }
+                            @cat.Name (@rootCount)
+                        </a>
+                    </li>
+                }
+            </ul>
         </div>
-        <button class="cat-scroll-btn right" type="button" style="opacity: 0; pointer-events: none;"><i class="bi bi-chevron-right"></i></button>
+
+        <!-- Sub Categories Dropdown -->
+        @if (subCategoriesToShow != null && subCategoriesToShow.Any())
+        {
+            <div class="dropdown" style="z-index: 1050;">
+                <button class="admin-filter-pill dropdown-toggle d-flex align-items-center justify-content-between" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="min-width: 200px; height: 42px; cursor: pointer; padding: 0 16px; border: 1px solid var(--admin-border); background-color: var(--admin-surface);">
+                    <span class="d-flex align-items-center">
+                        <i class="bi @selectedSubIcon me-2 text-info"></i> <span style="font-weight: 600;">@selectedSubName</span>
+                    </span>
+                </button>
+                <ul class="dropdown-menu shadow border-0" style="border-radius: 12px; min-width: 240px; max-height: 400px; overflow-y: auto; padding: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;">
+                    <li>
+                        <a class="dropdown-item rounded @(selectedId == parentId ? "active" : "") d-flex align-items-center" href="@Url.Action("Index", "ProductManagement", new { categoryId = parentId, country = selectedCountry })" style="padding: 8px 16px; margin-bottom: 4px; transition: all 0.2s;">
+                            <i class="bi bi-list-nested me-3 @(selectedId == parentId ? "text-white" : "text-muted")"></i> <span style="font-weight: 500;">Tümü</span>
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider opacity-10" style="margin: 4px 0 8px 0;"></li>
+                    @foreach (var sub in subCategoriesToShow)
+                    {
+                        var isSubActive = selectedId == sub.Id;
+                        <li>
+                            <a class="dropdown-item rounded @(isSubActive ? "active" : "") d-flex align-items-center" href="@Url.Action("Index", "ProductManagement", new { categoryId = sub.Id, country = selectedCountry })" style="padding: 8px 16px; margin-bottom: 2px; transition: all 0.2s; font-weight: 500;">
+                                @if (!string.IsNullOrEmpty(sub.IconClass))
+                                {
+                                    <i class="@sub.IconClass me-3 @(isSubActive ? "text-white" : "text-muted")"></i>
+                                }
+                                @sub.Name
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
     </div>
 
-    <div class="dropdown ms-3 flex-shrink-0" style="z-index: 1050;">
+    <!-- Right Side: Countries Dropdown -->
+    <div class="dropdown flex-shrink-0" style="z-index: 1050;">
         <button class="admin-filter-pill dropdown-toggle d-flex align-items-center justify-content-between" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="min-width: 180px; height: 42px; cursor: pointer; padding: 0 16px; border: 1px solid var(--admin-border); background-color: var(--admin-surface);">
             <span class="d-flex align-items-center">
                 @if (string.IsNullOrEmpty(selectedCountry))
@@ -326,29 +300,6 @@
         </ul>
     </div>
 </div>
-
-@if (subCategoriesToShow != null && subCategoriesToShow.Any())
-{
-    <div class="cat-scroll-wrapper mb-4" style="margin-top:-12px; min-width: 0;">
-        <button class="cat-scroll-btn left" type="button" style="opacity: 0; pointer-events: none;"><i class="bi bi-chevron-left"></i></button>
-        <div class="admin-subcategory-filter mb-0 w-100">
-            <a href="@Url.Action("Index", "ProductManagement", new { categoryId = parentId, country = selectedCountry })" class="admin-sub-filter-pill @(selectedId == parentId ? "active" : "")">
-                <i class="bi bi-list-nested"></i> Tümü
-            </a>
-            @foreach (var sub in subCategoriesToShow)
-            {
-                <a href="@Url.Action("Index", "ProductManagement", new { categoryId = sub.Id, country = selectedCountry })" class="admin-sub-filter-pill @(selectedId == sub.Id ? "active" : "")">
-                    @if (!string.IsNullOrEmpty(sub.IconClass))
-                    {
-                        <i class="@sub.IconClass"></i>
-                    }
-                    @sub.Name
-                </a>
-            }
-        </div>
-        <button class="cat-scroll-btn right" type="button" style="opacity: 0; pointer-events: none;"><i class="bi bi-chevron-right"></i></button>
-    </div>
-}
 
 <div class="table-wrapper">
     <div class="table-body">
@@ -475,49 +426,4 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="~/js/admin-products.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const wrappers = document.querySelectorAll('.cat-scroll-wrapper');
-            wrappers.forEach(wrapper => {
-                const container = wrapper.querySelector('.admin-category-filter, .admin-subcategory-filter');
-                const btnLeft = wrapper.querySelector('.cat-scroll-btn.left');
-                const btnRight = wrapper.querySelector('.cat-scroll-btn.right');
-                
-                if(!container || !btnLeft || !btnRight) return;
-
-                function updateButtons() {
-                    // Show/hide left button
-                    if (container.scrollLeft > 0) {
-                        btnLeft.style.opacity = '1';
-                        btnLeft.style.pointerEvents = 'auto';
-                    } else {
-                        btnLeft.style.opacity = '0';
-                        btnLeft.style.pointerEvents = 'none';
-                    }
-
-                    // Show/hide right button
-                    if (Math.ceil(container.scrollLeft + container.clientWidth) >= container.scrollWidth) {
-                        btnRight.style.opacity = '0';
-                        btnRight.style.pointerEvents = 'none';
-                    } else {
-                        btnRight.style.opacity = '1';
-                        btnRight.style.pointerEvents = 'auto';
-                    }
-                }
-
-                container.addEventListener('scroll', updateButtons);
-                window.addEventListener('resize', updateButtons);
-                
-                // Initial check after font load
-                setTimeout(updateButtons, 150);
-
-                btnLeft.addEventListener('click', () => {
-                    container.scrollBy({ left: -300, behavior: 'smooth' });
-                });
-                btnRight.addEventListener('click', () => {
-                    container.scrollBy({ left: 300, behavior: 'smooth' });
-                });
-            });
-        });
-    </script>
 }

@@ -202,8 +202,9 @@
                         <i class="bi bi-images me-1"></i> Ürün Resimleri
                     </div>
                     <div class="card-body">
-                        <p class="text-muted small">Maksimum 10 adet resim yükleyebilirsiniz. İlk yüklenen resim kapak fotoğrafı olacaktır.</p>
+                        <p class="text-muted small">Maksimum 10 adet resim yükleyebilirsiniz. Görsellerin üzerindeki yıldız butonunu kullanarak kapak (ana) fotoğrafını belirleyebilirsiniz.</p>
                         <input type="file" name="UploadedImages" id="imageUpload" multiple accept="image/*" class="form-control" />
+                        <input type="hidden" name="NewMainImageIndex" id="NewMainImageIndex" value="-1" />
                         
                         <div id="imagePreviewContainer" class="d-flex flex-wrap gap-2 mt-3">
                             <!-- JS ile önizlemeler buraya eklenecek -->
@@ -504,26 +505,93 @@
                 manufacturerSelect.trigger('change');
             });
 
-            // Resim Önizleme
-            $('#imageUpload').on('change', function(e) {
-                var files = e.target.files;
+            // Resim Önizleme ve Yönetimi
+            var selectedNewFiles = [];
+            var newMainImageIndex = -1;
+
+            function updateFileInputAndPreviews() {
                 var container = $('#imagePreviewContainer');
                 container.empty();
 
-                if (files.length > 10) {
-                    alert('Maksimum 10 adet resim seçebilirsiniz!');
+                var dt = new DataTransfer();
+                selectedNewFiles.forEach(function(file) {
+                    dt.items.add(file);
+                });
+                $('#imageUpload')[0].files = dt.files;
+
+                if (newMainImageIndex >= selectedNewFiles.length) {
+                    newMainImageIndex = selectedNewFiles.length > 0 ? 0 : -1;
+                }
+                $('#NewMainImageIndex').val(newMainImageIndex);
+
+                selectedNewFiles.forEach(function(file, index) {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        var isMain = (index === newMainImageIndex);
+                        
+                        var card = $('<div class="position-relative" style="width: 100px; height: 100px;"></div>');
+                        
+                        var img = $('<img>').attr('src', e.target.result)
+                            .addClass('img-thumbnail border ' + (isMain ? 'border-primary border-3' : ''))
+                            .css({width: '100px', height: '100px', objectFit: 'cover'});
+                        
+                        // Kapak Yap Butonu (Sol Üst)
+                        var starBtn = $('<button type="button" class="btn btn-sm position-absolute top-0 start-0 m-1 p-0 px-1 set-new-main-btn" ' +
+                            'data-index="' + index + '" ' +
+                            'title="' + (isMain ? 'Kapak Fotoğrafı' : 'Kapak Fotoğrafı Yap') + '" ' +
+                            'style="background: ' + (isMain ? '#fbbf24' : 'rgba(15, 23, 42, 0.7)') + '; border: 1px solid ' + (isMain ? '#d97706' : 'rgba(255, 255, 255, 0.2)') + '; color: ' + (isMain ? '#1e293b' : '#ffffff') + '; z-index: 5;">' +
+                            '<i class="bi ' + (isMain ? 'bi-star-fill text-dark' : 'bi-star') + '"></i>' +
+                            '</button>');
+                        
+                        // Silme Butonu (Sağ Üst)
+                        var deleteBtn = $('<button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 p-0 px-1 delete-new-img-btn" data-index="' + index + '" title="Kaldır">' +
+                            '<i class="bi bi-x"></i>' +
+                            '</button>');
+                        
+                        card.append(img).append(starBtn).append(deleteBtn);
+                        container.append(card);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            $('#imageUpload').on('change', function(e) {
+                var files = e.target.files;
+                if (!files || files.length === 0) return;
+
+                if (selectedNewFiles.length + files.length > 10) {
+                    alert('Toplamda maksimum 10 adet resim seçebilirsiniz!');
                     $(this).val('');
                     return;
                 }
 
                 for (var i = 0; i < files.length; i++) {
-                    var reader = new FileReader();
-                    reader.onload = function(e) {
-                        var img = $('<img>').attr('src', e.target.result).addClass('img-thumbnail').css({width: '100px', height: '100px', objectFit: 'cover'});
-                        container.append(img);
-                    }
-                    reader.readAsDataURL(files[i]);
+                    selectedNewFiles.push(files[i]);
                 }
+
+                if (newMainImageIndex === -1 && selectedNewFiles.length > 0) {
+                    newMainImageIndex = 0;
+                }
+
+                updateFileInputAndPreviews();
+            });
+
+            $(document).on('click', '.set-new-main-btn', function() {
+                var idx = parseInt($(this).data('index'));
+                newMainImageIndex = idx;
+                updateFileInputAndPreviews();
+            });
+
+            $(document).on('click', '.delete-new-img-btn', function() {
+                var idx = parseInt($(this).data('index'));
+                selectedNewFiles.splice(idx, 1);
+                
+                if (newMainImageIndex === idx) {
+                    newMainImageIndex = selectedNewFiles.length > 0 ? 0 : -1;
+                } else if (newMainImageIndex > idx) {
+                    newMainImageIndex--;
+                }
+                updateFileInputAndPreviews();
             });
 
             // --- YENİ İLİŞKİLİ ÜRÜN SEÇİM MANTIĞI ---

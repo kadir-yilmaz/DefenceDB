@@ -196,6 +196,17 @@ public class ProductManagementController : Controller
             if (!Directory.Exists(uploadsFolder))
                 Directory.CreateDirectory(uploadsFolder);
 
+            int newMainImageIndex = 0;
+            if (form.TryGetValue("NewMainImageIndex", out var newMainIndexStr) && int.TryParse(newMainIndexStr, out int index))
+            {
+                newMainImageIndex = index;
+            }
+
+            if (newMainImageIndex < 0 || newMainImageIndex >= imageCount)
+            {
+                newMainImageIndex = 0;
+            }
+
             for (int i = 0; i < imageCount; i++)
             {
                 var file = uploadedImages[i];
@@ -208,7 +219,7 @@ public class ProductManagementController : Controller
                     {
                         ProductId = instance.Id,
                         ImagePath = $"/images/products/{uniqueFileName}",
-                        IsMainImage = (i == 0) // İlk eklenen ana resim olsun
+                        IsMainImage = (i == newMainImageIndex) // Seçilen yeni resim kapak olsun
                     });
                 }
             }
@@ -331,6 +342,12 @@ public class ProductManagementController : Controller
             if (!Directory.Exists(uploadsFolder))
                 Directory.CreateDirectory(uploadsFolder);
 
+            int newMainImageIndex = -1;
+            if (form.TryGetValue("NewMainImageIndex", out var newMainIndexStr) && int.TryParse(newMainIndexStr, out int index))
+            {
+                newMainImageIndex = index;
+            }
+
             for (int i = 0; i < imagesToUpload; i++)
             {
                 var file = uploadedImages[i];
@@ -343,7 +360,7 @@ public class ProductManagementController : Controller
                     {
                         ProductId = instance.Id,
                         ImagePath = $"/images/products/{uniqueFileName}",
-                        IsMainImage = (existingImagesCount == 0 && i == 0)
+                        IsMainImage = (newMainImageIndex >= 0 ? (i == newMainImageIndex) : (existingImagesCount == 0 && i == 0))
                     });
                 }
             }
@@ -383,6 +400,17 @@ public class ProductManagementController : Controller
             {
                 System.IO.File.Delete(filePath);
             }
+
+            // Thumbnail dosyasını da sil
+            var directory = Path.GetDirectoryName(filePath);
+            if (directory != null)
+            {
+                var thumbPath = Path.Combine(directory, "thumbs", Path.GetFileName(filePath));
+                if (System.IO.File.Exists(thumbPath))
+                {
+                    System.IO.File.Delete(thumbPath);
+                }
+            }
         }
         catch { /* Dosya silinemezse yoksay */ }
 
@@ -412,6 +440,17 @@ public class ProductManagementController : Controller
                     if (System.IO.File.Exists(filePath))
                     {
                         System.IO.File.Delete(filePath);
+                    }
+
+                    // Thumbnail dosyasını da sil
+                    var directory = Path.GetDirectoryName(filePath);
+                    if (directory != null)
+                    {
+                        var thumbPath = Path.Combine(directory, "thumbs", Path.GetFileName(filePath));
+                        if (System.IO.File.Exists(thumbPath))
+                        {
+                            System.IO.File.Delete(thumbPath);
+                        }
                     }
                 }
                 catch { /* Dosya silinemezse yoksay */ }

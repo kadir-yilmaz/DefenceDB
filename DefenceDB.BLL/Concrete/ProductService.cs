@@ -157,6 +157,18 @@ public class ProductService : IProductService
             // Yeni eklenen resimleri (Id == 0 olanlar) kaydet
             if (product.Images != null)
             {
+                bool hasNewMainImage = product.Images.Any(img => img.Id == 0 && img.IsMainImage);
+                if (hasNewMainImage)
+                {
+                    var existingImages = await _context.ProductImages
+                        .Where(i => i.ProductId == product.Id)
+                        .ToListAsync();
+                    foreach (var img in existingImages)
+                    {
+                        img.IsMainImage = false;
+                    }
+                }
+
                 foreach (var img in product.Images)
                 {
                     if (img.Id == 0)
