@@ -131,51 +131,33 @@
     </style>
 
     <footer class="premium-footer pt-5 mt-auto">
-        <div class="container">
-            <div class="row g-4">
-                <!-- Column 1: Info -->
-                <div class="col-lg-5">
-                    <div class="d-flex align-items-center gap-2 mb-3">
-                        <i class="bi bi-shield-fill-check text-warning fs-3" style="filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.3));"></i>
-                        <span class="fs-4 fw-bold text-white font-outfit" style="letter-spacing: -0.02em;">DefenceDB</span>
-                    </div>
-                    <p class="fs-7 pe-lg-4" style="line-height: 1.6; font-size: 0.875rem;">
-                        Türkiye'nin ve dünyanın en kapsamlı bağımsız askeri teknoloji, savunma sanayii sistemleri ansiklopedisi ve taktik veritabanı portalı. Açık kaynaklı istihbarat (OSINT) standartlarına göre derlenmektedir.
-                    </p>
-
-                </div>
-
-                <!-- Column 2: Fast Links -->
-                <div class="col-sm-6 col-lg-3 offset-lg-1">
-                    <h5 class="footer-title">Hızlı Bağlantılar</h5>
-                    <ul class="list-unstyled d-flex flex-column gap-2 m-0">
-                        <li><a href="/" class="footer-link"><i class="bi bi-house-door"></i> Ana Sayfa</a></li>
-                        <li><a href="/Product" class="footer-link"><i class="bi bi-search"></i> Tüm Veritabanı</a></li>
-                        <li><a href="/Product?categorySlug=savas-ucaklari" class="footer-link"><i class="bi bi-airplane"></i> Havacılık Sistemleri</a></li>
-                        <li><a href="/Product?categorySlug=savas-gemileri" class="footer-link"><i class="bi bi-tsunami"></i> Deniz Sistemleri</a></li>
-                        <li><a href="/Admin" class="footer-link" target="_blank"><i class="bi bi-lock"></i> Yönetim Paneli</a></li>
-                    </ul>
-                </div>
-
-                <!-- Column 3: Tech Info -->
-                <div class="col-sm-6 col-lg-3">
-                    <h5 class="footer-title">Teknik Güvence</h5>
-                    <p class="fs-7 mb-3" style="line-height: 1.6; font-size: 0.85rem;">
-                        Sistemde sunulan tüm radar kavisleri, füze menzilleri, harp başlığı ağırlıkları ve askeri veri setleri üreticilerin resmi katalogları referans alınarak girilmektedir.
-                    </p>
-                </div>
+        @inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+        @{
+            var commitSha = Configuration["COMMIT_SHA"];
+            if (string.IsNullOrWhiteSpace(commitSha))
+                commitSha = "test";
+            else if (commitSha.Length > 7)
+                commitSha = commitSha.Substring(0, 7);
+        }
+        <div class="container text-center">
+            <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                <i class="bi bi-shield-fill-check text-warning fs-3" style="filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.3));"></i>
+                <span class="fs-4 fw-bold text-white font-outfit" style="letter-spacing: -0.02em;">DefenceDB</span>
             </div>
+            <p class="fs-7 mb-0 text-muted" style="line-height: 1.6; font-size: 0.875rem;">
+                Türkiye'nin askeri teknoloji, savunma sanayii sistemleri portalı.
+            </p>
         </div>
 
         <!-- System copyright bottom row -->
-        <div class="footer-bottom">
+        <div class="footer-bottom mt-4">
             <div class="container">
                 <div class="row align-items-center">
                     <div class="col-md-6 text-center text-md-start mb-2 mb-md-0">
                         &copy; 2026 - DefenceDB. Tüm hakları saklıdır.
                     </div>
                     <div class="col-md-6 text-center text-md-end" style="font-size: 0.75rem;">
-                        Bağımsız Askeri Ansiklopedi ve Havacılık/Deniz/Füze Veri Portalı.
+                        <span class="fw-bold" style="color: var(--admin-accent);">Version: @commitSha</span>
                     </div>
                 </div>
             </div>

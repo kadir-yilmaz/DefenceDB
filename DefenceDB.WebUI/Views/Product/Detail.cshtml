@@ -770,6 +770,9 @@
                 });
             }
         }
+        
+        // Çift eklemeleri (F16->Murad ve Murad->F16) engellemek için aynı ID'ye sahip olanları teke düşür
+        allRelations = allRelations.GroupBy(x => x.Id).Select(g => g.First()).ToList();
     }
 
     @if (allRelations.Any())

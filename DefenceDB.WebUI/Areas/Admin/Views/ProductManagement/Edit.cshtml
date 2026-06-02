@@ -387,6 +387,11 @@
                         
                         @{
                             var existingRelIds = Model.SourceRelationships?.Select(r => r.TargetProductId).ToList() ?? new List<int>();
+                            if (Model.TargetRelationships != null)
+                            {
+                                existingRelIds.AddRange(Model.TargetRelationships.Select(r => r.SourceProductId));
+                            }
+                            existingRelIds = existingRelIds.Distinct().ToList();
                         }
                         
                         <div class="row g-4">

@@ -154,12 +154,14 @@ public class ProductService : IProductService
 
     public async Task UpdateProductRelationshipsAsync(int sourceProductId, List<int> targetProductIds)
     {
+        // İki yönlü bağlantıları tamamen temizle ki tutarsızlık kalmasın
         var existingRelations = await _context.ProductRelationships
-            .Where(r => r.SourceProductId == sourceProductId)
+            .Where(r => r.SourceProductId == sourceProductId || r.TargetProductId == sourceProductId)
             .ToListAsync();
 
         _context.ProductRelationships.RemoveRange(existingRelations);
         
+        // Formdan gelen (seçili) bağlantıları yeniden oluştur
         foreach(var targetId in targetProductIds)
         {
             _context.ProductRelationships.Add(new ProductRelationship 
