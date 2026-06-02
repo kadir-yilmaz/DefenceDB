@@ -4,16 +4,19 @@ using DefenceDB.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace DefenceDB.DAL.Migrations
+namespace DefenceDB.DAL.update.sql
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260602161933_AddUnmannedPlatforms")]
+    partial class AddUnmannedPlatforms
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2168,57 +2171,6 @@ namespace DefenceDB.DAL.Migrations
                             MaxAltitudeFeet = 34400,
                             PayloadCapacityKg = 2800.0,
                             WingSpanMeters = 20.0
-                        },
-                        new
-                        {
-                            Id = 211,
-                            CategoryId = 24,
-                            Country = "Türkiye",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = false,
-                            Manufacturer = "TUSAŞ",
-                            Name = "Anka-S",
-                            Slug = "anka-s",
-                            CruisingSpeedKmh = 200.0,
-                            EnduranceHours = 30.0,
-                            MaxAltitudeFeet = 30000,
-                            PayloadCapacityKg = 350.0,
-                            WingSpanMeters = 17.5
-                        },
-                        new
-                        {
-                            Id = 212,
-                            CategoryId = 24,
-                            Country = "Türkiye",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = true,
-                            Manufacturer = "TUSAŞ",
-                            Name = "Aksungur",
-                            Slug = "aksungur",
-                            CruisingSpeedKmh = 250.0,
-                            EnduranceHours = 50.0,
-                            MaxAltitudeFeet = 40000,
-                            PayloadCapacityKg = 750.0,
-                            WingSpanMeters = 24.0
-                        },
-                        new
-                        {
-                            Id = 213,
-                            CategoryId = 24,
-                            Country = "Türkiye",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = true,
-                            Manufacturer = "TUSAŞ",
-                            Name = "Anka-3",
-                            Slug = "anka-3",
-                            CruisingSpeedKmh = 800.0,
-                            EnduranceHours = 10.0,
-                            MaxAltitudeFeet = 40000,
-                            PayloadCapacityKg = 1200.0,
-                            WingSpanMeters = 12.0
                         });
                 });
 

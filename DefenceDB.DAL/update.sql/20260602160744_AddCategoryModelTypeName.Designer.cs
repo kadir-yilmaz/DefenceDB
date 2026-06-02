@@ -4,16 +4,19 @@ using DefenceDB.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace DefenceDB.DAL.Migrations
+namespace DefenceDB.DAL.update.sql
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260602160744_AddCategoryModelTypeName")]
+    partial class AddCategoryModelTypeName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -396,75 +399,6 @@ namespace DefenceDB.DAL.Migrations
                             Name = "Tanklar",
                             Slug = "tanklar",
                             SortOrder = 5
-                        },
-                        new
-                        {
-                            Id = 23,
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IconClass = "bi bi-robot",
-                            Name = "İnsansız Platformlar",
-                            Slug = "insansiz-platformlar",
-                            SortOrder = 6
-                        },
-                        new
-                        {
-                            Id = 24,
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModelTypeName = "DefenceDB.EL.Models.Products.UAV",
-                            Name = "İHA (UAV)",
-                            ParentCategoryId = 23,
-                            Slug = "iha-uav",
-                            SortOrder = 0
-                        },
-                        new
-                        {
-                            Id = 25,
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModelTypeName = "DefenceDB.EL.Models.Products.USV",
-                            Name = "İDA (USV)",
-                            ParentCategoryId = 23,
-                            Slug = "ida-usv",
-                            SortOrder = 0
-                        },
-                        new
-                        {
-                            Id = 26,
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModelTypeName = "DefenceDB.EL.Models.Products.UGV",
-                            Name = "İKA (UGV)",
-                            ParentCategoryId = 23,
-                            Slug = "ika-ugv",
-                            SortOrder = 0
-                        },
-                        new
-                        {
-                            Id = 27,
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModelTypeName = "DefenceDB.EL.Models.Products.KamikazeUAV",
-                            Name = "Kamikaze İHA",
-                            ParentCategoryId = 23,
-                            Slug = "kamikaze-iha",
-                            SortOrder = 0
-                        },
-                        new
-                        {
-                            Id = 28,
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModelTypeName = "DefenceDB.EL.Models.Products.KamikazeUSV",
-                            Name = "Kamikaze İDA",
-                            ParentCategoryId = 23,
-                            Slug = "kamikaze-ida",
-                            SortOrder = 0
-                        },
-                        new
-                        {
-                            Id = 29,
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModelTypeName = "DefenceDB.EL.Models.Products.KamikazeUGV",
-                            Name = "Kamikaze İKA",
-                            ParentCategoryId = 23,
-                            Slug = "kamikaze-ika",
-                            SortOrder = 0
                         });
                 });
 
@@ -1576,57 +1510,6 @@ namespace DefenceDB.DAL.Migrations
                     b.ToTable("HypersonicGlideVehicles", (string)null);
                 });
 
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.KamikazeUAV", b =>
-                {
-                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
-
-                    b.Property<double?>("EnduranceHours")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("MaxSpeedKmh")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("RangeKm")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("WarheadWeightKg")
-                        .HasColumnType("float");
-
-                    b.ToTable("KamikazeUAVs", (string)null);
-                });
-
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.KamikazeUGV", b =>
-                {
-                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
-
-                    b.Property<double?>("MaxSpeedKmh")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("RangeKm")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("WarheadWeightKg")
-                        .HasColumnType("float");
-
-                    b.ToTable("KamikazeUGVs", (string)null);
-                });
-
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.KamikazeUSV", b =>
-                {
-                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
-
-                    b.Property<double?>("MaxSpeedKnots")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("RangeNauticalMiles")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("WarheadWeightKg")
-                        .HasColumnType("float");
-
-                    b.ToTable("KamikazeUSVs", (string)null);
-                });
-
             modelBuilder.Entity("DefenceDB.EL.Models.Products.Minehunter", b =>
                 {
                     b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
@@ -1977,290 +1860,6 @@ namespace DefenceDB.DAL.Migrations
                     b.ToTable("TrainerAircrafts", (string)null);
                 });
 
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.UAV", b =>
-                {
-                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
-
-                    b.Property<double?>("CruisingSpeedKmh")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("EnduranceHours")
-                        .HasColumnType("float");
-
-                    b.Property<int?>("MaxAltitudeFeet")
-                        .HasColumnType("int");
-
-                    b.Property<double?>("PayloadCapacityKg")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("WingSpanMeters")
-                        .HasColumnType("float");
-
-                    b.ToTable("UAVs", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 201,
-                            CategoryId = 24,
-                            Country = "Türkiye",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = true,
-                            Manufacturer = "Baykar",
-                            Name = "Bayraktar TB2",
-                            Slug = "bayraktar-tb2",
-                            CruisingSpeedKmh = 130.0,
-                            EnduranceHours = 27.0,
-                            MaxAltitudeFeet = 25000,
-                            PayloadCapacityKg = 150.0,
-                            WingSpanMeters = 12.0
-                        },
-                        new
-                        {
-                            Id = 202,
-                            CategoryId = 24,
-                            Country = "Türkiye",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = true,
-                            Manufacturer = "Baykar",
-                            Name = "Bayraktar TB3",
-                            Slug = "bayraktar-tb3",
-                            CruisingSpeedKmh = 160.0,
-                            EnduranceHours = 24.0,
-                            MaxAltitudeFeet = 25000,
-                            PayloadCapacityKg = 280.0,
-                            WingSpanMeters = 14.0
-                        },
-                        new
-                        {
-                            Id = 203,
-                            CategoryId = 24,
-                            Country = "Türkiye",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = true,
-                            Manufacturer = "Baykar",
-                            Name = "Bayraktar Akıncı",
-                            Slug = "bayraktar-akinci",
-                            CruisingSpeedKmh = 277.0,
-                            EnduranceHours = 24.0,
-                            MaxAltitudeFeet = 40000,
-                            PayloadCapacityKg = 1500.0,
-                            WingSpanMeters = 20.0
-                        },
-                        new
-                        {
-                            Id = 204,
-                            CategoryId = 24,
-                            Country = "Türkiye",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = true,
-                            Manufacturer = "Baykar",
-                            Name = "Bayraktar Kızılelma",
-                            Slug = "bayraktar-kizilelma",
-                            CruisingSpeedKmh = 735.0,
-                            EnduranceHours = 5.0,
-                            MaxAltitudeFeet = 45000,
-                            PayloadCapacityKg = 1500.0,
-                            WingSpanMeters = 10.0
-                        },
-                        new
-                        {
-                            Id = 205,
-                            CategoryId = 24,
-                            Country = "ABD",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = false,
-                            Manufacturer = "General Atomics",
-                            Name = "MQ-9 Reaper",
-                            Slug = "mq-9-reaper",
-                            CruisingSpeedKmh = 313.0,
-                            EnduranceHours = 27.0,
-                            MaxAltitudeFeet = 50000,
-                            PayloadCapacityKg = 1700.0,
-                            WingSpanMeters = 20.0
-                        },
-                        new
-                        {
-                            Id = 206,
-                            CategoryId = 24,
-                            Country = "ABD",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = false,
-                            Manufacturer = "Northrop Grumman",
-                            Name = "RQ-4 Global Hawk",
-                            Slug = "rq-4-global-hawk",
-                            CruisingSpeedKmh = 575.0,
-                            EnduranceHours = 34.0,
-                            MaxAltitudeFeet = 60000,
-                            PayloadCapacityKg = 1360.0,
-                            WingSpanMeters = 39.899999999999999
-                        },
-                        new
-                        {
-                            Id = 207,
-                            CategoryId = 24,
-                            Country = "Çin",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = false,
-                            Manufacturer = "Chengdu",
-                            Name = "Wing Loong II",
-                            Slug = "wing-loong-ii",
-                            CruisingSpeedKmh = 370.0,
-                            EnduranceHours = 32.0,
-                            MaxAltitudeFeet = 32500,
-                            PayloadCapacityKg = 480.0,
-                            WingSpanMeters = 20.5
-                        },
-                        new
-                        {
-                            Id = 208,
-                            CategoryId = 24,
-                            Country = "Çin",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = false,
-                            Manufacturer = "CASC",
-                            Name = "CH-4 Rainbow",
-                            Slug = "ch-4-rainbow",
-                            CruisingSpeedKmh = 235.0,
-                            EnduranceHours = 40.0,
-                            MaxAltitudeFeet = 23600,
-                            PayloadCapacityKg = 345.0,
-                            WingSpanMeters = 18.0
-                        },
-                        new
-                        {
-                            Id = 209,
-                            CategoryId = 24,
-                            Country = "Rusya",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = false,
-                            Manufacturer = "Kronshtadt Group",
-                            Name = "Orion",
-                            Slug = "orion",
-                            CruisingSpeedKmh = 120.0,
-                            EnduranceHours = 24.0,
-                            MaxAltitudeFeet = 24600,
-                            PayloadCapacityKg = 250.0,
-                            WingSpanMeters = 16.300000000000001
-                        },
-                        new
-                        {
-                            Id = 210,
-                            CategoryId = 24,
-                            Country = "Rusya",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = false,
-                            Manufacturer = "Sukhoi",
-                            Name = "S-70 Okhotnik",
-                            Slug = "s-70-okhotnik",
-                            CruisingSpeedKmh = 1000.0,
-                            EnduranceHours = 12.0,
-                            MaxAltitudeFeet = 34400,
-                            PayloadCapacityKg = 2800.0,
-                            WingSpanMeters = 20.0
-                        },
-                        new
-                        {
-                            Id = 211,
-                            CategoryId = 24,
-                            Country = "Türkiye",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = false,
-                            Manufacturer = "TUSAŞ",
-                            Name = "Anka-S",
-                            Slug = "anka-s",
-                            CruisingSpeedKmh = 200.0,
-                            EnduranceHours = 30.0,
-                            MaxAltitudeFeet = 30000,
-                            PayloadCapacityKg = 350.0,
-                            WingSpanMeters = 17.5
-                        },
-                        new
-                        {
-                            Id = 212,
-                            CategoryId = 24,
-                            Country = "Türkiye",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = true,
-                            Manufacturer = "TUSAŞ",
-                            Name = "Aksungur",
-                            Slug = "aksungur",
-                            CruisingSpeedKmh = 250.0,
-                            EnduranceHours = 50.0,
-                            MaxAltitudeFeet = 40000,
-                            PayloadCapacityKg = 750.0,
-                            WingSpanMeters = 24.0
-                        },
-                        new
-                        {
-                            Id = 213,
-                            CategoryId = 24,
-                            Country = "Türkiye",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            IsShowcase = true,
-                            Manufacturer = "TUSAŞ",
-                            Name = "Anka-3",
-                            Slug = "anka-3",
-                            CruisingSpeedKmh = 800.0,
-                            EnduranceHours = 10.0,
-                            MaxAltitudeFeet = 40000,
-                            PayloadCapacityKg = 1200.0,
-                            WingSpanMeters = 12.0
-                        });
-                });
-
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.UGV", b =>
-                {
-                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
-
-                    b.Property<string>("DriveType")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<double?>("MaxSpeedKmh")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("OperationalRangeKm")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("WeightKg")
-                        .HasColumnType("float");
-
-                    b.ToTable("UGVs", (string)null);
-                });
-
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.USV", b =>
-                {
-                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
-
-                    b.Property<double?>("DisplacementTons")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("EnduranceHours")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("MaxSpeedKnots")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("OperationalRangeNauticalMiles")
-                        .HasColumnType("float");
-
-                    b.ToTable("USVs", (string)null);
-                });
-
             modelBuilder.Entity("DefenceDB.EL.Models.Category", b =>
                 {
                     b.HasOne("DefenceDB.EL.Models.Category", "ParentCategory")
@@ -2489,33 +2088,6 @@ namespace DefenceDB.DAL.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.KamikazeUAV", b =>
-                {
-                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
-                        .WithOne()
-                        .HasForeignKey("DefenceDB.EL.Models.Products.KamikazeUAV", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.KamikazeUGV", b =>
-                {
-                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
-                        .WithOne()
-                        .HasForeignKey("DefenceDB.EL.Models.Products.KamikazeUGV", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.KamikazeUSV", b =>
-                {
-                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
-                        .WithOne()
-                        .HasForeignKey("DefenceDB.EL.Models.Products.KamikazeUSV", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("DefenceDB.EL.Models.Products.Minehunter", b =>
                 {
                     b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
@@ -2557,33 +2129,6 @@ namespace DefenceDB.DAL.Migrations
                     b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
                         .WithOne()
                         .HasForeignKey("DefenceDB.EL.Models.Products.TrainerAircraft", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.UAV", b =>
-                {
-                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
-                        .WithOne()
-                        .HasForeignKey("DefenceDB.EL.Models.Products.UAV", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.UGV", b =>
-                {
-                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
-                        .WithOne()
-                        .HasForeignKey("DefenceDB.EL.Models.Products.UGV", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.USV", b =>
-                {
-                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
-                        .WithOne()
-                        .HasForeignKey("DefenceDB.EL.Models.Products.USV", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

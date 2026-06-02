@@ -46,6 +46,14 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
     // Land Vehicles
     public DbSet<Tank> Tanks { get; set; } = null!;
 
+    // Unmanned Platforms
+    public DbSet<UAV> UAVs { get; set; } = null!;
+    public DbSet<USV> USVs { get; set; } = null!;
+    public DbSet<UGV> UGVs { get; set; } = null!;
+    public DbSet<KamikazeUAV> KamikazeUAVs { get; set; } = null!;
+    public DbSet<KamikazeUSV> KamikazeUSVs { get; set; } = null!;
+    public DbSet<KamikazeUGV> KamikazeUGVs { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -79,6 +87,13 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
         modelBuilder.Entity<AirDefenseRadar>().ToTable("AirDefenseRadars");
 
         modelBuilder.Entity<Tank>().ToTable("Tanks");
+
+        modelBuilder.Entity<UAV>().ToTable("UAVs");
+        modelBuilder.Entity<USV>().ToTable("USVs");
+        modelBuilder.Entity<UGV>().ToTable("UGVs");
+        modelBuilder.Entity<KamikazeUAV>().ToTable("KamikazeUAVs");
+        modelBuilder.Entity<KamikazeUSV>().ToTable("KamikazeUSVs");
+        modelBuilder.Entity<KamikazeUGV>().ToTable("KamikazeUGVs");
 
         // Apply Product Seeds
         modelBuilder.SeedProducts();

@@ -99,7 +99,7 @@ public class ProductManagementController : Controller
         var category = await _categoryService.GetCategoryByIdAsync(categoryId.Value);
         if (category == null) return NotFound();
 
-        Type modelType = GetTypeFromCategory(category.Slug);
+        Type modelType = GetTypeFromCategory(category);
         if (modelType == null)
         {
             _notificationService.Error("Bu kategoriye eşleşen C# model tipi bulunamadı.", "Hata");
@@ -445,30 +445,23 @@ public class ProductManagementController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private Type GetTypeFromCategory(string slug)
+    private Type GetTypeFromCategory(Category category)
     {
-        return slug switch
+        if (string.IsNullOrEmpty(category.ModelTypeName)) 
+            return null;
+
+        // Try getting type directly
+        Type modelType = Type.GetType(category.ModelTypeName);
+        
+        // Fallback for different assemblies
+        if (modelType == null)
         {
-            "hava-hava-fuzeleri" => typeof(DefenceDB.EL.Models.Products.AirToAirMissile),
-            "balistik-fuzeler" => typeof(DefenceDB.EL.Models.Products.BallisticMissile),
-            "anti-gemi-fuzeleri" => typeof(DefenceDB.EL.Models.Products.AntiShipMissile),
-            "seyir-fuzeleri" => typeof(DefenceDB.EL.Models.Products.CruiseMissile),
-            "anti-radyasyon" => typeof(DefenceDB.EL.Models.Products.AntiRadiationMissile),
-            "hgv" => typeof(DefenceDB.EL.Models.Products.HypersonicGlideVehicle),
-            "avci-ucaklari" => typeof(DefenceDB.EL.Models.Products.FighterAircraft),
-            "bombardiman" => typeof(DefenceDB.EL.Models.Products.BomberAircraft),
-            "egitim" => typeof(DefenceDB.EL.Models.Products.TrainerAircraft),
-            "hucumbot" => typeof(DefenceDB.EL.Models.Products.FastAttackCraft),
-            "korvet" => typeof(DefenceDB.EL.Models.Products.Corvette),
-            "firkateyn" => typeof(DefenceDB.EL.Models.Products.Frigate),
-            "destroyer" => typeof(DefenceDB.EL.Models.Products.Destroyer),
-            "mayin-avcisi" => typeof(DefenceDB.EL.Models.Products.Minehunter),
-            "denizalti" => typeof(DefenceDB.EL.Models.Products.Submarine),
-            "ucak-radarlari" or "hava-radarlari-airborne" => typeof(DefenceDB.EL.Models.Products.AirborneRadar),
-            "gemi-radarlari" or "deniz-radarlari-naval" => typeof(DefenceDB.EL.Models.Products.NavalRadar),
-            "hava-savunma-radarlari" => typeof(DefenceDB.EL.Models.Products.AirDefenseRadar),
-            _ => null
-        };
+            modelType = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(a => a.GetTypes())
+                .FirstOrDefault(t => t.FullName == category.ModelTypeName);
+        }
+        
+        return modelType;
     }
 
     private static async Task<string> SaveOptimizedProductImageAsync(IFormFile file, string uploadsFolder, string slug)

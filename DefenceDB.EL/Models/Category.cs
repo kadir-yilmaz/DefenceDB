@@ -20,6 +20,9 @@ public class Category : BaseEntity
     [MaxLength(50)]
     public string? IconClass { get; set; }
 
+    [MaxLength(255)]
+    public string? ModelTypeName { get; set; }
+
     public int SortOrder { get; set; }
 
     // Self-referencing hierarchy
