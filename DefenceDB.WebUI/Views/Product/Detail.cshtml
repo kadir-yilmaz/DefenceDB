@@ -701,6 +701,10 @@
                                         <div class="spec-value">-</div>
                                     }
                                 }
+                                else if (prop.PropertyType.IsEnum || (Nullable.GetUnderlyingType(prop.PropertyType)?.IsEnum == true))
+                                {
+                                    <div class="spec-value">@(value != null ? DefenceDB.EL.Helpers.LocalizationHelper.GetDisplayName(value.ToString(), "tr") : "-")</div>
+                                }
                                 else
                                 {
                                     <div class="spec-value">@(value?.ToString() ?? "-")</div>

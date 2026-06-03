@@ -14,9 +14,10 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem 
             { 
                 Id = 401, 
-                CategoryId = 39, 
+                CategoryId = 47, 
                 Name = "S-400 Triumf", 
                 Slug = "s-400-triumf", 
+                SystemType = AirDefenseSystemType.UzunYuksekIrtifa,
                 Manufacturer = "Almaz-Antey", 
                 Country = "Rusya", 
                 Description = "Rusya yapımı orta ve uzun menzilli uçaksavar ve füze savunma sistemi.", 
@@ -32,9 +33,10 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem 
             { 
                 Id = 402, 
-                CategoryId = 39, 
+                CategoryId = 47, 
                 Name = "S-500 Prometey", 
                 Slug = "s-500-prometey", 
+                SystemType = AirDefenseSystemType.UzunYuksekIrtifa,
                 Manufacturer = "Almaz-Antey", 
                 Country = "Rusya", 
                 Description = "Uzay ve kıtalararası balistik füze savunması odaklı yeni nesil uzun menzilli hava savunma sistemi.", 
@@ -50,9 +52,10 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem 
             { 
                 Id = 403, 
-                CategoryId = 39, 
+                CategoryId = 47, 
                 Name = "MIM-104 Patriot (PAC-3)", 
                 Slug = "mim-104-patriot-pac-3", 
+                SystemType = AirDefenseSystemType.UzunYuksekIrtifa,
                 Manufacturer = "Raytheon / Lockheed Martin", 
                 Country = "ABD", 
                 Description = "Amerika Birleşik Devletleri ordusunun ana taktik hava ve balistik füze savunma sistemi.", 
@@ -68,9 +71,10 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem 
             { 
                 Id = 404, 
-                CategoryId = 39, 
+                CategoryId = 47, 
                 Name = "THAAD", 
                 Slug = "thaad", 
+                SystemType = AirDefenseSystemType.UzunYuksekIrtifa,
                 Manufacturer = "Lockheed Martin", 
                 Country = "ABD", 
                 Description = "Atmosfer içi ve atmosfer dışı (Terminal aşamada) kısa, orta ve ara menzilli balistik füzeleri önleme sistemi.", 
@@ -86,9 +90,10 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem 
             { 
                 Id = 405, 
-                CategoryId = 39, 
+                CategoryId = 47, 
                 Name = "SAMP/T Mamba", 
                 Slug = "samp-t-mamba", 
+                SystemType = AirDefenseSystemType.UzunYuksekIrtifa,
                 Manufacturer = "Eurosam", 
                 Country = "Fransa", 
                 Description = "Aster 30 füzelerini kullanan, uçak ve seyir füzelerine ek olarak balistik füzelere karşı da etkili Avrupa menşeili hava savunma sistemi.", 
@@ -104,9 +109,10 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem 
             { 
                 Id = 406, 
-                CategoryId = 39, 
+                CategoryId = 47, 
                 Name = "HQ-9", 
                 Slug = "hq-9", 
+                SystemType = AirDefenseSystemType.UzunYuksekIrtifa,
                 Manufacturer = "CASIC", 
                 Country = "Çin", 
                 Description = "Çin Halk Kurtuluş Ordusu'nun ana uzun menzilli hava ve füze savunma sistemi.", 
@@ -122,9 +128,10 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem 
             { 
                 Id = 408, 
-                CategoryId = 39, 
+                CategoryId = 47, 
                 Name = "HİSAR-A+", 
                 Slug = "hisar-a-plus", 
+                SystemType = AirDefenseSystemType.AlcakIrtifa,
                 Manufacturer = "Aselsan / Roketsan", 
                 Country = "Türkiye", 
                 Description = "Türkiye tarafından milli imkanlarla geliştirilen, savaş uçakları, helikopterler, seyir füzeleri ve İHA'lara karşı etkili alçak irtifa hava savunma sistemi.", 
@@ -140,9 +147,10 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem 
             { 
                 Id = 409, 
-                CategoryId = 39, 
+                CategoryId = 47, 
                 Name = "HİSAR-O+", 
                 Slug = "hisar-o-plus", 
+                SystemType = AirDefenseSystemType.OrtaIrtifa,
                 Manufacturer = "Aselsan / Roketsan", 
                 Country = "Türkiye", 
                 Description = "Türkiye tarafından yerli imkanlarla tasarlanan ve geliştirilen, savaş uçakları, İHA'lar, seyir füzeleri ve helikopterler gibi hedefleri imha etmek üzere tasarlanmış orta irtifa hava savunma sistemi.", 
@@ -158,9 +166,10 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem
             {
                 Id = 411,
-                CategoryId = 39,
+                CategoryId = 47,
                 Name = "K-SAM Chunma (Pegasus)",
                 Slug = "k-sam-chunma-pegasus",
+                SystemType = AirDefenseSystemType.AlcakIrtifa,
                 Manufacturer = "Hanwha Defense / LIG Nex1",
                 Country = "Güney Kore",
                 Description = "Güney Kore ordusunun kritik tesislerini ve birliklerini korumak için tasarlanmış mobil alçak irtifa hava savunma sistemi.",
@@ -176,9 +185,10 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem
             {
                 Id = 412,
-                CategoryId = 39,
+                CategoryId = 47,
                 Name = "Cheongung I (M-SAM)",
                 Slug = "cheongung-i-m-sam",
+                SystemType = AirDefenseSystemType.OrtaIrtifa,
                 Manufacturer = "LIG Nex1 / Hanwha Systems",
                 Country = "Güney Kore",
                 Description = "Güney Kore yapımı, orta irtifadaki hava tehditlerine (uçaklar ve seyir füzeleri) karşı geliştirilmiş ilk nesil Cheongung hava savunma sistemi.",
@@ -194,9 +204,10 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem
             {
                 Id = 413,
-                CategoryId = 39,
+                CategoryId = 47,
                 Name = "L-SAM",
                 Slug = "l-sam",
+                SystemType = AirDefenseSystemType.UzunYuksekIrtifa,
                 Manufacturer = "LIG Nex1 / Hanwha Systems",
                 Country = "Güney Kore",
                 Description = "Güney Kore'nin katmanlı füze savunma kalkanı (KAMD) kapsamında geliştirdiği, üst irtifadaki balistik füzeleri ve hava tehditlerini önleme amaçlı uzun menzilli hava savunma sistemi.",
@@ -212,9 +223,10 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem
             {
                 Id = 414,
-                CategoryId = 39,
+                CategoryId = 47,
                 Name = "Cheongung II (M-SAM Block II)",
                 Slug = "cheongung-ii-m-sam-block-ii",
+                SystemType = AirDefenseSystemType.OrtaIrtifa,
                 Manufacturer = "LIG Nex1 / Hanwha Systems",
                 Country = "Güney Kore",
                 Description = "Cheongung I'in geliştirilmiş versiyonu olan orta irtifa hava savunma sistemi. Daha gelişmiş radar, artırılmış menzil ve çoklu hedef takip yeteneği sunar.",
@@ -230,9 +242,10 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem
             {
                 Id = 415,
-                CategoryId = 39,
+                CategoryId = 44,
                 Name = "KP-SAM (Shin-Gung)",
                 Slug = "kp-sam-shin-gung",
+                SystemType = AirDefenseSystemType.CokAlcakIrtifa,
                 Manufacturer = "LIG Nex1",
                 Country = "Güney Kore",
                 Description = "Güney Kore'nin taşınabilir hava savunma sistemi (MANPADS). Helikopterler, İHA'lar ve alçak uçan uçaklara karşı etkili.",
@@ -248,9 +261,10 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem
             {
                 Id = 416,
-                CategoryId = 39,
+                CategoryId = 46,
                 Name = "Biho (K30)",
                 Slug = "biho-k30",
+                SystemType = AirDefenseSystemType.CokAlcakIrtifa,
                 Manufacturer = "Doosan DST / S&T Dynamics",
                 Country = "Güney Kore",
                 Description = "Güney Kore yapımı kendinden tahrikli uçaksavar topu (SPAAG). 30mm çift namlulu top ve kısa menzilli füzelerle donatılmıştır.",
@@ -266,9 +280,10 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem
             {
                 Id = 417,
-                CategoryId = 39,
+                CategoryId = 47,
                 Name = "Cheonma (K-SAM Block II)",
                 Slug = "cheonma-k-sam-block-ii",
+                SystemType = AirDefenseSystemType.AlcakIrtifa,
                 Manufacturer = "Hanwha Defense / LIG Nex1",
                 Country = "Güney Kore",
                 Description = "K-SAM Chunma'nın geliştirilmiş versiyonu olan alçak irtifa hava savunma sistemi. Daha modern radar ve geliştirilmiş füze teknolojisi kullanır.",
@@ -284,9 +299,10 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem
             {
                 Id = 418,
-                CategoryId = 39,
+                CategoryId = 47,
                 Name = "MIM-104 Patriot (PAC-2)",
                 Slug = "mim-104-patriot-pac-2",
+                SystemType = AirDefenseSystemType.UzunYuksekIrtifa,
                 Manufacturer = "Raytheon / Lockheed Martin",
                 Country = "ABD",
                 Description = "Patriot sisteminin PAC-2 konfigürasyonu. Öncelikle geleneksel hava tehditlerine (uçaklar, helikopterler, seyir füzeleri) karşı etkili, sınırlı balistik füze savunma yeteneği vardır.",

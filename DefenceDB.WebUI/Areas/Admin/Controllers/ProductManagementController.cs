@@ -166,6 +166,14 @@ public class ProductManagementController : Controller
                     {
                         convertedValue = values.Contains("true");
                     }
+                    else if (prop.PropertyType.IsEnum)
+                    {
+                        convertedValue = Enum.Parse(prop.PropertyType, valueStr);
+                    }
+                    else if (Nullable.GetUnderlyingType(prop.PropertyType)?.IsEnum == true)
+                    {
+                        convertedValue = Enum.Parse(Nullable.GetUnderlyingType(prop.PropertyType), valueStr);
+                    }
                     else if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(int?))
                     {
                         convertedValue = int.Parse(valueStr);
@@ -310,6 +318,14 @@ public class ProductManagementController : Controller
                     if (prop.PropertyType == typeof(bool))
                     {
                         convertedValue = values.Contains("true");
+                    }
+                    else if (prop.PropertyType.IsEnum)
+                    {
+                        convertedValue = Enum.Parse(prop.PropertyType, valueStr);
+                    }
+                    else if (Nullable.GetUnderlyingType(prop.PropertyType)?.IsEnum == true)
+                    {
+                        convertedValue = Enum.Parse(Nullable.GetUnderlyingType(prop.PropertyType), valueStr);
                     }
                     else if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(int?))
                     {

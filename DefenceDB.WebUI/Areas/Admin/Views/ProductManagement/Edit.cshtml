@@ -102,6 +102,19 @@
                                         <input type="hidden" name="@prop.Name" value="false">
                                     </div>
                                 }
+                                else if (prop.PropertyType.IsEnum || (Nullable.GetUnderlyingType(prop.PropertyType)?.IsEnum == true))
+                                {
+                                    var enumType = prop.PropertyType.IsEnum ? prop.PropertyType : Nullable.GetUnderlyingType(prop.PropertyType);
+                                    var enumValues = Enum.GetValues(enumType);
+                                    <select name="@prop.Name" class="form-select">
+                                        <option value="">-- Seçin --</option>
+                                        @foreach (var val in enumValues)
+                                        {
+                                            var isSelected = propValue != null && val.ToString() == propValue.ToString() ? "selected" : null;
+                                            <option value="@val" selected="@isSelected">@DefenceDB.EL.Helpers.LocalizationHelper.GetDisplayName(val.ToString(), "tr")</option>
+                                        }
+                                    </select>
+                                }
                                 else if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(int?))
                                 {
                                     <input type="number" name="@prop.Name" value="@propValue" class="form-control" />

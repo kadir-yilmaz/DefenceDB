@@ -4,6 +4,9 @@ namespace DefenceDB.EL.Models.Products;
 
 public class AirDefenseSystem : DefenseProduct
 {
+    [Display(Name = "Sistem Tipi")]
+    public AirDefenseSystemType? SystemType { get; set; }
+
     [Display(Name = "Maksimum Arama Menzili (km)")]
     public double? MaxSearchRangeKm { get; set; }
 

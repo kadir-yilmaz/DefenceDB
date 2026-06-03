@@ -73,6 +73,11 @@ public static class LocalizationHelper
         { "PayloadKg", "Taşıma Kapasitesi (Faydalı Yük) (kg)" },
 
         // Hava Savunma Sistemleri
+        { "SystemType", "Sistem Tipi" },
+        { "CokAlcakIrtifa", "Çok Alçak İrtifa" },
+        { "AlcakIrtifa", "Alçak İrtifa" },
+        { "OrtaIrtifa", "Orta İrtifa" },
+        { "UzunYuksekIrtifa", "Uzun / Yüksek İrtifa" },
         { "MaxSearchRangeKm", "Maksimum Arama Menzili (km)" },
         { "MaxTrackingRangeKm", "Maksimum Takip Menzili (km)" },
         { "MaxEngagementAltitudeFt", "Maksimum Angajman İrtifası (feet)" },
@@ -150,6 +155,11 @@ public static class LocalizationHelper
         { "PayloadKg", "Payload (kg)" },
 
         // Air Defense Systems
+        { "SystemType", "System Type" },
+        { "CokAlcakIrtifa", "Very Short Range" },
+        { "AlcakIrtifa", "Short Range" },
+        { "OrtaIrtifa", "Medium Range" },
+        { "UzunYuksekIrtifa", "Long / High Altitude" },
         { "MaxSearchRangeKm", "Maximum Search Range (km)" },
         { "MaxTrackingRangeKm", "Maximum Tracking Range (km)" },
         { "MaxEngagementAltitudeFt", "Maximum Engagement Altitude (feet)" },

@@ -79,8 +79,12 @@ public class CategoryConfig : IEntityTypeConfiguration<Category>
             new Category { Id = 37, Name = "Deniz Gaz Türbinleri", Slug = "deniz-gaz-turbinleri", ParentCategoryId = 30, ModelTypeName = "DefenceDB.EL.Models.Products.MarineGasTurbine", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
             new Category { Id = 38, Name = "Turboshaft Motorlar", Slug = "turboshaft-motorlar", ParentCategoryId = 30, ModelTypeName = "DefenceDB.EL.Models.Products.TurboshaftEngine", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
             
-            // Hava Savunma Sistemleri (39)
-            new Category { Id = 39, Name = "Hava Savunma Sistemleri", Slug = "hava-savunma-sistemleri", IconClass = "bi bi-shield-fill-check", SortOrder = 8, ModelTypeName = "DefenceDB.EL.Models.Products.AirDefenseSystem", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
+            // Hava Savunma Sistemleri (39) ve Alt Kategorileri (44-47)
+            new Category { Id = 39, Name = "Hava Savunma Sistemleri", Slug = "hava-savunma-sistemleri", IconClass = "bi bi-shield-fill-check", SortOrder = 8, ModelTypeName = "DefenceDB.EL.Models.Products.AirDefenseSystem", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Category { Id = 44, Name = "Taşınabilir Hava Savunma Sistemleri (MANPADS)", Slug = "manpads", ParentCategoryId = 39, ModelTypeName = "DefenceDB.EL.Models.Products.AirDefenseSystem", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Category { Id = 45, Name = "Yakın Savunma Silah Sistemleri (CIWS)", Slug = "ciws", ParentCategoryId = 39, ModelTypeName = "DefenceDB.EL.Models.Products.AirDefenseSystem", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Category { Id = 46, Name = "Kundağı Motorlu Uçaksavar Topları (SPAAG)", Slug = "spaag", ParentCategoryId = 39, ModelTypeName = "DefenceDB.EL.Models.Products.AirDefenseSystem", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Category { Id = 47, Name = "Hava ve Füze Savunma Sistemleri", Slug = "hava-ve-fuze-savunma-sistemleri", ParentCategoryId = 39, ModelTypeName = "DefenceDB.EL.Models.Products.AirDefenseSystem", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
         );
     }
 }
