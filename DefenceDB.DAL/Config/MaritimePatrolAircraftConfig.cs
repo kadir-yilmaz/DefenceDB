@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using DefenceDB.EL.Models.Products;
 using DefenceDB.EL.Extensions;
+using DefenceDB.EL.Constants;
 
 namespace DefenceDB.DAL.Config;
 
@@ -15,7 +16,7 @@ public class MaritimePatrolAircraftConfig : IEntityTypeConfiguration<MaritimePat
             new MaritimePatrolAircraft
             {
                 Id = 503,
-                CategoryId = 42,
+                CategoryId = CategoryConstants.DenizKarakolUcaklari,
                 Name = "P-8A Poseidon",
                 Slug = "p-8a-poseidon",
                 Manufacturer = "Boeing",
@@ -30,7 +31,7 @@ public class MaritimePatrolAircraftConfig : IEntityTypeConfiguration<MaritimePat
             new MaritimePatrolAircraft
             {
                 Id = 504,
-                CategoryId = 42,
+                CategoryId = CategoryConstants.DenizKarakolUcaklari,
                 Name = "ATR 72 Meltem III",
                 Slug = "atr-72-meltem-iii",
                 Manufacturer = "Alenia Aermacchi / TUSAŞ",

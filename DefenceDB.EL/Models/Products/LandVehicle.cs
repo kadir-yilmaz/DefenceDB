@@ -2,12 +2,12 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DefenceDB.EL.Models.Products;
 
-public class Tank : DefenseProduct
+public class LandVehicle : DefenseProduct
 {
     [Display(Name = "Motor Gücü (Beygir)")]
     public int? EngineHorsePower { get; set; }
 
-    [Display(Name = "Top Çapı (mm)")]
+    [Display(Name = "Top/Namlu Çapı (mm)")]
     public double? MainGunCaliberMm { get; set; }
 
     [Display(Name = "Ağırlık (Ton)")]

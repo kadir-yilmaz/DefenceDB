@@ -47,7 +47,10 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
     public DbSet<AirDefenseRadar> AirDefenseRadars { get; set; } = null!;
 
     // Land Vehicles
-    public DbSet<Tank> Tanks { get; set; } = null!;
+    public DbSet<LandVehicle> LandVehicles { get; set; } = null!;
+
+    // Infantry Weapons
+    public DbSet<InfantryWeapon> InfantryWeapons { get; set; } = null!;
 
     // Air Defense Systems
     public DbSet<AirDefenseSystem> AirDefenseSystems { get; set; } = null!;
@@ -106,7 +109,8 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
         modelBuilder.Entity<NavalRadar>().ToTable("NavalRadars");
         modelBuilder.Entity<AirDefenseRadar>().ToTable("AirDefenseRadars");
 
-        modelBuilder.Entity<Tank>().ToTable("Tanks");
+        modelBuilder.Entity<LandVehicle>().ToTable("LandVehicles");
+        modelBuilder.Entity<InfantryWeapon>().ToTable("InfantryWeapons");
         modelBuilder.Entity<AirDefenseSystem>().ToTable("AirDefenseSystems");
 
         modelBuilder.Entity<UAV>().ToTable("UAVs");

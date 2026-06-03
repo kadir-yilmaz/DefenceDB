@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using DefenceDB.EL.Models.Products;
 using DefenceDB.EL.Extensions;
+using DefenceDB.EL.Constants;
 
 namespace DefenceDB.DAL.Config;
 
@@ -15,7 +16,7 @@ public class AirSojAircraftConfig : IEntityTypeConfiguration<AirSojAircraft>
             new AirSojAircraft
             {
                 Id = 501,
-                CategoryId = 40,
+                CategoryId = CategoryConstants.HavaSojUcaklari,
                 Name = "HAVA SOJ (Global 6000)",
                 Slug = "hava-soj-global-6000",
                 Manufacturer = "TUSAŞ / Bombardier",

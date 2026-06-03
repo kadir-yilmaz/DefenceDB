@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using DefenceDB.EL.Models.Products;
 using DefenceDB.EL.Extensions;
+using DefenceDB.EL.Constants;
 
 namespace DefenceDB.DAL.Config;
 
@@ -15,7 +16,7 @@ public class CargoAircraftConfig : IEntityTypeConfiguration<CargoAircraft>
             new CargoAircraft
             {
                 Id = 502,
-                CategoryId = 41,
+                CategoryId = CategoryConstants.AskeriKargoUcaklari,
                 Name = "A400M Atlas",
                 Slug = "a400m-atlas",
                 Manufacturer = "Airbus Defence and Space",

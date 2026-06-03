@@ -4,6 +4,7 @@ using DefenceDB.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DefenceDB.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260603105755_AddLandVehiclesAndRenameTank")]
+    partial class AddLandVehiclesAndRenameTank
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -692,55 +695,6 @@ namespace DefenceDB.DAL.Migrations
                             Name = "Hava ve Füze Savunma Sistemleri",
                             ParentCategoryId = 39,
                             Slug = "hava-ve-fuze-savunma-sistemleri",
-                            SortOrder = 0
-                        },
-                        new
-                        {
-                            Id = 54,
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IconClass = "bi bi-crosshair",
-                            Name = "Piyade Silahları",
-                            Slug = "piyade-silahlari",
-                            SortOrder = 9
-                        },
-                        new
-                        {
-                            Id = 55,
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModelTypeName = "DefenceDB.EL.Models.Products.InfantryWeapon",
-                            Name = "Tabancalar",
-                            ParentCategoryId = 54,
-                            Slug = "tabancalar",
-                            SortOrder = 0
-                        },
-                        new
-                        {
-                            Id = 56,
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModelTypeName = "DefenceDB.EL.Models.Products.InfantryWeapon",
-                            Name = "Piyade Tüfekleri",
-                            ParentCategoryId = 54,
-                            Slug = "piyade-tufekleri",
-                            SortOrder = 0
-                        },
-                        new
-                        {
-                            Id = 57,
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModelTypeName = "DefenceDB.EL.Models.Products.InfantryWeapon",
-                            Name = "Makineli Tüfekler",
-                            ParentCategoryId = 54,
-                            Slug = "makineli-tufekler",
-                            SortOrder = 0
-                        },
-                        new
-                        {
-                            Id = 58,
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModelTypeName = "DefenceDB.EL.Models.Products.InfantryWeapon",
-                            Name = "Keskin Nişancı Tüfekleri",
-                            ParentCategoryId = 54,
-                            Slug = "keskin-nisanci-tufekleri",
                             SortOrder = 0
                         });
                 });
@@ -2349,119 +2303,6 @@ namespace DefenceDB.DAL.Migrations
                     b.ToTable("HypersonicGlideVehicles", (string)null);
                 });
 
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.InfantryWeapon", b =>
-                {
-                    b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
-
-                    b.Property<string>("Caliber")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int?>("EffectiveRangeMeters")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("MagazineCapacity")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("RateOfFireRpm")
-                        .HasColumnType("int");
-
-                    b.Property<double?>("WeightKg")
-                        .HasColumnType("float");
-
-                    b.ToTable("InfantryWeapons", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 601,
-                            CategoryId = 55,
-                            Country = "Türkiye",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Emniyet Genel Müdürlüğü ve Türk Silahlı Kuvvetleri'nin ana hizmet tabancası.",
-                            IsActive = true,
-                            IsShowcase = true,
-                            Manufacturer = "Sarsılmaz",
-                            Name = "SAR 9",
-                            Slug = "sar-9",
-                            Caliber = "9x19mm Parabellum",
-                            EffectiveRangeMeters = 50,
-                            MagazineCapacity = 15,
-                            WeightKg = 0.79000000000000004
-                        },
-                        new
-                        {
-                            Id = 602,
-                            CategoryId = 56,
-                            Country = "Türkiye",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Tamamen milli imkanlarla geliştirilen TSK'nın ana piyade tüfeği.",
-                            IsActive = true,
-                            IsShowcase = true,
-                            Manufacturer = "MKE / Kale Kalıp / Sarsılmaz",
-                            Name = "MPT-76",
-                            Slug = "mpt-76",
-                            Caliber = "7.62x51mm NATO",
-                            EffectiveRangeMeters = 600,
-                            MagazineCapacity = 20,
-                            RateOfFireRpm = 700,
-                            WeightKg = 4.0999999999999996
-                        },
-                        new
-                        {
-                            Id = 603,
-                            CategoryId = 56,
-                            Country = "Türkiye",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Özel kuvvetler ve emniyet birimleri için kısa namlulu ve hafif milli piyade tüfeği.",
-                            IsActive = true,
-                            IsShowcase = false,
-                            Manufacturer = "MKE",
-                            Name = "MPT-55",
-                            Slug = "mpt-55",
-                            Caliber = "5.56x45mm NATO",
-                            EffectiveRangeMeters = 400,
-                            MagazineCapacity = 30,
-                            RateOfFireRpm = 800,
-                            WeightKg = 3.2999999999999998
-                        },
-                        new
-                        {
-                            Id = 604,
-                            CategoryId = 57,
-                            Country = "Türkiye",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Araç üstü ve piyade kullanımı için geliştirilmiş yerli makineli tüfek.",
-                            IsActive = true,
-                            IsShowcase = true,
-                            Manufacturer = "Sarsılmaz",
-                            Name = "SAR 762 MT",
-                            Slug = "sar-762-mt",
-                            Caliber = "7.62x51mm NATO",
-                            EffectiveRangeMeters = 1200,
-                            MagazineCapacity = 100,
-                            RateOfFireRpm = 850,
-                            WeightKg = 12.0
-                        },
-                        new
-                        {
-                            Id = 605,
-                            CategoryId = 58,
-                            Country = "Türkiye",
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "MPT-76 platformu üzerinden geliştirilen yarı otomatik manga tipi keskin nişancı tüfeği.",
-                            IsActive = true,
-                            IsShowcase = true,
-                            Manufacturer = "MKE",
-                            Name = "KNT-76",
-                            Slug = "knt-76",
-                            Caliber = "7.62x51mm NATO",
-                            EffectiveRangeMeters = 800,
-                            MagazineCapacity = 20,
-                            WeightKg = 4.7000000000000002
-                        });
-                });
-
             modelBuilder.Entity("DefenceDB.EL.Models.Products.KamikazeUAV", b =>
                 {
                     b.HasBaseType("DefenceDB.EL.Models.DefenseProduct");
@@ -3772,15 +3613,6 @@ namespace DefenceDB.DAL.Migrations
                     b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
                         .WithOne()
                         .HasForeignKey("DefenceDB.EL.Models.Products.HypersonicGlideVehicle", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("DefenceDB.EL.Models.Products.InfantryWeapon", b =>
-                {
-                    b.HasOne("DefenceDB.EL.Models.DefenseProduct", null)
-                        .WithOne()
-                        .HasForeignKey("DefenceDB.EL.Models.Products.InfantryWeapon", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using DefenceDB.EL.Models.Products;
+using DefenceDB.EL.Constants;
 
 namespace DefenceDB.DAL.Config;
 
@@ -14,7 +15,7 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem 
             { 
                 Id = 401, 
-                CategoryId = 47, 
+                CategoryId = CategoryConstants.HavaVeFuzeSavunma, 
                 Name = "S-400 Triumf", 
                 Slug = "s-400-triumf", 
                 SystemType = AirDefenseSystemType.UzunYuksekIrtifa,
@@ -33,7 +34,7 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem 
             { 
                 Id = 402, 
-                CategoryId = 47, 
+                CategoryId = CategoryConstants.HavaVeFuzeSavunma, 
                 Name = "S-500 Prometey", 
                 Slug = "s-500-prometey", 
                 SystemType = AirDefenseSystemType.UzunYuksekIrtifa,
@@ -52,7 +53,7 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem 
             { 
                 Id = 403, 
-                CategoryId = 47, 
+                CategoryId = CategoryConstants.HavaVeFuzeSavunma, 
                 Name = "MIM-104 Patriot (PAC-3)", 
                 Slug = "mim-104-patriot-pac-3", 
                 SystemType = AirDefenseSystemType.UzunYuksekIrtifa,
@@ -71,7 +72,7 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem 
             { 
                 Id = 404, 
-                CategoryId = 47, 
+                CategoryId = CategoryConstants.HavaVeFuzeSavunma, 
                 Name = "THAAD", 
                 Slug = "thaad", 
                 SystemType = AirDefenseSystemType.UzunYuksekIrtifa,
@@ -90,7 +91,7 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem 
             { 
                 Id = 405, 
-                CategoryId = 47, 
+                CategoryId = CategoryConstants.HavaVeFuzeSavunma, 
                 Name = "SAMP/T Mamba", 
                 Slug = "samp-t-mamba", 
                 SystemType = AirDefenseSystemType.UzunYuksekIrtifa,
@@ -109,7 +110,7 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem 
             { 
                 Id = 406, 
-                CategoryId = 47, 
+                CategoryId = CategoryConstants.HavaVeFuzeSavunma, 
                 Name = "HQ-9", 
                 Slug = "hq-9", 
                 SystemType = AirDefenseSystemType.UzunYuksekIrtifa,
@@ -128,7 +129,7 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem 
             { 
                 Id = 408, 
-                CategoryId = 47, 
+                CategoryId = CategoryConstants.HavaVeFuzeSavunma, 
                 Name = "HİSAR-A+", 
                 Slug = "hisar-a-plus", 
                 SystemType = AirDefenseSystemType.AlcakIrtifa,
@@ -147,7 +148,7 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem 
             { 
                 Id = 409, 
-                CategoryId = 47, 
+                CategoryId = CategoryConstants.HavaVeFuzeSavunma, 
                 Name = "HİSAR-O+", 
                 Slug = "hisar-o-plus", 
                 SystemType = AirDefenseSystemType.OrtaIrtifa,
@@ -166,7 +167,7 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem
             {
                 Id = 411,
-                CategoryId = 47,
+                CategoryId = CategoryConstants.HavaVeFuzeSavunma,
                 Name = "K-SAM Chunma (Pegasus)",
                 Slug = "k-sam-chunma-pegasus",
                 SystemType = AirDefenseSystemType.AlcakIrtifa,
@@ -185,7 +186,7 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem
             {
                 Id = 412,
-                CategoryId = 47,
+                CategoryId = CategoryConstants.HavaVeFuzeSavunma,
                 Name = "Cheongung I (M-SAM)",
                 Slug = "cheongung-i-m-sam",
                 SystemType = AirDefenseSystemType.OrtaIrtifa,
@@ -204,7 +205,7 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem
             {
                 Id = 413,
-                CategoryId = 47,
+                CategoryId = CategoryConstants.HavaVeFuzeSavunma,
                 Name = "L-SAM",
                 Slug = "l-sam",
                 SystemType = AirDefenseSystemType.UzunYuksekIrtifa,
@@ -223,7 +224,7 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem
             {
                 Id = 414,
-                CategoryId = 47,
+                CategoryId = CategoryConstants.HavaVeFuzeSavunma,
                 Name = "Cheongung II (M-SAM Block II)",
                 Slug = "cheongung-ii-m-sam-block-ii",
                 SystemType = AirDefenseSystemType.OrtaIrtifa,
@@ -242,7 +243,7 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem
             {
                 Id = 415,
-                CategoryId = 44,
+                CategoryId = CategoryConstants.Manpads,
                 Name = "KP-SAM (Shin-Gung)",
                 Slug = "kp-sam-shin-gung",
                 SystemType = AirDefenseSystemType.CokAlcakIrtifa,
@@ -261,7 +262,7 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem
             {
                 Id = 416,
-                CategoryId = 46,
+                CategoryId = CategoryConstants.Spaag,
                 Name = "Biho (K30)",
                 Slug = "biho-k30",
                 SystemType = AirDefenseSystemType.CokAlcakIrtifa,
@@ -280,7 +281,7 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem
             {
                 Id = 417,
-                CategoryId = 47,
+                CategoryId = CategoryConstants.HavaVeFuzeSavunma,
                 Name = "Cheonma (K-SAM Block II)",
                 Slug = "cheonma-k-sam-block-ii",
                 SystemType = AirDefenseSystemType.AlcakIrtifa,
@@ -299,7 +300,7 @@ public class AirDefenseSystemConfig : IEntityTypeConfiguration<AirDefenseSystem>
             new AirDefenseSystem
             {
                 Id = 418,
-                CategoryId = 47,
+                CategoryId = CategoryConstants.HavaVeFuzeSavunma,
                 Name = "MIM-104 Patriot (PAC-2)",
                 Slug = "mim-104-patriot-pac-2",
                 SystemType = AirDefenseSystemType.UzunYuksekIrtifa,

@@ -40,3 +40,46 @@ Modern web standartlarına uygun yüksek performanslı medya yönetimi:
 
 ---
 
+## Mimari Değerlendirmeler & Trade-Offs (Ödünleşimler)
+
+Bu projede tercih edilen **TPT (Table-Per-Type)** kalıtım modeli ile alternatif modern yaklaşımlar (örneğin **TPH + JSONB Hibrit Yaklaşım**) arasındaki farklar ve tasarım kararları aşağıda teknik detaylarıyla açıklanmıştır.
+
+### 1. TPT (Table-Per-Type) Neden Tercih Edildi?
+Savunma sanayii alanı (domain), askeri standartlar (STANAG vb.) ve regülasyonlar nedeniyle **katı ve kararlı (stable)** bir taksonomiye sahiptir. Bir muharebe tankının namlu çapı, bir uçağın radar tipi veya bir denizaltının dalış derinliği gibi teknik parametreler uzun yıllar boyunca değişmez.
+
+* **Tip Güvenliği (Compile-time Type Safety):** C# sınıfları ve veritabanı şeması arasında birebir strongly-typed eşleşme sağlanmıştır. Bu durum veritabanında tutarsız veri oluşmasını engeller.
+* **Veritabanı Seviyesinde Kısıtlar (Database Constraints):** Her alt tabloya özel Foreign Key, Not Null ve Check kısıtları doğrudan veritabanı motoru (SQL Server/PostgreSQL) tarafından denetlenir.
+* **Metadata Tabanlı Dinamik UI (Reflection):** Projenin admin paneli, alt sınıflardaki (örn: `LandVehicle`) strongly-typed property'leri C# Reflection (Yansıma) kullanarak okur ve UI formlarını sıfır kod yazımı ile dinamik olarak üretir.
+
+### 2. TPT'nin Performans Maliyeti (JOIN Patlaması)
+TPT modelinde her alt tip için ayrı bir fiziksel tablo oluşturulduğundan, tüm ürünleri alt tipleriyle birlikte çekmek istediğimizde (`_context.DefenseProducts.ToList()`) EF Core arkada tüm alt tabloları (20+ tablo) ana tabloya `LEFT JOIN` ile bağlayan devasa bir SQL sorgusu üretir:
+
+```sql
+SELECT p.Id, p.Name, t.EngineHorsePower, s.MaxDepthMeters, a.Generation ...
+FROM DefenseProducts p
+LEFT JOIN LandVehicles t ON p.Id = t.Id
+LEFT JOIN Submarines s ON p.Id = s.Id
+LEFT JOIN FighterAircrafts a ON p.Id = a.Id
+-- (20+ LEFT JOIN...)
+```
+
+Bu durum yüksek ölçekli sistemlerde veritabanı CPU, I/O ve RAM kullanımını artırır.
+
+### 3. Alternatif: TPH + JSONB (Hibrit) Yaklaşımı ve Karşılaştırma
+Eğer bu proje dinamik, sürekli değişen ve sınırsız varyasyona sahip bir yapı gerektirseydi (örneğin E-Ticaret ürün özellikleri gibi), TPH (Table-Per-Hierarchy) mimarisi üzerine tek bir **JSON/JSONB** kolonu eklenerek hibrit bir model kurulabilirdi:
+
+* **Sıfır JOIN Performansı:** Veritabanında sadece `DefenseProducts` adında tek bir tablo olur ve alt sınıflara ait özel nitelikler bu tablodaki tek bir `SpecJson` kolonunda JSON formatında tutulurdu. Bu sayede tüm ürünleri çekme işlemi sıfır JOIN ile inanılmaz hızlı gerçekleşirdi.
+* **Ağ (Network) Hafifliği:** Sadece o ürüne ait dolu veriler JSON olarak taşınacağı için, TPT'deki gibi yüzlerce `NULL` kolon içeren şişmiş veri setleri oluşmazdı.
+
+#### TPT vs TPH+JSONB Karşılaştırma Tablosu
+
+| Kriter | TPT (Projede Seçilen) | TPH + JSONB (Alternatif) |
+| :--- | :--- | :--- |
+| **Derleme Zamanı Güvenliği** | En Yüksek (Strongly-typed) | Düşük (JSON string parsing) |
+| **Sorgu Performansı (Milyon Satır)** | Düşük (20+ JOIN) | En Yüksek (Tek Tablo, 0 JOIN) |
+| **Veritabanı Kısıtları (FK, Not Null)** | Var (Veritabanı seviyesinde) | Yok (Uygulama katmanında yönetilmeli) |
+| **Şema Esnekliği (Yeni Özellik Ekleme)** | Düşük (Yeni kolon / Migration gerekir) | En Yüksek (Migration gerektirmez) |
+| **Kullanım Alanı** | Regüle, Katı ve Sabit Domainler | Dinamik, Sürekli Değişen Domainler (E-Ticaret vb.) |
+
+**Tasarım Kararı Özeti:** Projede, veri tutarlılığını garanti altına almak, güçlü tipli (strongly-typed) yapıyı korumak ve Reflection tabanlı dinamik UI motorunu en temiz şekilde beslemek amacıyla **TPT** modeli bilinçli olarak tercih edilmiştir. Ölçeklenebilirlik gereksinimlerine göre JSONB hibrit modeline geçiş planı mimari yol haritamızda yer almaktadır.
+

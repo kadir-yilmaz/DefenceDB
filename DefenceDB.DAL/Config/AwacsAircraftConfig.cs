@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using DefenceDB.EL.Models.Products;
 using DefenceDB.EL.Extensions;
+using DefenceDB.EL.Constants;
 
 namespace DefenceDB.DAL.Config;
 
@@ -15,7 +16,7 @@ public class AwacsAircraftConfig : IEntityTypeConfiguration<AwacsAircraft>
             new AwacsAircraft
             {
                 Id = 505,
-                CategoryId = 43,
+                CategoryId = CategoryConstants.AwacsUcaklari,
                 Name = "E-7T Barış Kartalı",
                 Slug = "e-7t-baris-kartali",
                 Manufacturer = "Boeing / TUSAŞ",
