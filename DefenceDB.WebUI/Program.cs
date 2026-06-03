@@ -7,6 +7,8 @@ using DefenceDB.BLL.Concrete;
 using DefenceDB.DAL.Seed;
 using NToastNotify;
 using DefenceDB.WebUI.Services;
+using Elastic.Clients.Elasticsearch;
+using Elastic.Transport;
 
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.DataProtection;
@@ -29,11 +31,51 @@ builder.Services.Configure<FormOptions>(options =>
     options.MultipartBodyLengthLimit = 104_857_600;
 });
 
+// ── Feature Toggle Manager ──────────────────────────────────────
+builder.Services.AddSingleton<IFeatureManager, FeatureManager>();
+var featureManager = new FeatureManager(builder.Configuration);
+
+// ── Caching (In-Memory) ──────────────────────────────────────────
+builder.Services.AddSingleton<ICacheService, MemoryCacheService>();
+
+builder.Services.AddScoped<IImageProcessingService, ImageProcessingService>();
+builder.Services.AddScoped<IProductFormMapper, ProductFormMapper>();
+
+// ── Search (Elasticsearch veya SQL Fallback) ────────────────────
+if (featureManager.UseElasticsearch)
+{
+    var esUrl = builder.Configuration.GetConnectionString("Elasticsearch") ?? "http://localhost:9200";
+    var settings = new ElasticsearchClientSettings(new Uri(esUrl))
+        .DefaultIndex("defencedb-products")
+        .DisableDirectStreaming()
+        .RequestTimeout(TimeSpan.FromSeconds(30));
+    
+    builder.Services.AddSingleton(new ElasticsearchClient(settings));
+    builder.Services.AddScoped<ISearchService, ElasticsearchService>();
+}
+else
+{
+    builder.Services.AddScoped<ISearchService, SqlFallbackSearchService>();
+}
+
+// ── EF Core Sync Interceptor ────────────────────────────────────
+builder.Services.AddSingleton<ElasticSyncInterceptor>();
+
 // Add DbContext
 var connectionString = builder.Configuration.GetConnectionString("sqlConnection") 
     ?? throw new InvalidOperationException("Connection string 'sqlConnection' not found.");
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(connectionString));
+builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
+{
+    options.UseSqlServer(connectionString);
+    
+    // Interceptor'ı sadece feature aktifse ekle
+    var fm = serviceProvider.GetService<IFeatureManager>();
+    if (fm is not null)
+    {
+        var interceptor = serviceProvider.GetRequiredService<ElasticSyncInterceptor>();
+        options.AddInterceptors(interceptor);
+    }
+});
 
 // Add Identity
 builder.Services.AddIdentity<AppUser, AppRole>(options =>
@@ -86,7 +128,8 @@ builder.Services.AddAuthorization(options =>
 
 // Register Services
 builder.Services.AddScoped<ICategoryService, CategoryService>();
-builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IProductQueryService, ProductQueryManager>();
+builder.Services.AddScoped<IProductCommandService, ProductCommandManager>();
 builder.Services.AddScoped<INotificationService, ToastNotificationService>();
 
 // Add services to the container.
@@ -97,6 +140,7 @@ builder.Services.AddControllersWithViews()
         PositionClass = ToastPositions.BottomRight,
         TimeOut = 5000
     });
+
 
 var app = builder.Build();
 
@@ -110,6 +154,14 @@ using (var scope = app.Services.CreateScope())
         await context.Database.MigrateAsync();
 
         await SeedData.InitializeAsync(services, builder.Configuration);
+
+        // Elasticsearch ilk indeksleme (feature aktifse)
+        var fm = services.GetService<IFeatureManager>();
+        if (fm is not null && fm.UseElasticsearch)
+        {
+            var searchService = services.GetRequiredService<ISearchService>();
+            await searchService.ReindexAllAsync();
+        }
     }
     catch (Exception ex)
     {

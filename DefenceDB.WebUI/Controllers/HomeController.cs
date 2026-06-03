@@ -9,23 +9,23 @@ public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
     private readonly ICategoryService _categoryService;
-    private readonly IProductService _productService;
+    private readonly IProductQueryService _productQueryService;
 
     public HomeController(
         ILogger<HomeController> logger,
         ICategoryService categoryService,
-        IProductService productService)
+        IProductQueryService productQueryService)
     {
         _logger = logger;
         _categoryService = categoryService;
-        _productService = productService;
+        _productQueryService = productQueryService;
     }
 
     public async Task<IActionResult> Index()
     {
         ViewBag.Categories = await _categoryService.GetRootCategoriesAsync();
-        ViewBag.RecentProducts = await _productService.GetRecentProductsAsync(5);
-        ViewBag.ShowcaseProducts = await _productService.GetShowcaseProductsAsync();
+        ViewBag.RecentProducts = await _productQueryService.GetRecentProductsAsync(5);
+        ViewBag.ShowcaseProducts = await _productQueryService.GetShowcaseProductsAsync();
         ViewData["Title"] = "Ana Sayfa - Savunma Wiki";
 
         return View();

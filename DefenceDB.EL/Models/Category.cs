@@ -24,6 +24,8 @@ public class Category : BaseEntity
     public string? ModelTypeName { get; set; }
 
     public int SortOrder { get; set; }
+    
+    public bool IsShowcase { get; set; } = false;
 
     // Self-referencing hierarchy
     public int? ParentCategoryId { get; set; }

@@ -69,6 +69,11 @@
                 </div>
 
                 <!-- Right Links Removed per user request -->
+                <!-- Benchmark Link -->
+                <a asp-controller="Benchmark" asp-action="Index" class="nav-link text-warning d-flex align-items-center gap-1 ms-2" style="font-size: 0.85rem; font-weight: 600; white-space: nowrap;">
+                    <i class="bi bi-speedometer2"></i>
+                    <span class="d-none d-lg-inline">Benchmark</span>
+                </a>
             </div>
         </div>
     </nav>
@@ -76,7 +81,7 @@
     <!-- SECOND BAR: Root Categories (Udemy Style) -->
     <div class="udemy-categories-bar">
         <ul class="udemy-cat-list">
-            @foreach (var rootCat in rootCategories)
+            @foreach (var rootCat in rootCategories.Where(c => c.IsShowcase).OrderBy(c => c.SortOrder))
             {
                 <li class="udemy-cat-item">
                     @{ var rootCount = (rootCat.Products?.Count ?? 0) + (rootCat.SubCategories?.Sum(sc => sc.Products?.Count ?? 0) ?? 0); }

@@ -4,10 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using DefenceDB.BLL.Abstract;
 using DefenceDB.EL.Models;
 using DefenceDB.EL.Extensions;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Jpeg;
-using SixLabors.ImageSharp.Processing;
+using DefenceDB.EL.Extensions;
 using DefenceDB.WebUI.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace DefenceDB.WebUI.Areas.Admin.Controllers;
@@ -16,22 +15,35 @@ namespace DefenceDB.WebUI.Areas.Admin.Controllers;
 [Authorize(Policy = "EditorPolicy")]
 public class ProductManagementController : Controller
 {
-    private readonly IProductService _productService;
+    private readonly IProductQueryService _productQueryService;
+    private readonly IProductCommandService _productCommandService;
     private readonly ICategoryService _categoryService;
-    private readonly IWebHostEnvironment _env;
     private readonly INotificationService _notificationService;
+    private readonly IProductFormMapper _formMapper;
+    private readonly IImageProcessingService _imageService;
+    private readonly IWebHostEnvironment _env;
 
-    public ProductManagementController(IProductService productService, ICategoryService categoryService, IWebHostEnvironment env, INotificationService notificationService)
+    public ProductManagementController(
+        IProductQueryService productQueryService, 
+        IProductCommandService productCommandService,
+        ICategoryService categoryService, 
+        INotificationService notificationService,
+        IProductFormMapper formMapper,
+        IImageProcessingService imageService,
+        IWebHostEnvironment env)
     {
-        _productService = productService;
+        _productQueryService = productQueryService;
+        _productCommandService = productCommandService;
         _categoryService = categoryService;
-        _env = env;
         _notificationService = notificationService;
+        _formMapper = formMapper;
+        _imageService = imageService;
+        _env = env;
     }
 
     public async Task<IActionResult> Index(int? categoryId, string? country, int page = 1)
     {
-        var query = _productService.GetProductsQueryable();
+        var query = _productQueryService.GetProductsQueryable();
         
         var totalCount = await query.CountAsync();
         ViewBag.TotalProductCount = totalCount;
@@ -63,7 +75,7 @@ public class ProductManagementController : Controller
 
         ViewBag.Categories = await _categoryService.GetCategoriesWithChildrenAsync();
         
-        ViewBag.Countries = await _productService.GetProductsQueryable()
+        ViewBag.Countries = await _productQueryService.GetProductsQueryable()
             .Where(p => !string.IsNullOrWhiteSpace(p.Country))
             .Select(p => p.Country)
             .Distinct()
@@ -109,7 +121,7 @@ public class ProductManagementController : Controller
         var instance = Activator.CreateInstance(modelType) as DefenseProduct;
         instance.CategoryId = categoryId.Value;
         
-        ViewBag.AllProducts = await _productService.GetAllProductsAsync();
+        ViewBag.AllProducts = await _productQueryService.GetAllProductsAsync();
         return View("Create", instance);
     }
 
@@ -118,121 +130,35 @@ public class ProductManagementController : Controller
     [RequestFormLimits(MultipartBodyLengthLimit = 104_857_600)]
     public async Task<IActionResult> Create(IFormCollection form)
     {
-        string modelTypeFullName = form["ModelTypeFullName"];
-        if (string.IsNullOrEmpty(modelTypeFullName)) return BadRequest();
+        var instance = _formMapper.MapFromFormForCreate(form);
+        if (instance == null) return BadRequest("Geçersiz veya eksik model verisi.");
 
-        Type modelType = Type.GetType(modelTypeFullName);
-        // Fallback arama (Farklı assembly'lerdeyse)
-        if (modelType == null)
-        {
-            modelType = AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(a => a.GetTypes())
-                .FirstOrDefault(t => t.FullName == modelTypeFullName);
-        }
-        
-        if (modelType == null) return BadRequest("Geçersiz model tipi.");
-
-        var instance = Activator.CreateInstance(modelType) as DefenseProduct;
-        if (instance == null) return BadRequest();
-
-        // Temel özellikleri ata
-        instance.Name = form["Name"];
-        instance.Country = form["Country"];
-        instance.Manufacturer = form["Manufacturer"];
-        instance.Status = form["Status"];
-        instance.Description = form["Description"];
-        instance.IsActive = form["IsActive"].Contains("true");
-        instance.IsShowcase = form["IsShowcase"].Contains("true");
-        instance.CategoryId = int.Parse(form["CategoryId"]);
-        instance.VideoUrl = form["VideoUrl"];
-        instance.Slug = instance.Name.ToSlug();
-
-        // Dinamik özellikleri ata
-        var baseProperties = typeof(DefenseProduct).GetProperties().Select(p => p.Name).ToList();
-        var specificProperties = modelType.GetProperties().Where(p => !baseProperties.Contains(p.Name)).ToList();
-
-        foreach (var prop in specificProperties)
-        {
-            if (form.TryGetValue(prop.Name, out var values))
-            {
-                var valueStr = values.FirstOrDefault();
-                if (string.IsNullOrEmpty(valueStr) && prop.PropertyType != typeof(bool)) continue;
-
-                object convertedValue = null;
-                
-                try 
-                {
-                    if (prop.PropertyType == typeof(bool))
-                    {
-                        convertedValue = values.Contains("true");
-                    }
-                    else if (prop.PropertyType.IsEnum)
-                    {
-                        convertedValue = Enum.Parse(prop.PropertyType, valueStr);
-                    }
-                    else if (Nullable.GetUnderlyingType(prop.PropertyType)?.IsEnum == true)
-                    {
-                        convertedValue = Enum.Parse(Nullable.GetUnderlyingType(prop.PropertyType), valueStr);
-                    }
-                    else if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(int?))
-                    {
-                        convertedValue = int.Parse(valueStr);
-                    }
-                    else if (prop.PropertyType == typeof(double) || prop.PropertyType == typeof(double?))
-                    {
-                        convertedValue = double.Parse(valueStr, System.Globalization.CultureInfo.InvariantCulture);
-                    }
-                    else
-                    {
-                        convertedValue = valueStr;
-                    }
-                    
-                    prop.SetValue(instance, convertedValue);
-                }
-                catch { /* Dönüşüm hatasını yoksay */ }
-            }
-        }
-
-        await _productService.AddProductAsync(instance);
+        await _productCommandService.AddProductAsync(instance);
 
         // Resim Yükleme (Max 10)
         var uploadedImages = HttpContext.Request.Form.Files.GetFiles("UploadedImages");
         if (uploadedImages != null && uploadedImages.Count > 0)
         {
-            int imageCount = Math.Min(uploadedImages.Count, 10);
-            string uploadsFolder = Path.Combine(_env.WebRootPath, "images", "products");
-            if (!Directory.Exists(uploadsFolder))
-                Directory.CreateDirectory(uploadsFolder);
-
             int newMainImageIndex = 0;
             if (form.TryGetValue("NewMainImageIndex", out var newMainIndexStr) && int.TryParse(newMainIndexStr, out int index))
             {
                 newMainImageIndex = index;
             }
 
-            if (newMainImageIndex < 0 || newMainImageIndex >= imageCount)
+            var imagePaths = await _imageService.ProcessAndSaveImagesAsync(uploadedImages, instance.Slug, 10);
+            
+            instance.Images ??= new List<ProductImage>();
+            for (int i = 0; i < imagePaths.Count; i++)
             {
-                newMainImageIndex = 0;
-            }
-
-            for (int i = 0; i < imageCount; i++)
-            {
-                var file = uploadedImages[i];
-                if (file.Length > 0 && file.ContentType.StartsWith("image/"))
+                instance.Images.Add(new ProductImage
                 {
-                    string uniqueFileName = await SaveOptimizedProductImageAsync(file, uploadsFolder, instance.Slug);
-
-                    instance.Images ??= new List<ProductImage>();
-                    instance.Images.Add(new ProductImage
-                    {
-                        ProductId = instance.Id,
-                        ImagePath = $"/images/products/{uniqueFileName}",
-                        IsMainImage = (i == newMainImageIndex) // Seçilen yeni resim kapak olsun
-                    });
-                }
+                    ProductId = instance.Id,
+                    ImagePath = imagePaths[i],
+                    IsMainImage = (i == newMainImageIndex)
+                });
             }
-            // Resimleri ekledikten sonra ürünü bir daha güncelleyelim
-            await _productService.UpdateProductAsync(instance);
+            
+            await _productCommandService.UpdateProductAsync(instance);
         }
 
         // İlişkileri Kaydet
@@ -241,7 +167,7 @@ public class ProductManagementController : Controller
             var relatedIds = relatedIdsValues.Select(v => int.TryParse(v, out int id) ? id : 0).Where(i => i > 0).ToList();
             if (relatedIds.Any())
             {
-                await _productService.UpdateProductRelationshipsAsync(instance.Id, relatedIds);
+                await _productCommandService.UpdateProductRelationshipsAsync(instance.Id, relatedIds);
             }
         }
 
@@ -267,7 +193,7 @@ public class ProductManagementController : Controller
             return BadRequest("Geçersiz ürün ID'si");
         }
 
-        var product = await _productService.GetProductByIdAsync(id);
+        var product = await _productQueryService.GetProductByIdAsync(id);
         
         if (product == null) 
         {
@@ -276,7 +202,7 @@ public class ProductManagementController : Controller
         }
 
         Console.WriteLine($"Product found: {product.Name}");
-        ViewBag.AllProducts = await _productService.GetAllProductsAsync();
+        ViewBag.AllProducts = await _productQueryService.GetAllProductsAsync();
         return View("Edit", product);
     }
 
@@ -285,66 +211,10 @@ public class ProductManagementController : Controller
     [RequestFormLimits(MultipartBodyLengthLimit = 104_857_600)]
     public async Task<IActionResult> Edit(int id, IFormCollection form)
     {
-        var instance = await _productService.GetProductByIdAsync(id);
+        var instance = await _productQueryService.GetProductByIdAsync(id);
         if (instance == null) return NotFound();
 
-        // Temel özellikleri ata
-        instance.Name = form["Name"];
-        instance.Country = form["Country"];
-        instance.Manufacturer = form["Manufacturer"];
-        instance.Status = form["Status"];
-        instance.Description = form["Description"];
-        instance.IsActive = form["IsActive"].Contains("true");
-        instance.IsShowcase = form["IsShowcase"].Contains("true");
-        instance.VideoUrl = form["VideoUrl"];
-        instance.Slug = instance.Name.ToSlug();
-
-        // Dinamik özellikleri ata
-        var modelType = instance.GetType();
-        var baseProperties = typeof(DefenseProduct).GetProperties().Select(p => p.Name).ToList();
-        var specificProperties = modelType.GetProperties().Where(p => !baseProperties.Contains(p.Name)).ToList();
-
-        foreach (var prop in specificProperties)
-        {
-            if (form.TryGetValue(prop.Name, out var values))
-            {
-                var valueStr = values.FirstOrDefault();
-                if (string.IsNullOrEmpty(valueStr) && prop.PropertyType != typeof(bool)) continue;
-
-                object convertedValue = null;
-                
-                try 
-                {
-                    if (prop.PropertyType == typeof(bool))
-                    {
-                        convertedValue = values.Contains("true");
-                    }
-                    else if (prop.PropertyType.IsEnum)
-                    {
-                        convertedValue = Enum.Parse(prop.PropertyType, valueStr);
-                    }
-                    else if (Nullable.GetUnderlyingType(prop.PropertyType)?.IsEnum == true)
-                    {
-                        convertedValue = Enum.Parse(Nullable.GetUnderlyingType(prop.PropertyType), valueStr);
-                    }
-                    else if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(int?))
-                    {
-                        convertedValue = int.Parse(valueStr);
-                    }
-                    else if (prop.PropertyType == typeof(double) || prop.PropertyType == typeof(double?))
-                    {
-                        convertedValue = double.Parse(valueStr, System.Globalization.CultureInfo.InvariantCulture);
-                    }
-                    else
-                    {
-                        convertedValue = valueStr;
-                    }
-                    
-                    prop.SetValue(instance, convertedValue);
-                }
-                catch { /* Dönüşüm hatasını yoksay */ }
-            }
-        }
+        _formMapper.MapFromFormForEdit(form, instance);
 
         // Resim Yükleme (Mevcutlara Ek Olarak)
         var uploadedImages = HttpContext.Request.Form.Files.GetFiles("UploadedImages");
@@ -352,49 +222,40 @@ public class ProductManagementController : Controller
         {
             var existingImagesCount = instance.Images?.Count ?? 0;
             int allowedNewImages = Math.Max(0, 10 - existingImagesCount);
-            int imagesToUpload = Math.Min(uploadedImages.Count, allowedNewImages);
             
-            string uploadsFolder = Path.Combine(_env.WebRootPath, "images", "products");
-            if (!Directory.Exists(uploadsFolder))
-                Directory.CreateDirectory(uploadsFolder);
-
             int newMainImageIndex = -1;
             if (form.TryGetValue("NewMainImageIndex", out var newMainIndexStr) && int.TryParse(newMainIndexStr, out int index))
             {
                 newMainImageIndex = index;
             }
 
-            for (int i = 0; i < imagesToUpload; i++)
+            var imagePaths = await _imageService.ProcessAndSaveImagesAsync(uploadedImages, instance.Slug, allowedNewImages);
+            
+            instance.Images ??= new List<ProductImage>();
+            for (int i = 0; i < imagePaths.Count; i++)
             {
-                var file = uploadedImages[i];
-                if (file.Length > 0 && file.ContentType.StartsWith("image/"))
+                instance.Images.Add(new ProductImage
                 {
-                    string uniqueFileName = await SaveOptimizedProductImageAsync(file, uploadsFolder, instance.Slug);
-
-                    instance.Images ??= new List<ProductImage>();
-                    instance.Images.Add(new ProductImage
-                    {
-                        ProductId = instance.Id,
-                        ImagePath = $"/images/products/{uniqueFileName}",
-                        IsMainImage = (newMainImageIndex >= 0 ? (i == newMainImageIndex) : (existingImagesCount == 0 && i == 0))
-                    });
-                }
+                    ProductId = instance.Id,
+                    ImagePath = imagePaths[i],
+                    IsMainImage = (newMainImageIndex >= 0 ? (i == newMainImageIndex) : (existingImagesCount == 0 && i == 0))
+                });
             }
         }
 
         // Ürünü ve (varsa) yeni resimlerini tek seferde kaydet
-        await _productService.UpdateProductAsync(instance);
+        await _productCommandService.UpdateProductAsync(instance);
 
         // İlişkileri Kaydet
         if (form.TryGetValue("RelatedProductIds", out var relatedIdsValues))
         {
             var relatedIds = relatedIdsValues.Select(v => int.TryParse(v, out int id) ? id : 0).Where(i => i > 0).ToList();
-            await _productService.UpdateProductRelationshipsAsync(instance.Id, relatedIds);
+            await _productCommandService.UpdateProductRelationshipsAsync(instance.Id, relatedIds);
         }
         else
         {
             // Hiçbiri seçilmediyse tümünü temizle
-            await _productService.UpdateProductRelationshipsAsync(instance.Id, new List<int>());
+            await _productCommandService.UpdateProductRelationshipsAsync(instance.Id, new List<int>());
         }
 
         _notificationService.Success("Ürün başarıyla güncellendi.", "Başarılı");
@@ -405,7 +266,7 @@ public class ProductManagementController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteImage(int imageId)
     {
-        var image = await _productService.GetProductImageByIdAsync(imageId);
+        var image = await _productQueryService.GetProductImageByIdAsync(imageId);
         if (image == null) return Json(new { success = false, message = "Resim bulunamadı." });
 
         // Dosyayı sistemden sil
@@ -431,7 +292,7 @@ public class ProductManagementController : Controller
         catch { /* Dosya silinemezse yoksay */ }
 
         // Veritabanından sil
-        await _productService.DeleteProductImageAsync(image);
+        await _productCommandService.DeleteProductImageAsync(image);
 
         return Json(new { success = true });
     }
@@ -446,7 +307,7 @@ public class ProductManagementController : Controller
         int successCount = 0;
         foreach(var id in imageIds)
         {
-            var image = await _productService.GetProductImageByIdAsync(id);
+            var image = await _productQueryService.GetProductImageByIdAsync(id);
             if (image != null)
             {
                 // Dosyayı sistemden sil
@@ -475,7 +336,7 @@ public class ProductManagementController : Controller
         }
 
         // Veritabanından topluca sil
-        await _productService.DeleteProductImagesAsync(imageIds);
+        await _productCommandService.DeleteProductImagesAsync(imageIds);
 
         return Json(new { success = true, message = $"{successCount} adet resim başarıyla silindi." });
     }
@@ -484,10 +345,10 @@ public class ProductManagementController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SetMainImage(int imageId)
     {
-        var image = await _productService.GetProductImageByIdAsync(imageId);
+        var image = await _productQueryService.GetProductImageByIdAsync(imageId);
         if (image == null) return Json(new { success = false, message = "Resim bulunamadı." });
 
-        await _productService.SetMainImageAsync(image.ProductId, imageId);
+        await _productCommandService.SetMainImageAsync(image.ProductId, imageId);
 
         return Json(new { success = true });
     }
@@ -495,7 +356,40 @@ public class ProductManagementController : Controller
     [HttpPost]
     public async Task<IActionResult> Delete(int id)
     {
-        await _productService.DeleteProductAsync(id);
+        var product = await _productQueryService.GetProductByIdAsync(id);
+        if (product == null) return NotFound();
+
+        // 1) Eski Resimleri Sil
+        if (product.Images != null && product.Images.Any())
+        {
+            var imagesFolder = Path.Combine(_env.WebRootPath, "images", "products");
+            var thumbsFolder = Path.Combine(imagesFolder, "thumbs");
+
+            foreach (var img in product.Images)
+            {
+                var fileName = Path.GetFileName(img.ImagePath);
+                if (string.IsNullOrEmpty(fileName)) continue;
+
+                var mainImagePath = Path.Combine(imagesFolder, fileName);
+                var thumbImagePath = Path.Combine(thumbsFolder, fileName);
+
+                if (System.IO.File.Exists(mainImagePath))
+                    System.IO.File.Delete(mainImagePath);
+
+                if (System.IO.File.Exists(thumbImagePath))
+                    System.IO.File.Delete(thumbImagePath);
+            }
+
+            // Veritabanından resimleri sil (Cascading delete yoksa)
+            await _productCommandService.DeleteProductImagesAsync(product.Images.Select(i => i.Id));
+        }
+
+        // 2) İki yönlü bağlantıları tamamen temizle
+        await _productCommandService.UpdateProductRelationshipsAsync(id, new List<int>());
+
+        // 3) Ürünü Sil
+        await _productCommandService.DeleteProductAsync(id);
+
         _notificationService.Success("Ürün başarıyla silindi.", "Başarılı");
         return RedirectToAction(nameof(Index));
     }
@@ -519,58 +413,17 @@ public class ProductManagementController : Controller
         return modelType;
     }
 
-    private static async Task<string> SaveOptimizedProductImageAsync(IFormFile file, string uploadsFolder, string slug)
-    {
-        string uniqueFileName = $"{slug}-{Guid.NewGuid().ToString()[..8]}.webp";
-        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-        string thumbsFolder = Path.Combine(uploadsFolder, "thumbs");
-        string thumbPath = Path.Combine(thumbsFolder, uniqueFileName);
 
-        if (!Directory.Exists(thumbsFolder))
-            Directory.CreateDirectory(thumbsFolder);
-
-        await using var input = file.OpenReadStream();
-        using var image = await Image.LoadAsync(input);
-
-        if (image.Width > 1080 || image.Height > 1080)
-        {
-            image.Mutate(x => x.Resize(new ResizeOptions
-            {
-                Size = new Size(1080, 1080),
-                Mode = ResizeMode.Max
-            }));
-        }
-
-        image.Metadata.ExifProfile = null;
-
-        await image.SaveAsWebpAsync(filePath, new SixLabors.ImageSharp.Formats.Webp.WebpEncoder
-        {
-            Quality = 80
-        });
-
-        using var thumb = image.Clone(x => x.Resize(new ResizeOptions
-        {
-            Size = new Size(360, 260),
-            Mode = ResizeMode.Crop
-        }));
-
-        await thumb.SaveAsWebpAsync(thumbPath, new SixLabors.ImageSharp.Formats.Webp.WebpEncoder
-        {
-            Quality = 75
-        });
-
-        return uniqueFileName;
-    }
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleShowcase(int id, bool state)
     {
-        var product = await _productService.GetProductByIdAsync(id);
+        var product = await _productQueryService.GetProductByIdAsync(id);
         if (product == null)
             return Json(new { success = false, message = "Ürün bulunamadı." });
 
         product.IsShowcase = state;
-        await _productService.UpdateProductAsync(product);
+        await _productCommandService.UpdateProductAsync(product);
 
         return Json(new { success = true, message = "Ürün vitrin durumu güncellendi." });
     }

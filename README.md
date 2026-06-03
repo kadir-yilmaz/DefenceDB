@@ -22,13 +22,39 @@ Modern web standartlarına uygun yüksek performanslı medya yönetimi:
 
 ### 4. Sıfır Etki (Zero-Impact) YouTube İframe Sistemi
 Ürün detay sayfalarındaki YouTube videoları sayfa açılışını asla yavaşlatmaz. Klasik iframe yerine **`srcdoc` lazy load hack** tekniği kullanılmıştır. Sayfa yüklenirken sadece hafif bir kapak resmi gelir, kullanıcı "Play" butonuna basana kadar YouTube'un ağır script'leri sisteme sızmaz.
+### 5. CQRS Read Model
+TPT'nin getirdiği "JOIN Patlaması" ve performans maliyetini çözmek için sistemde **CQRS (Command Query Responsibility Segregation)** yaklaşımıyla özel bir Okuma Modeli (Read Model) geliştirilmiştir.
+* **Yazma (Command):** Veriler eklenirken/güncellenirken hala %100 tip güvenli (type-safe) olan TPT tablolarına yazılır.
+* **Senkronizasyon (Interceptor):** `ElasticSyncInterceptor` (EF Core Interceptor) devreye girerek, TPT tablolarına yazılan ilişkili veriyi anında düzleştirir (flatten) ve hiçbir `JOIN` gerektirmeyen tek bir `ProductReadModels` tablosuna (Flat Table) satır olarak ekler. Alt sınıflara has özellikler bu tabloda `SpecificPropertiesJson` kolonunda tutulur.
+* **Okuma (Query):** Kullanıcı arayüzü listeleme yaparken karmaşık TPT tablolarını değil, bu düz tabloyu sorgular.
+* **Performans Kazanımı:** 20+ LEFT JOIN ortadan kalktı! Sorgu süreleri harici bir Elasticsearch hızına ulaştı.
+
+#### Performans Karşılaştırması (Benchmark)
+Aşağıdaki tablo, sistemdeki farklı veri çekme yöntemlerinin "İlk Sorgu (Cold Start)" ve "İkinci Sorgu (Warm Start)" sürelerini (milisaniye cinsinden) göstermektedir:
+
+| Yöntem | İlk Sorgu (Cold Start) | İkinci Sorgu (Warm Start) |
+| :--- | :--- | :--- |
+| **SQL Server TPT (20+ JOIN)** | ~350 ms | ~55 ms |
+| **Elasticsearch** | ~290 ms | ~13 ms |
+| **SQL Read Model (Flat Table)** | **~25 ms** | **~14 ms** |
+| **In-Memory Cache** | ~17 ms (Miss) | ~4 ms (Hit) |
+
+> **Not:** Elasticsearch'ün ilk sorguda (~290ms) zorlanmasının sebebi, HTTP TCP bağlantı maliyeti (Connection Pooling) ve JIT (Just-In-Time) derlemesidir. SQL Read Model ise tek satırlık `SELECT *` sorgusu olduğu için ilk açılışta bile **~25ms** gibi muazzam bir hız sunmaktadır. Bu sayede harici bir ES sunucusu kurma ve yönetme maliyetinden tamamen kurtulunmuştur.
+
+### 6. Modern Caching (Önbellekleme)
+Projenin karmaşıklığını ve altyapı maliyetini düşürmek adına dışa bağımlı Redis yapısı projeden çıkartılmış, onun yerine ASP.NET Core'un doğrudan RAM üzerinde çalışan, ultra hızlı yerleşik **In-Memory Cache** mekanizmasına geçiş yapılmıştır. Cache Hit süreleri ~2ms seviyesindedir.
+
+### 7. Clean Architecture & Service-Level CQRS (MediatR Olmadan)
+Veritabanındaki "Read Model" ayrımını uygulama (Application) katmanına da taşımak için servisler "Command" ve "Query" olarak fiziksel olarak ikiye ayrılmıştır. Geliştiricilerin genelde düştüğü "Her proje için MediatR kurup yüzlerce sınıf (Boilerplate) oluşturma" tuzağına düşmeden, pragmatik bir Clean Architecture uygulanmıştır:
+* **`IProductQueryService`**: Sadece veri okuma metodlarını barındırır. Ön yüzdeki (ziyaretçilerin girdiği) tüm Controller'lar sadece bu servisi kullanır. Bu sayede ön yüzden veritabanına yanlışlıkla veya güvenlik açığı ile veri yazılması **imkansız** hale getirilmiştir.
+* **`IProductCommandService`**: Sadece veri ekleme, silme ve güncelleme metodlarını barındırır. Yalnızca yetkilendirilmiş Admin Controller'ları tarafından kullanılır.
 
 ## Kullanılan Teknolojiler
 
-* **Backend:** C#, ASP.NET Core 8 MVC
+* **Backend:** C#, ASP.NET Core 8 Web API
 * **Veritabanı:** Microsoft SQL Server & Entity Framework Core (Code First)
 * **Mimari:** N-Tier Architecture (Katmanlı Mimari - BLL, DAL, EL, WebUI)
-* **Frontend:** HTML5, CSS3, JavaScript, Bootstrap 5
+* **Frontend:** ASP.NET Core 8 MVC
 * **Görsel İşleme:** SixLabors.ImageSharp
 
 ## Kurulum ve Çalıştırma

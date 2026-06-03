@@ -7,18 +7,18 @@ namespace DefenceDB.WebUI.Controllers;
 
 public class ProductController : Controller
 {
-    private readonly IProductService _productService;
+    private readonly IProductQueryService _productQueryService;
     private readonly ICategoryService _categoryService;
 
-    public ProductController(IProductService productService, ICategoryService categoryService)
+    public ProductController(IProductQueryService productQueryService, ICategoryService categoryService)
     {
-        _productService = productService;
+        _productQueryService = productQueryService;
         _categoryService = categoryService;
     }
 
     public async Task<IActionResult> Index(string? categorySlug, string? country, string? search, int page = 1)
     {
-        IQueryable<DefenseProduct> query = _productService.GetProductsQueryable();
+        IQueryable<DefenseProduct> query = _productQueryService.GetProductsQueryable();
 
         if (!string.IsNullOrEmpty(search))
         {
@@ -169,11 +169,11 @@ public class ProductController : Controller
         if (parts.Length < 2 || !int.TryParse(parts[0], out int id))
             return NotFound();
 
-        var product = await _productService.GetProductByIdAsync(id);
+        var product = await _productQueryService.GetProductByIdAsync(id);
         if (product == null)
             return NotFound();
 
-        var rivalProducts = (await _productService.GetProductsByCategoryAsync(product.CategoryId))
+        var rivalProducts = (await _productQueryService.GetProductsByCategoryAsync(product.CategoryId))
             .Where(p => p.Id != product.Id && p.IsActive)
             .Take(12)
             .ToList();
@@ -189,7 +189,7 @@ public class ProductController : Controller
         if (string.IsNullOrWhiteSpace(term))
             return Json(new List<object>());
 
-        var allProducts = await _productService.GetAllProductsAsync();
+        var allProducts = await _productQueryService.GetAllProductsAsync();
         
         var termClean = term.ToLowerInvariant().Replace("-", "").Replace(" ", "");
 

@@ -24,10 +24,10 @@ public class CategoryConfig : IEntityTypeConfiguration<Category>
         // --- SEED DATA ---
         builder.HasData(
             // Ana Kategoriler (1-4)
-            new Category { Id = CategoryConstants.Fuzeler, Name = "Füzeler", Slug = "fuzeler", IconClass = "bi bi-rocket-takeoff", SortOrder = 1, CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
-            new Category { Id = CategoryConstants.SavasUcaklari, Name = "Savaş Uçakları", Slug = "savas-ucaklari", IconClass = "bi bi-airplane-engines", SortOrder = 2, CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
-            new Category { Id = CategoryConstants.SavasGemileri, Name = "Savaş Gemileri", Slug = "savas-gemileri", IconClass = "bi bi-tsunami", SortOrder = 3, CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
-            new Category { Id = CategoryConstants.Radarlar, Name = "Radarlar", Slug = "radarlar", IconClass = "bi bi-radar", SortOrder = 4, CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Category { Id = CategoryConstants.Fuzeler, Name = "Füzeler", Slug = "fuzeler", IconClass = "bi bi-rocket-takeoff", SortOrder = 1, IsShowcase = true, CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Category { Id = CategoryConstants.SavasUcaklari, Name = "Savaş Uçakları", Slug = "savas-ucaklari", IconClass = "bi bi-airplane-engines", SortOrder = 2, IsShowcase = true, CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Category { Id = CategoryConstants.SavasGemileri, Name = "Savaş Gemileri", Slug = "savas-gemileri", IconClass = "bi bi-tsunami", SortOrder = 3, IsShowcase = true, CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Category { Id = CategoryConstants.Radarlar, Name = "Radarlar", Slug = "radarlar", IconClass = "bi bi-radar", SortOrder = 4, IsShowcase = true, CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
             
             // Füzeler Alt Kategorileri (5-10)
             new Category { Id = CategoryConstants.HavaHavaFuzeleri, Name = "Hava-Hava Füzeleri", Slug = "hava-hava-fuzeleri", ParentCategoryId = CategoryConstants.Fuzeler, ModelTypeName = "DefenceDB.EL.Models.Products.AirToAirMissile", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
@@ -68,7 +68,7 @@ public class CategoryConfig : IEntityTypeConfiguration<Category>
             new Category { Id = CategoryConstants.Cnra, Name = "Çok Namlulu Roketatar Sistemleri (ÇNRA)", Slug = "cnra", ParentCategoryId = CategoryConstants.KaraAraclari, ModelTypeName = "DefenceDB.EL.Models.Products.LandVehicle", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
             
             // İnsansız Platformlar (23) ve Alt Kategorileri (24-28)
-            new Category { Id = CategoryConstants.InsansizPlatformlar, Name = "İnsansız Platformlar", Slug = "insansiz-platformlar", IconClass = "bi bi-robot", SortOrder = 6, CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Category { Id = CategoryConstants.InsansizPlatformlar, Name = "İnsansız Platformlar", Slug = "insansiz-platformlar", IconClass = "bi bi-robot", SortOrder = 6, IsShowcase = true, CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
             new Category { Id = CategoryConstants.Uav, Name = "İHA (UAV)", Slug = "iha-uav", ParentCategoryId = CategoryConstants.InsansizPlatformlar, ModelTypeName = "DefenceDB.EL.Models.Products.UAV", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
             new Category { Id = CategoryConstants.Usv, Name = "İDA (USV)", Slug = "ida-usv", ParentCategoryId = CategoryConstants.InsansizPlatformlar, ModelTypeName = "DefenceDB.EL.Models.Products.USV", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
             new Category { Id = CategoryConstants.Ugv, Name = "İKA (UGV)", Slug = "ika-ugv", ParentCategoryId = CategoryConstants.InsansizPlatformlar, ModelTypeName = "DefenceDB.EL.Models.Products.UGV", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
@@ -87,7 +87,7 @@ public class CategoryConfig : IEntityTypeConfiguration<Category>
             new Category { Id = CategoryConstants.TurboshaftMotorlar, Name = "Turboshaft Motorlar", Slug = "turboshaft-motorlar", ParentCategoryId = CategoryConstants.MotorVeGucSistemleri, ModelTypeName = "DefenceDB.EL.Models.Products.TurboshaftEngine", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
             
             // Hava Savunma Sistemleri (39) ve Alt Kategorileri (44-47)
-            new Category { Id = CategoryConstants.HavaSavunmaSistemleri, Name = "Hava Savunma Sistemleri", Slug = "hava-savunma-sistemleri", IconClass = "bi bi-shield-fill-check", SortOrder = 8, ModelTypeName = "DefenceDB.EL.Models.Products.AirDefenseSystem", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Category { Id = CategoryConstants.HavaSavunmaSistemleri, Name = "Hava Savunma Sistemleri", Slug = "hava-savunma-sistemleri", IconClass = "bi bi-shield-fill-check", SortOrder = 8, IsShowcase = true, ModelTypeName = "DefenceDB.EL.Models.Products.AirDefenseSystem", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
             new Category { Id = CategoryConstants.Manpads, Name = "Taşınabilir Hava Savunma Sistemleri (MANPADS)", Slug = "manpads", ParentCategoryId = CategoryConstants.HavaSavunmaSistemleri, ModelTypeName = "DefenceDB.EL.Models.Products.AirDefenseSystem", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
             new Category { Id = CategoryConstants.Ciws, Name = "Yakın Savunma Silah Sistemleri (CIWS)", Slug = "ciws", ParentCategoryId = CategoryConstants.HavaSavunmaSistemleri, ModelTypeName = "DefenceDB.EL.Models.Products.AirDefenseSystem", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
             new Category { Id = CategoryConstants.Spaag, Name = "Kundağı Motorlu Uçaksavar Topları (SPAAG)", Slug = "spaag", ParentCategoryId = CategoryConstants.HavaSavunmaSistemleri, ModelTypeName = "DefenceDB.EL.Models.Products.AirDefenseSystem", CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc) },

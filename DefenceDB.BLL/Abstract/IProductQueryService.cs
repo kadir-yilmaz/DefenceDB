@@ -2,7 +2,7 @@ using DefenceDB.EL.Models;
 
 namespace DefenceDB.BLL.Abstract;
 
-public interface IProductService
+public interface IProductQueryService
 {
     Task<List<DefenseProduct>> GetAllProductsAsync();
     IQueryable<DefenseProduct> GetProductsQueryable();
@@ -15,13 +15,5 @@ public interface IProductService
     Task<List<DefenseProduct>> GetShowcaseProductsAsync();
     Task<List<DefenseProduct>> SearchProductsAsync(string query);
 
-    Task AddProductAsync(DefenseProduct product);
-    Task UpdateProductAsync(DefenseProduct product);
-    Task DeleteProductAsync(int id);
-
-    Task UpdateProductRelationshipsAsync(int sourceProductId, List<int> targetProductIds);
     Task<ProductImage?> GetProductImageByIdAsync(int imageId);
-    Task DeleteProductImageAsync(ProductImage image);
-    Task DeleteProductImagesAsync(IEnumerable<int> imageIds);
-    Task SetMainImageAsync(int productId, int mainImageId);
 }

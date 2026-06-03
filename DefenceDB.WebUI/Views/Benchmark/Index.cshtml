@@ -1,0 +1,857 @@
+@{
+    ViewData["Title"] = "Performans Benchmark";
+    var useEs = ViewData["UseElasticsearch"] as bool? ?? false;
+    var useRedis = ViewData["UseRedis"] as bool? ?? false;
+}
+
+<style>
+    /* ═══════════════════════════════════════════════════════════
+       BENCHMARK DASHBOARD — GLASSMORPHIC DARK THEME
+       ═══════════════════════════════════════════════════════════ */
+
+    /* Override the global * transition from site.css that causes flicker */
+    .benchmark-hero,
+    .benchmark-hero *,
+    .benchmark-hero *::before,
+    .benchmark-hero *::after {
+        transition: none !important;
+    }
+    /* Re-enable only specific transitions we actually want */
+    .benchmark-hero .glass-card {
+        transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease !important;
+    }
+    .benchmark-hero .bench-btn {
+        transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease !important;
+    }
+    .benchmark-hero .bench-search-input {
+        transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+    }
+
+    /* Force dark background on entire page to prevent white flash */
+    body:has(.benchmark-hero),
+    body:has(.benchmark-hero) .app-container,
+    body:has(.benchmark-hero) main {
+        background-color: #0f172a !important;
+    }
+
+    .benchmark-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+        min-height: 100vh;
+        padding: 2rem 0 4rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .benchmark-hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at 30% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                    radial-gradient(ellipse at 70% 20%, rgba(168, 85, 247, 0.06) 0%, transparent 50%),
+                    radial-gradient(ellipse at 50% 80%, rgba(245, 158, 11, 0.04) 0%, transparent 50%);
+        pointer-events: none;
+        will-change: opacity;
+        animation: auroraFade 8s ease-in-out infinite alternate;
+    }
+
+    @@keyframes auroraFade {
+        0% { opacity: 0.6; }
+        100% { opacity: 1; }
+    }
+
+    .bench-title {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 800;
+        font-size: 2.5rem;
+        background: linear-gradient(135deg, #60a5fa, #a78bfa, #f59e0b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -0.03em;
+        margin-bottom: 0.5rem;
+    }
+
+    .bench-subtitle {
+        color: #94a3b8;
+        font-family: 'Inter', sans-serif;
+        font-size: 1rem;
+        letter-spacing: 0.5px;
+    }
+
+    /* Status badges */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 9999px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        backdrop-filter: blur(10px);
+    }
+
+    .status-active {
+        background: rgba(34, 197, 94, 0.15);
+        color: #4ade80;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .status-inactive {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .status-active .status-dot {
+        background: #4ade80;
+        box-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
+        animation: pulse-green 2s infinite;
+    }
+
+    .status-inactive .status-dot {
+        background: #f87171;
+    }
+
+    @@keyframes pulse-green {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+    }
+
+    /* Glass card */
+    .glass-card {
+        background: rgba(30, 41, 59, 0.5);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(148, 163, 184, 0.1);
+        border-radius: 16px;
+        padding: 1.75rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .glass-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.2), transparent);
+    }
+
+    .glass-card:hover {
+        border-color: rgba(148, 163, 184, 0.2);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-title-sm {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 600;
+        color: #e2e8f0;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .card-desc {
+        color: #94a3b8;
+        font-size: 0.85rem;
+        font-family: 'Inter', sans-serif;
+        margin-bottom: 1rem;
+    }
+
+    /* Scenario buttons */
+    .bench-btn {
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        font-size: 0.85rem;
+        padding: 10px 24px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .bench-btn::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+        opacity: 0;
+        transition: opacity 0.25s ease;
+    }
+
+    .bench-btn:hover::after {
+        opacity: 1;
+    }
+
+    .bench-btn-primary {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: #fff;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+
+    .bench-btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+    }
+
+    .bench-btn-purple {
+        background: linear-gradient(135deg, #a855f7, #7c3aed);
+        color: #fff;
+        box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+    }
+
+    .bench-btn-amber {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: #1e293b;
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+    }
+
+    .bench-btn-success {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: #fff;
+        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+    }
+
+    .bench-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+    /* Results area */
+    .result-panel {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(148, 163, 184, 0.08);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-top: 1rem;
+        min-height: 80px;
+    }
+
+    .result-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.06);
+    }
+
+    .result-row:last-child {
+        border-bottom: none;
+    }
+
+    .result-label {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.85rem;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .result-value {
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    .result-value.fast {
+        color: #4ade80;
+        text-shadow: 0 0 10px rgba(74, 222, 128, 0.3);
+    }
+
+    .result-value.medium {
+        color: #fbbf24;
+    }
+
+    .result-value.slow {
+        color: #f87171;
+    }
+
+    .result-count {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-left: 8px;
+    }
+
+    /* Chart container */
+    .chart-container {
+        background: rgba(15, 23, 42, 0.4);
+        border: 1px solid rgba(148, 163, 184, 0.08);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .chart-title {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 600;
+        color: #e2e8f0;
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Loading spinner */
+    .bench-spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
+
+    @@keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Search input */
+    .bench-search-input {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        border-radius: 10px;
+        color: #e2e8f0;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9rem;
+        padding: 10px 16px;
+        width: 100%;
+        transition: border-color 0.2s ease;
+    }
+
+    .bench-search-input:focus {
+        outline: none;
+        border-color: rgba(59, 130, 246, 0.5);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .bench-search-input::placeholder {
+        color: #64748b;
+    }
+
+    /* Speedometer-style metric */
+    .metric-circle {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-family: 'JetBrains Mono', monospace;
+        position: relative;
+    }
+
+    .metric-circle::before {
+        content: '';
+        position: absolute;
+        inset: -3px;
+        border-radius: 50%;
+        padding: 3px;
+        background: conic-gradient(var(--metric-color, #3b82f6) var(--metric-pct, 0%), rgba(148, 163, 184, 0.1) 0%);
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+    }
+
+    .metric-value {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: var(--metric-color, #3b82f6);
+    }
+
+    .metric-unit {
+        font-size: 0.65rem;
+        color: #94a3b8;
+        font-weight: 600;
+    }
+
+    /* Architecture diagram */
+    .arch-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    .arch-badge.sql { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.25); }
+    .arch-badge.sql-flat { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25); }
+    .arch-badge.es { background: rgba(168, 85, 247, 0.15); color: #a78bfa; border: 1px solid rgba(168, 85, 247, 0.25); }
+    .arch-badge.redis { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.25); }
+    .arch-badge.cache { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25); }
+</style>
+
+<script>
+    // Immediately force dark background to prevent white flash
+    document.body.style.backgroundColor = '#0f172a';
+    var appContainer = document.querySelector('.app-container');
+    if (appContainer) appContainer.style.backgroundColor = '#0f172a';
+    var mainEl = document.querySelector('main');
+    if (mainEl) mainEl.style.backgroundColor = '#0f172a';
+</script>
+
+<div class="benchmark-hero">
+    <div class="container position-relative" style="z-index: 1;">
+
+        <!-- Header -->
+        <div class="text-center mb-4 pt-4">
+            <h1 class="bench-title">
+                <i class="bi bi-speedometer2 me-2"></i>Performans Benchmark
+            </h1>
+            <p class="bench-subtitle">
+                TPT (SQL Server) vs Elasticsearch vs Redis — Gerçek zamanlı karşılaştırma
+            </p>
+            <div class="d-flex justify-content-center gap-3 mt-3 flex-wrap">
+                <span class="status-badge @(useEs ? "status-active" : "status-inactive")">
+                    <span class="status-dot"></span>
+                    Elasticsearch
+                </span>
+                <span class="status-badge @(useRedis ? "status-active" : "status-inactive")">
+                    <span class="status-dot"></span>
+                    Redis Cache
+                </span>
+                <span class="status-badge status-active">
+                    <span class="status-dot"></span>
+                    SQL Server (TPT)
+                </span>
+                <span class="status-badge status-active">
+                    <span class="status-dot" style="background:#34d399;"></span>
+                    SQL Read Model (Flat)
+                </span>
+            </div>
+        </div>
+
+        <!-- Scenario Cards -->
+        <div class="row g-4 mt-2">
+
+            <!-- Scenario 1: Get All Products -->
+            <div class="col-lg-4">
+                <div class="glass-card h-100">
+                    <div class="d-flex align-items-start justify-content-between mb-2">
+                        <div>
+                            <span class="card-title-sm d-block">
+                                <i class="bi bi-collection-fill text-primary me-2"></i>Tüm Ürünler
+                            </span>
+                            <span class="card-desc d-block">
+                                TPT (JOIN) vs Read Model vs ES
+                            </span>
+                        </div>
+                        <span class="arch-badge sql">TPT</span>
+                        <span class="arch-badge sql-flat ms-1">CQRS</span>
+                    </div>
+                    <button class="bench-btn bench-btn-primary w-100" onclick="runScenario('GetAllProducts', this)">
+                        <i class="bi bi-play-fill"></i> Çalıştır
+                    </button>
+                    <div class="result-panel" id="result-GetAllProducts">
+                        <div class="text-center text-muted" style="font-size: 0.85rem; padding: 1rem;">
+                            <i class="bi bi-arrow-up-circle"></i> Testi başlatmak için butona tıklayın
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scenario 2: Text Search -->
+            <div class="col-lg-4">
+                <div class="glass-card h-100">
+                    <div class="d-flex align-items-start justify-content-between mb-2">
+                        <div>
+                            <span class="card-title-sm d-block">
+                                <i class="bi bi-search text-purple me-2" style="color: #a78bfa;"></i>Metin Arama
+                            </span>
+                            <span class="card-desc d-block">
+                                SQL LIKE vs Read Model LIKE vs ES
+                            </span>
+                        </div>
+                        <span class="arch-badge es">ES</span>
+                    </div>
+                    <div class="mb-2">
+                        <input type="text" class="bench-search-input" id="searchQuery" placeholder="Arama terimi girin... (ör: hava)" value="hava" />
+                    </div>
+                    <button class="bench-btn bench-btn-purple w-100" onclick="runTextSearch(this)">
+                        <i class="bi bi-play-fill"></i> Ara & Karşılaştır
+                    </button>
+                    <div class="result-panel" id="result-TextSearch">
+                        <div class="text-center text-muted" style="font-size: 0.85rem; padding: 1rem;">
+                            <i class="bi bi-arrow-up-circle"></i> Arama testi için butona tıklayın
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scenario 3: Cache Test -->
+            <div class="col-lg-4">
+                <div class="glass-card h-100">
+                    <div class="d-flex align-items-start justify-content-between mb-2">
+                        <div>
+                            <span class="card-title-sm d-block">
+                                <i class="bi bi-lightning-charge-fill me-2" style="color: #fbbf24;"></i>Cache Hit
+                            </span>
+                            <span class="card-desc d-block">
+                                Uncached SQL vs @(useRedis ? "Redis" : "Memory") Cache
+                            </span>
+                        </div>
+                        <span class="arch-badge @(useRedis ? "redis" : "cache")">@(useRedis ? "Redis" : "Mem")</span>
+                    </div>
+                    <button class="bench-btn bench-btn-amber w-100" onclick="runScenario('CacheTest', this)">
+                        <i class="bi bi-play-fill"></i> Çalıştır
+                    </button>
+                    <div class="result-panel" id="result-CacheTest">
+                        <div class="text-center text-muted" style="font-size: 0.85rem; padding: 1rem;">
+                            <i class="bi bi-arrow-up-circle"></i> Cache testini başlatın
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Run All + Reindex -->
+        <div class="d-flex justify-content-center gap-3 mt-4 flex-wrap">
+            <button class="bench-btn bench-btn-primary" onclick="runAllScenarios(this)">
+                <i class="bi bi-play-circle-fill"></i> Tümünü Çalıştır
+            </button>
+            @if(useEs) {
+                <button class="bench-btn bench-btn-success" onclick="reindex(this)">
+                    <i class="bi bi-arrow-repeat"></i> ES Reindex
+                </button>
+            }
+            <button class="bench-btn" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);" onclick="syncReadModels(this)">
+                <i class="bi bi-database-fill-down"></i> Sync SQL Read Model
+            </button>
+        </div>
+
+        <!-- Chart -->
+        <div class="chart-container">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="chart-title"><i class="bi bi-bar-chart-fill me-2" style="color: #60a5fa;"></i>Sonuç Grafiği</span>
+                <div class="d-flex gap-3">
+                    <span style="font-size:0.75rem; color: #60a5fa; font-family:'Inter',sans-serif;">● SQL Server TPT</span>
+                    <span style="font-size:0.75rem; color: #34d399; font-family:'Inter',sans-serif;">● SQL Read Model</span>
+                    <span style="font-size:0.75rem; color: #a78bfa; font-family:'Inter',sans-serif;">● Elasticsearch</span>
+                    <span style="font-size:0.75rem; color: #fbbf24; font-family:'Inter',sans-serif;">● Cache</span>
+                </div>
+            </div>
+            <div style="position: relative; height: 300px; width: 100%;">
+                <canvas id="benchmarkChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script>
+        // ── Chart Setup ────────────────────────────────────
+        const ctx = document.getElementById('benchmarkChart').getContext('2d');
+        const benchChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'SQL Server (ms)',
+                        data: [],
+                        backgroundColor: 'rgba(96, 165, 250, 0.7)',
+                        borderColor: '#60a5fa',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        barPercentage: 0.7,
+                    },
+                    {
+                        label: 'SQL Read Model (ms)',
+                        data: [],
+                        backgroundColor: 'rgba(52, 211, 153, 0.7)',
+                        borderColor: '#34d399',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        barPercentage: 0.7,
+                    },
+                    {
+                        label: 'Elasticsearch (ms)',
+                        data: [],
+                        backgroundColor: 'rgba(167, 139, 250, 0.7)',
+                        borderColor: '#a78bfa',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        barPercentage: 0.7,
+                    },
+                    {
+                        label: 'Cache Hot (ms)',
+                        data: [],
+                        backgroundColor: 'rgba(251, 191, 36, 0.7)',
+                        borderColor: '#fbbf24',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        barPercentage: 0.7,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 800,
+                    easing: 'easeOutQuart'
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        titleFont: { family: "'Inter', sans-serif", weight: '600' },
+                        bodyFont: { family: "'JetBrains Mono', monospace" },
+                        borderColor: 'rgba(148, 163, 184, 0.2)',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' ms';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#94a3b8', font: { family: "'Inter', sans-serif", size: 11 } },
+                        grid: { color: 'rgba(148, 163, 184, 0.06)' }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#94a3b8',
+                            font: { family: "'JetBrains Mono', monospace", size: 11 },
+                            callback: function(value) { return value + ' ms'; }
+                        },
+                        grid: { color: 'rgba(148, 163, 184, 0.06)' }
+                    }
+                }
+            }
+        });
+
+        function addToChart(label, sqlMs, sqlFlatMs, esMs, cacheMs) {
+            benchChart.data.labels.push(label);
+            benchChart.data.datasets[0].data.push(sqlMs || 0);
+            benchChart.data.datasets[1].data.push(sqlFlatMs || 0);
+            benchChart.data.datasets[2].data.push(esMs || 0);
+            benchChart.data.datasets[3].data.push(cacheMs || 0);
+            benchChart.update();
+        }
+
+        // ── Scenario Runners ───────────────────────────────
+        function getSpeedClass(ms) {
+            if (ms < 5) return 'fast';
+            if (ms < 50) return 'fast';
+            if (ms < 200) return 'medium';
+            return 'slow';
+        }
+
+        function formatResult(data) {
+            let html = '';
+
+            html += `<div class="result-row">
+                <span class="result-label"><span class="arch-badge sql">SQL</span> TPT Query</span>
+                <span>
+                    <span class="result-value ${getSpeedClass(data.sqlTimeMs)}">${data.sqlTimeMs.toFixed(2)} ms</span>
+                    <span class="result-count">(${data.sqlCount} kayıt)</span>
+                </span>
+            </div>`;
+
+            if (data.sqlReadModelTimeMs !== null && data.sqlReadModelTimeMs !== undefined) {
+                html += `<div class="result-row">
+                    <span class="result-label"><span class="arch-badge sql-flat">SQL</span> Read Model</span>
+                    <span>
+                        <span class="result-value ${getSpeedClass(data.sqlReadModelTimeMs)}">${data.sqlReadModelTimeMs.toFixed(2)} ms</span>
+                        <span class="result-count">(${data.sqlReadModelCount} kayıt)</span>
+                    </span>
+                </div>`;
+            }
+
+
+            if (data.esTimeMs !== null && data.esTimeMs !== undefined) {
+                html += `<div class="result-row">
+                    <span class="result-label"><span class="arch-badge es">ES</span> Elasticsearch</span>
+                    <span>
+                        <span class="result-value ${getSpeedClass(data.esTimeMs)}">${data.esTimeMs.toFixed(2)} ms</span>
+                        <span class="result-count">(${data.esCount} kayıt)</span>
+                    </span>
+                </div>`;
+            }
+            if (data.cacheColdMs !== null && data.cacheColdMs !== undefined) {
+                html += `<div class="result-row">
+                    <span class="result-label"><span class="arch-badge cache">Cold</span> Cache Miss</span>
+                    <span class="result-value ${getSpeedClass(data.cacheColdMs)}">${data.cacheColdMs.toFixed(2)} ms</span>
+                </div>`;
+            }
+
+            if (data.cacheHotMs !== null && data.cacheHotMs !== undefined) {
+                html += `<div class="result-row">
+                    <span class="result-label"><span class="arch-badge redis">Hot</span> Cache Hit</span>
+                    <span>
+                        <span class="result-value ${getSpeedClass(data.cacheHotMs)}">${data.cacheHotMs.toFixed(2)} ms</span>
+                        ${data.cacheCount ? `<span class="result-count">(${data.cacheCount} kayıt)</span>` : ''}
+                    </span>
+                </div>`;
+            }
+
+            // Speed comparison
+            if (data.esTimeMs !== null && data.esTimeMs !== undefined && data.sqlTimeMs > 0 && data.esTimeMs > 0) {
+                const ratio = (data.sqlTimeMs / data.esTimeMs).toFixed(1);
+                if (ratio > 1) {
+                    html += `<div class="result-row" style="border-top: 1px solid rgba(74, 222, 128, 0.15); margin-top: 4px; padding-top: 10px;">
+                        <span class="result-label" style="color: #4ade80;"><i class="bi bi-lightning-charge-fill"></i> ES ${ratio}x daha hızlı</span>
+                    </div>`;
+                }
+            }
+
+            return html;
+        }
+
+        async function runScenario(scenario, btn) {
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<span class="bench-spinner"></span> Çalışıyor...';
+            btn.disabled = true;
+
+            const panel = document.getElementById('result-' + scenario);
+            panel.innerHTML = '<div class="text-center" style="padding: 1rem;"><span class="bench-spinner"></span></div>';
+
+            try {
+                const url = scenario === 'CacheTest' ? '/Benchmark/RunCacheTest' : '/Benchmark/RunGetAllProducts';
+                const resp = await fetch(url, { method: 'POST' });
+                const data = await resp.json();
+
+                panel.innerHTML = formatResult(data);
+                addToChart(data.scenario, data.sqlTimeMs, data.sqlReadModelTimeMs, data.esTimeMs, data.cacheHotMs);
+            } catch (err) {
+                panel.innerHTML = `<div class="text-center" style="color: #f87171; padding: 1rem;">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Hata: ${err.message}
+                </div>`;
+            }
+
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+
+        async function runTextSearch(btn) {
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<span class="bench-spinner"></span> Arıyor...';
+            btn.disabled = true;
+
+            const query = document.getElementById('searchQuery').value || 'hava';
+            const panel = document.getElementById('result-TextSearch');
+            panel.innerHTML = '<div class="text-center" style="padding: 1rem;"><span class="bench-spinner"></span></div>';
+
+            try {
+                const resp = await fetch('/Benchmark/RunTextSearch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query })
+                });
+                const data = await resp.json();
+
+                panel.innerHTML = formatResult(data);
+                addToChart(data.scenario, data.sqlTimeMs, data.sqlReadModelTimeMs, data.esTimeMs, data.cacheHotMs);
+            } catch (err) {
+                panel.innerHTML = `<div class="text-center" style="color: #f87171; padding: 1rem;">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Hata: ${err.message}
+                </div>`;
+            }
+
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+
+        async function runAllScenarios(btn) {
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<span class="bench-spinner"></span> Tüm testler çalışıyor...';
+            btn.disabled = true;
+
+            // Clear chart
+            benchChart.data.labels = [];
+            benchChart.data.datasets.forEach(d => d.data = []);
+            benchChart.update();
+
+            // Run each scenario sequentially
+            const getAllBtn = document.querySelector('[onclick*="GetAllProducts"]');
+            await runScenario('GetAllProducts', getAllBtn);
+
+            await new Promise(r => setTimeout(r, 300));
+
+            const searchBtn = document.querySelector('[onclick*="runTextSearch"]');
+            await runTextSearch(searchBtn);
+
+            await new Promise(r => setTimeout(r, 300));
+
+            const cacheBtn = document.querySelector('[onclick*="CacheTest"]');
+            await runScenario('CacheTest', cacheBtn);
+
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+
+        async function reindex(btn) {
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<span class="bench-spinner"></span> Reindex...';
+            btn.disabled = true;
+
+            try {
+                const resp = await fetch('/Benchmark/Reindex', { method: 'POST' });
+                const data = await resp.json();
+                if (data.success) {
+                    alert(`Reindex tamamlandı! Süre: ${data.timeMs.toFixed(0)} ms`);
+                } else {
+                    alert(data.message || 'Reindex başarısız');
+                }
+            } catch (err) {
+                alert('Reindex hatası: ' + err.message);
+            }
+
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+
+        async function syncReadModels(btn) {
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<span class="bench-spinner"></span> Senkronize ediliyor...';
+            btn.disabled = true;
+
+            try {
+                const resp = await fetch('/Benchmark/SyncReadModels', { method: 'POST' });
+                const data = await resp.json();
+                if (data.success) {
+                    alert(`Read Model Senkronizasyonu Tamamlandı! \nSüre: ${data.timeMs.toFixed(0)} ms \nAktarılan Kayıt: ${data.count}`);
+                } else {
+                    alert('Senkronizasyon başarısız');
+                }
+            } catch (err) {
+                alert('Senkronizasyon hatası: ' + err.message);
+            }
+
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+    </script>
+}

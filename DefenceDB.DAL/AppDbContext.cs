@@ -15,6 +15,9 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
     public DbSet<DefenseProduct> DefenseProducts { get; set; } = null!;
     public DbSet<ProductRelationship> ProductRelationships { get; set; } = null!;
     public DbSet<ProductImage> ProductImages { get; set; } = null!;
+    
+    // CQRS Read Model Table
+    public DbSet<ProductReadModel> ProductReadModels { get; set; } = null!;
 
     // Missiles
     public DbSet<BallisticMissile> BallisticMissiles { get; set; } = null!;

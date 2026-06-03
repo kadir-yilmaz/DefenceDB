@@ -1,0 +1,87 @@
+@model IEnumerable<DefenceDB.EL.Models.Category>
+
+@{
+    ViewData["Title"] = "Kategori Yönetimi (Navbar)";
+}
+
+<div class="card bg-dark text-light border-secondary">
+    <div class="card-header border-secondary d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-list-nested me-2"></i> Kategori Yönetimi</h5>
+        <span class="badge bg-secondary">@Model.Count() Ana Kategori</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>Kategori Adı</th>
+                        <th>İkon</th>
+                        <th>Alt Kategori Sayısı</th>
+                        <th>Ana Menüde Göster (Navbar)</th>
+                        <th class="text-end">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var cat in Model.OrderBy(c => c.SortOrder))
+                    {
+                        <tr>
+                            <td>@cat.Id</td>
+                            <td>
+                                <strong>@cat.Name</strong>
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(cat.IconClass))
+                                {
+                                    <i class="@cat.IconClass"></i>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">@cat.SubCategories.Count</span>
+                            </td>
+                            <td>
+                                @if (cat.IsShowcase)
+                                {
+                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Gösteriliyor</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary"><i class="bi bi-x-circle me-1"></i> Gizli</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <form asp-action="ToggleShowcase" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@cat.Id" />
+                                    @if (cat.IsShowcase)
+                                    {
+                                        <button type="submit" class="btn btn-sm btn-outline-warning" title="Menüden Kaldır">
+                                            <i class="bi bi-eye-slash"></i> Gizle
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="submit" class="btn btn-sm btn-outline-success" title="Menüye Ekle">
+                                            <i class="bi bi-eye"></i> Göster
+                                        </button>
+                                    }
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                Kayıtlı kategori bulunamadı.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

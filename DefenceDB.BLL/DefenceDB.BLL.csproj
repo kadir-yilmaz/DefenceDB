@@ -11,4 +11,10 @@
     <ProjectReference Include="..\DefenceDB.EL\DefenceDB.EL.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.14.*" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="8.0.*" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.*" />
+  </ItemGroup>
+
 </Project>

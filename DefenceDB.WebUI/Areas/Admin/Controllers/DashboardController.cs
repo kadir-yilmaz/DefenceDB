@@ -10,23 +10,23 @@ namespace DefenceDB.WebUI.Areas.Admin.Controllers;
 [Authorize(Roles = "Admin,Editor")]
 public class DashboardController : Controller
 {
-    private readonly IProductService _productService;
+    private readonly IProductQueryService _productQueryService;
     private readonly ICategoryService _categoryService;
     private readonly UserManager<AppUser> _userManager;
 
     public DashboardController(
-        IProductService productService,
+        IProductQueryService productQueryService,
         ICategoryService categoryService,
         UserManager<AppUser> userManager)
     {
-        _productService = productService;
+        _productQueryService = productQueryService;
         _categoryService = categoryService;
         _userManager = userManager;
     }
 
     public async Task<IActionResult> Index()
     {
-        var products = await _productService.GetAllProductsAsync();
+        var products = await _productQueryService.GetAllProductsAsync();
         var categories = await _categoryService.GetAllCategoriesAsync();
         var users = _userManager.Users.ToList();
 

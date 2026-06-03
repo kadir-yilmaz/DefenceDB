@@ -34,6 +34,11 @@
                     <i class="bi bi-box-seam-fill"></i>
                     <span>Ürün Yönetimi</span>
                 </a>
+                <a href="@Url.Action("Index", "CategoryManagement", new { area = "Admin" })"
+                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "CategoryManagement" ? "active" : "")">
+                    <i class="bi bi-list-nested"></i>
+                    <span>Kategori Yönetimi</span>
+                </a>
             </div>
 
             @if (User.IsInRole("Admin"))
