@@ -132,12 +132,15 @@
 
     <footer class="premium-footer pt-5 mt-auto">
         @inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+        @inject DefenceDB.BLL.Abstract.IVisitorService VisitorService
         @{
             var commitSha = Configuration["COMMIT_SHA"];
             if (string.IsNullOrWhiteSpace(commitSha))
                 commitSha = "test";
             else if (commitSha.Length > 7)
                 commitSha = commitSha.Substring(0, 7);
+            
+            var totalVisitors = await VisitorService.GetTotalUniqueVisitorsAsync();
         }
         <div class="container text-center">
             <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
@@ -147,6 +150,16 @@
             <p class="fs-7 mb-0 text-muted" style="line-height: 1.6; font-size: 0.875rem;">
                 Türkiye'nin askeri teknoloji, savunma sanayii sistemleri portalı.
             </p>
+            
+            <!-- Ziyaretçi Sayacı -->
+            <div class="mt-3 d-flex align-items-center justify-content-center gap-2" style="font-size: 0.875rem;">
+                <i class="bi bi-people-fill text-warning" style="filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.2));"></i>
+                <span class="text-muted">
+                    Toplam 
+                    <span class="fw-bold text-white">@totalVisitors.ToString("N0")</span> 
+                    benzersiz ziyaretçi
+                </span>
+            </div>
         </div>
 
         <!-- System copyright bottom row -->

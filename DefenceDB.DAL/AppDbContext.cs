@@ -76,6 +76,9 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
     public DbSet<TurboshaftEngine> TurboshaftEngines { get; set; }
     public DbSet<MarineGasTurbine> MarineGasTurbines { get; set; } = null!;
 
+    // Visitor Tracking
+    public DbSet<Visitor> Visitors { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -131,5 +134,14 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
         modelBuilder.Entity<TurbopropEngine>().ToTable("TurbopropEngines");
         modelBuilder.Entity<TurboshaftEngine>().ToTable("TurboshaftEngines");
         modelBuilder.Entity<MarineGasTurbine>().ToTable("MarineGasTurbines");
+
+        // Visitor Configuration
+        modelBuilder.Entity<Visitor>(entity =>
+        {
+            entity.HasKey(v => v.Id);
+            entity.Property(v => v.VisitorHash).IsRequired().HasMaxLength(64);
+            entity.HasIndex(v => v.VisitorHash).IsUnique();
+            entity.HasIndex(v => v.FirstVisitDate);
+        });
     }
 }

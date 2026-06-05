@@ -12,6 +12,7 @@ using Elastic.Transport;
 
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.DataProtection;
+using DefenceDB.WebUI.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -131,6 +132,10 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductQueryService, ProductQueryManager>();
 builder.Services.AddScoped<IProductCommandService, ProductCommandManager>();
 builder.Services.AddScoped<INotificationService, ToastNotificationService>();
+builder.Services.AddScoped<IVisitorService, VisitorService>();
+
+// Background Services
+builder.Services.AddHostedService<DefenceDB.WebUI.BackgroundServices.VisitorCleanupService>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews()
@@ -181,6 +186,9 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseNToastNotify();
+
+// Visitor Tracking Middleware
+app.UseMiddleware<VisitorTrackingMiddleware>();
 
 app.UseRouting();
 
