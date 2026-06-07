@@ -1,9 +1,34 @@
-# DefenceDB — Local Development Infrastructure
+# DefenceDB — Docker Compose Configuration
 # Usage: docker-compose up -d
-# This does NOT containerize the .NET app itself; it only provides
-# Elasticsearch and Kibana for local CQRS/benchmark usage.
+# Includes the .NET app, Elasticsearch, and Kibana
 
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: defencedb-app
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__sqlConnection=${SQL_CONNECTION_STRING}
+      - ConnectionStrings__Elasticsearch=http://elasticsearch:9200
+      - Features__UseElasticsearch=true
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - defencedb-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.14.3
     container_name: defencedb-elasticsearch
@@ -17,6 +42,8 @@ services:
     volumes:
       - es-data:/usr/share/elasticsearch/data
     restart: unless-stopped
+    networks:
+      - defencedb-network
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
       interval: 15s
@@ -34,6 +61,12 @@ services:
       elasticsearch:
         condition: service_healthy
     restart: unless-stopped
+    networks:
+      - defencedb-network
 
 volumes:
   es-data:
+
+networks:
+  defencedb-network:
+    driver: bridge
