@@ -6,20 +6,20 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copy solution and project files
-COPY ["DefenceDB.sln", "."]
+COPY ["DefenceDB.slnx", "."]
 COPY ["DefenceDB.WebUI/DefenceDB.WebUI.csproj", "DefenceDB.WebUI/"]
 COPY ["DefenceDB.BLL/DefenceDB.BLL.csproj", "DefenceDB.BLL/"]
 COPY ["DefenceDB.DAL/DefenceDB.DAL.csproj", "DefenceDB.DAL/"]
 COPY ["DefenceDB.EL/DefenceDB.EL.csproj", "DefenceDB.EL/"]
 
 # Restore dependencies
-RUN dotnet restore "DefenceDB.sln"
+RUN dotnet restore "DefenceDB.slnx"
 
 # Copy all source code
 COPY . .
 
 # Build the solution
-RUN dotnet build "DefenceDB.sln" -c Release -o /app/build
+RUN dotnet build "DefenceDB.slnx" -c Release -o /app/build
 
 # Stage 2: Publish
 FROM build AS publish
