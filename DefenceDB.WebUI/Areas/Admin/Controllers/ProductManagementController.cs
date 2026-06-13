@@ -21,7 +21,6 @@ public class ProductManagementController : Controller
     private readonly INotificationService _notificationService;
     private readonly IProductFormMapper _formMapper;
     private readonly IImageProcessingService _imageService;
-    private readonly IWebHostEnvironment _env;
 
     public ProductManagementController(
         IProductQueryService productQueryService, 
@@ -29,8 +28,7 @@ public class ProductManagementController : Controller
         ICategoryService categoryService, 
         INotificationService notificationService,
         IProductFormMapper formMapper,
-        IImageProcessingService imageService,
-        IWebHostEnvironment env)
+        IImageProcessingService imageService)
     {
         _productQueryService = productQueryService;
         _productCommandService = productCommandService;
@@ -38,7 +36,6 @@ public class ProductManagementController : Controller
         _notificationService = notificationService;
         _formMapper = formMapper;
         _imageService = imageService;
-        _env = env;
     }
 
     public async Task<IActionResult> Index(int? categoryId, string? country, int page = 1)
@@ -269,27 +266,8 @@ public class ProductManagementController : Controller
         var image = await _productQueryService.GetProductImageByIdAsync(imageId);
         if (image == null) return Json(new { success = false, message = "Resim bulunamadı." });
 
-        // Dosyayı sistemden sil
-        try
-        {
-            var filePath = Path.Combine(_env.WebRootPath, image.ImagePath.TrimStart('/'));
-            if (System.IO.File.Exists(filePath))
-            {
-                System.IO.File.Delete(filePath);
-            }
-
-            // Thumbnail dosyasını da sil
-            var directory = Path.GetDirectoryName(filePath);
-            if (directory != null)
-            {
-                var thumbPath = Path.Combine(directory, "thumbs", Path.GetFileName(filePath));
-                if (System.IO.File.Exists(thumbPath))
-                {
-                    System.IO.File.Delete(thumbPath);
-                }
-            }
-        }
-        catch { /* Dosya silinemezse yoksay */ }
+        // MinIO'dan sil
+        await _imageService.DeleteImageAsync(image.ImagePath);
 
         // Veritabanından sil
         await _productCommandService.DeleteProductImageAsync(image);
@@ -310,27 +288,7 @@ public class ProductManagementController : Controller
             var image = await _productQueryService.GetProductImageByIdAsync(id);
             if (image != null)
             {
-                // Dosyayı sistemden sil
-                try
-                {
-                    var filePath = Path.Combine(_env.WebRootPath, image.ImagePath.TrimStart('/'));
-                    if (System.IO.File.Exists(filePath))
-                    {
-                        System.IO.File.Delete(filePath);
-                    }
-
-                    // Thumbnail dosyasını da sil
-                    var directory = Path.GetDirectoryName(filePath);
-                    if (directory != null)
-                    {
-                        var thumbPath = Path.Combine(directory, "thumbs", Path.GetFileName(filePath));
-                        if (System.IO.File.Exists(thumbPath))
-                        {
-                            System.IO.File.Delete(thumbPath);
-                        }
-                    }
-                }
-                catch { /* Dosya silinemezse yoksay */ }
+                await _imageService.DeleteImageAsync(image.ImagePath);
                 successCount++;
             }
         }
@@ -359,25 +317,12 @@ public class ProductManagementController : Controller
         var product = await _productQueryService.GetProductByIdAsync(id);
         if (product == null) return NotFound();
 
-        // 1) Eski Resimleri Sil
+        // 1) Eski Resimleri MinIO'dan Sil
         if (product.Images != null && product.Images.Any())
         {
-            var imagesFolder = Path.Combine(_env.WebRootPath, "images", "products");
-            var thumbsFolder = Path.Combine(imagesFolder, "thumbs");
-
             foreach (var img in product.Images)
             {
-                var fileName = Path.GetFileName(img.ImagePath);
-                if (string.IsNullOrEmpty(fileName)) continue;
-
-                var mainImagePath = Path.Combine(imagesFolder, fileName);
-                var thumbImagePath = Path.Combine(thumbsFolder, fileName);
-
-                if (System.IO.File.Exists(mainImagePath))
-                    System.IO.File.Delete(mainImagePath);
-
-                if (System.IO.File.Exists(thumbImagePath))
-                    System.IO.File.Delete(thumbImagePath);
+                await _imageService.DeleteImageAsync(img.ImagePath);
             }
 
             // Veritabanından resimleri sil (Cascading delete yoksa)
