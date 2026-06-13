@@ -1,7 +1,7 @@
-# Multi-stage build for DefenceDB ASP.NET Core 10 application
+# Multi-stage build for DefenceDB ASP.NET Core 8 application
 
 # Stage 1: Build
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 
 WORKDIR /src
 
@@ -26,7 +26,7 @@ FROM build AS publish
 RUN dotnet publish "DefenceDB.WebUI/DefenceDB.WebUI.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Stage 3: Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 
 WORKDIR /app
 
