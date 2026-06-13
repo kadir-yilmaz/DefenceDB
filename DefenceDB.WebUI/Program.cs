@@ -137,7 +137,6 @@ builder.Services.AddScoped<IVisitorService, VisitorService>();
 // Background Services
 builder.Services.AddHostedService<DefenceDB.WebUI.BackgroundServices.VisitorCleanupService>();
 
-// Add services to the container.
 builder.Services.AddControllersWithViews()
     .AddNToastNotifyToastr(new ToastrOptions
     {
@@ -146,6 +145,7 @@ builder.Services.AddControllersWithViews()
         TimeOut = 5000
     });
 
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -204,5 +204,7 @@ app.MapControllerRoute(
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapHealthChecks("/health");
 
 app.Run();
