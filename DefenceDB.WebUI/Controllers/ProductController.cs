@@ -214,29 +214,45 @@ public class ProductController : Controller
 
     private async Task<bool> AnyAsyncSafe(IQueryable<DefenseProduct> source)
     {
+        if (source.Provider.GetType().Name.StartsWith("EnumerableQuery"))
+            return source.Any();
+
         if (source is IAsyncEnumerable<DefenseProduct>)
             return await source.AnyAsync();
+            
         return source.Any();
     }
 
     private async Task<DefenseProduct> FirstAsyncSafe(IQueryable<DefenseProduct> source)
     {
+        if (source.Provider.GetType().Name.StartsWith("EnumerableQuery"))
+            return source.First();
+
         if (source is IAsyncEnumerable<DefenseProduct>)
             return await source.FirstAsync();
+            
         return source.First();
     }
 
     private async Task<int> CountAsyncSafe(IQueryable<DefenseProduct> source)
     {
+        if (source.Provider.GetType().Name.StartsWith("EnumerableQuery"))
+            return source.Count();
+
         if (source is IAsyncEnumerable<DefenseProduct>)
             return await source.CountAsync();
+            
         return source.Count();
     }
 
     private async Task<List<DefenseProduct>> ToListAsyncSafe(IQueryable<DefenseProduct> source)
     {
+        if (source.Provider.GetType().Name.StartsWith("EnumerableQuery"))
+            return source.ToList();
+
         if (source is IAsyncEnumerable<DefenseProduct>)
             return await source.ToListAsync();
+            
         return source.ToList();
     }
 }
