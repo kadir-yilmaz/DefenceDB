@@ -42,7 +42,7 @@ public class ProductManagementController : Controller
     {
         var query = _productQueryService.GetProductsQueryable();
         
-        var totalCount = await query.CountAsync();
+        var totalCount = await CountAsyncSafe(query);
         ViewBag.TotalProductCount = totalCount;
 
         // Debug
@@ -72,23 +72,25 @@ public class ProductManagementController : Controller
 
         ViewBag.Categories = await _categoryService.GetCategoriesWithChildrenAsync();
         
-        ViewBag.Countries = await _productQueryService.GetProductsQueryable()
-            .Where(p => !string.IsNullOrWhiteSpace(p.Country))
-            .Select(p => p.Country)
-            .Distinct()
-            .OrderBy(c => c)
-            .ToListAsync();
+        ViewBag.Countries = await ToListAsyncSafe(
+            _productQueryService.GetProductsQueryable()
+                .Where(p => !string.IsNullOrWhiteSpace(p.Country))
+                .Select(p => p.Country)
+                .Distinct()
+                .OrderBy(c => c)
+        );
 
         int pageSize = 30;
-        int totalItems = await query.CountAsync();
+        int totalItems = await CountAsyncSafe(query);
         int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
         
         page = Math.Max(1, Math.Min(page, totalPages > 0 ? totalPages : 1));
         
-        var pagedProducts = await query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+        var pagedProducts = await ToListAsyncSafe(
+            query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+        );
 
         ViewBag.CurrentPage = page;
         ViewBag.TotalPages = totalPages;
@@ -373,4 +375,25 @@ public class ProductManagementController : Controller
         return Json(new { success = true, message = "Ürün vitrin durumu güncellendi." });
     }
 
+    private async Task<List<T>> ToListAsyncSafe<T>(IQueryable<T> source)
+    {
+        if (source.Provider.GetType().Name.StartsWith("EnumerableQuery"))
+            return source.ToList();
+
+        if (source is IAsyncEnumerable<T>)
+            return await source.ToListAsync();
+            
+        return source.ToList();
+    }
+
+    private async Task<int> CountAsyncSafe<T>(IQueryable<T> source)
+    {
+        if (source.Provider.GetType().Name.StartsWith("EnumerableQuery"))
+            return source.Count();
+
+        if (source is IAsyncEnumerable<T>)
+            return await source.CountAsync();
+            
+        return source.Count();
+    }
 }
