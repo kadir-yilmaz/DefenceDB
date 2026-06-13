@@ -207,4 +207,39 @@ app.MapControllerRoute(
 
 app.MapHealthChecks("/health");
 
+// Temporary Debug Endpoint
+app.MapGet("/debug/files", (IWebHostEnvironment env) =>
+{
+    var wwwroot = env.WebRootPath;
+    if (string.IsNullOrEmpty(wwwroot) || !System.IO.Directory.Exists(wwwroot))
+        return Results.Text("wwwroot not found or empty path.");
+
+    var result = new System.Text.StringBuilder();
+    result.AppendLine($"WebRootPath: {wwwroot}");
+    
+    void ListDir(string path, int indent)
+    {
+        var spaces = new string(' ', indent * 2);
+        try
+        {
+            foreach (var dir in System.IO.Directory.GetDirectories(path))
+            {
+                result.AppendLine($"{spaces}[DIR] {System.IO.Path.GetFileName(dir)}");
+                ListDir(dir, indent + 1);
+            }
+            foreach (var file in System.IO.Directory.GetFiles(path))
+            {
+                result.AppendLine($"{spaces}{System.IO.Path.GetFileName(file)} ({new System.IO.FileInfo(file).Length} bytes)");
+            }
+        }
+        catch (Exception ex)
+        {
+            result.AppendLine($"{spaces}ERROR: {ex.Message}");
+        }
+    }
+
+    ListDir(wwwroot, 0);
+    return Results.Text(result.ToString());
+});
+
 app.Run();

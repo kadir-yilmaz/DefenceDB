@@ -19,8 +19,6 @@ appsettings.Production.json
 # Static Assets (Videos & Uploaded Images)
 DefenceDB.WebUI/wwwroot/images/products/*
 !DefenceDB.WebUI/wwwroot/images/products/.gitkeep
-DefenceDB.WebUI/wwwroot/videos/*
-!DefenceDB.WebUI/wwwroot/videos/.gitkeep
 
 # Security & Deploy Files
 DefenceDB.WebUI/App_Data/
