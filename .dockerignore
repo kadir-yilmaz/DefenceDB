@@ -1,0 +1,23 @@
+# Ignore build outputs
+**/bin/
+**/obj/
+
+# Ignore IDE settings
+.vs/
+.vscode/
+
+# Ignore git
+.git/
+.github/
+.gitignore
+
+# Ignore local publish folders
+**/publish/
+publish/
+
+# Ignore local env and temporary files
+.env
+.env.*
+*.user
+.DS_Store
+Thumbs.db

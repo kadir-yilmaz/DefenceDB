@@ -102,7 +102,7 @@ public class ProductController : Controller
         {
             DefenseProduct firstItem = null;
             if (memoryQuery != null && memoryQuery.Any()) firstItem = memoryQuery.First();
-            else if (memoryQuery == null && await query.AnyAsync()) firstItem = await query.FirstAsync();
+            else if (memoryQuery == null && await AnyAsyncSafe(query)) firstItem = await FirstAsyncSafe(query);
 
             if (firstItem != null)
             {
@@ -132,7 +132,7 @@ public class ProductController : Controller
         }
 
         int pageSize = 30;
-        int totalItems = memoryQuery != null ? memoryQuery.Count() : await query.CountAsync();
+        int totalItems = memoryQuery != null ? memoryQuery.Count() : await CountAsyncSafe(query);
         int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
         
         page = Math.Max(1, Math.Min(page, totalPages > 0 ? totalPages : 1));
@@ -147,10 +147,9 @@ public class ProductController : Controller
         }
         else
         {
-            pagedProducts = await query
+            pagedProducts = await ToListAsyncSafe(query
                 .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
+                .Take(pageSize));
         }
 
         ViewBag.CurrentPage = page;
@@ -211,5 +210,33 @@ public class ProductController : Controller
             .ToList();
 
         return Json(matches);
+    }
+
+    private async Task<bool> AnyAsyncSafe(IQueryable<DefenseProduct> source)
+    {
+        if (source is IAsyncEnumerable<DefenseProduct>)
+            return await source.AnyAsync();
+        return source.Any();
+    }
+
+    private async Task<DefenseProduct> FirstAsyncSafe(IQueryable<DefenseProduct> source)
+    {
+        if (source is IAsyncEnumerable<DefenseProduct>)
+            return await source.FirstAsync();
+        return source.First();
+    }
+
+    private async Task<int> CountAsyncSafe(IQueryable<DefenseProduct> source)
+    {
+        if (source is IAsyncEnumerable<DefenseProduct>)
+            return await source.CountAsync();
+        return source.Count();
+    }
+
+    private async Task<List<DefenseProduct>> ToListAsyncSafe(IQueryable<DefenseProduct> source)
+    {
+        if (source is IAsyncEnumerable<DefenseProduct>)
+            return await source.ToListAsync();
+        return source.ToList();
     }
 }
