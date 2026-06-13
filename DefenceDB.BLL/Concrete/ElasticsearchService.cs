@@ -63,11 +63,16 @@ public class ElasticsearchService : ISearchService
                 .Query(q => q
                     .Term(t => t.Field(f => f.CategoryId).Value(categoryId))
                 )
-                .Sort(so => so.Field(f => f.Name, new FieldSort { Order = SortOrder.Asc }))
             );
 
             if (response.IsValidResponse)
-                return response.Documents.ToList();
+            {
+                return response.Documents.OrderBy(d => d.Name).ToList();
+            }
+            else
+            {
+                _logger.LogWarning("Elasticsearch GetByCategory failed: {Debug}", response.DebugInformation);
+            }
         }
         catch (Exception ex)
         {
