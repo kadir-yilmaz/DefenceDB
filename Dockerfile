@@ -1,7 +1,7 @@
 # Multi-stage build for DefenceDB ASP.NET Core 10 application
 
 # Stage 1: Build
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 # --- CSS / Tailwind Derlemesi İçin Node.js Kurulumu ---
 RUN apt-get update && apt-get install -y curl \
