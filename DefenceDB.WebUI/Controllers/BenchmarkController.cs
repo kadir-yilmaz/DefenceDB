@@ -62,6 +62,7 @@ public class BenchmarkController : Controller
         sw.Stop();
         results.SqlTimeMs = sw.Elapsed.TotalMilliseconds;
         results.SqlCount = sqlProducts.Count;
+        results.SqlData = sqlProducts;
 
         // ── SQL Read Model (CQRS) ──
         sw.Restart();
@@ -72,6 +73,7 @@ public class BenchmarkController : Controller
         sw.Stop();
         results.SqlReadModelTimeMs = sw.Elapsed.TotalMilliseconds;
         results.SqlReadModelCount = readModelProducts.Count;
+        results.SqlReadModelData = readModelProducts;
 
         // ── Elasticsearch ──
         if (_featureManager.UseElasticsearch)
@@ -81,6 +83,7 @@ public class BenchmarkController : Controller
             sw.Stop();
             results.EsTimeMs = sw.Elapsed.TotalMilliseconds;
             results.EsCount = esProducts.Count;
+            results.EsData = esProducts;
         }
 
         // ── Cached (In-Memory) ──
@@ -97,6 +100,7 @@ public class BenchmarkController : Controller
         }
         sw.Stop();
         results.CacheColdMs = sw.Elapsed.TotalMilliseconds;
+        results.CacheColdData = cached;
 
         // Hot read (cache hit)
         sw.Restart();
@@ -104,6 +108,7 @@ public class BenchmarkController : Controller
         sw.Stop();
         results.CacheHotMs = sw.Elapsed.TotalMilliseconds;
         results.CacheCount = cached?.Count ?? 0;
+        results.CacheHotData = cached;
 
         return Json(results);
     }
@@ -135,6 +140,7 @@ public class BenchmarkController : Controller
         sw.Stop();
         results.SqlTimeMs = sw.Elapsed.TotalMilliseconds;
         results.SqlCount = sqlResults.Count;
+        results.SqlData = sqlResults;
 
         // ── SQL Read Model (CQRS) LIKE ──
         sw.Restart();
@@ -151,6 +157,7 @@ public class BenchmarkController : Controller
         sw.Stop();
         results.SqlReadModelTimeMs = sw.Elapsed.TotalMilliseconds;
         results.SqlReadModelCount = rmResults.Count;
+        results.SqlReadModelData = rmResults;
 
         // ── Elasticsearch ──
         if (_featureManager.UseElasticsearch)
@@ -160,7 +167,47 @@ public class BenchmarkController : Controller
             sw.Stop();
             results.EsTimeMs = sw.Elapsed.TotalMilliseconds;
             results.EsCount = esResults.Count;
+            results.EsData = esResults;
         }
+
+        // ── Cache Cold & Hot for TextSearch ──
+        string cacheKey = $"benchmark:search:{query}";
+        await _cacheService.RemoveAsync(cacheKey); // Clear for fair test
+
+        // Cold read (cache miss)
+        sw.Restart();
+        var cached = await _cacheService.GetAsync<List<ProductDocument>>(cacheKey);
+        if (cached is null)
+        {
+            if (_featureManager.UseElasticsearch)
+            {
+                cached = await _searchService.SearchAsync(query, 20);
+            }
+            else
+            {
+                cached = rmResults.Select(p => new ProductDocument
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Slug = p.Slug,
+                    CategoryId = p.CategoryId,
+                    CategoryName = p.CategoryName,
+                    ProductType = p.ProductType
+                }).ToList();
+            }
+            await _cacheService.SetAsync(cacheKey, cached, TimeSpan.FromMinutes(5));
+        }
+        sw.Stop();
+        results.CacheColdMs = sw.Elapsed.TotalMilliseconds;
+        results.CacheColdData = cached;
+
+        // Hot read (cache hit)
+        sw.Restart();
+        cached = await _cacheService.GetAsync<List<ProductDocument>>(cacheKey);
+        sw.Stop();
+        results.CacheHotMs = sw.Elapsed.TotalMilliseconds;
+        results.CacheCount = cached?.Count ?? 0;
+        results.CacheHotData = cached;
 
         return Json(results);
     }
@@ -177,9 +224,9 @@ public class BenchmarkController : Controller
         // Clean start
         await _cacheService.RemoveAsync(cacheKey);
 
-        // ── Uncached SQL read ──
+        // ── SQL Server TPT ──
         var sw = Stopwatch.StartNew();
-        var products = await _context.DefenseProducts
+        var sqlProducts = await _context.DefenseProducts
             .AsNoTracking()
             .Include(p => p.Category)
             .Include(p => p.Images)
@@ -187,28 +234,65 @@ public class BenchmarkController : Controller
             .ToListAsync();
         sw.Stop();
         results.SqlTimeMs = sw.Elapsed.TotalMilliseconds;
-        results.SqlCount = products.Count;
+        results.SqlCount = sqlProducts.Count;
+        results.SqlData = sqlProducts;
 
-        // ── Write to cache ──
-        var docs = products.Select(p => new ProductDocument
+        // ── SQL Read Model (CQRS) ──
+        sw.Restart();
+        var readModelProducts = await _context.ProductReadModels
+            .AsNoTracking()
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync();
+        sw.Stop();
+        results.SqlReadModelTimeMs = sw.Elapsed.TotalMilliseconds;
+        results.SqlReadModelCount = readModelProducts.Count;
+        results.SqlReadModelData = readModelProducts;
+
+        // ── Elasticsearch ──
+        if (_featureManager.UseElasticsearch)
         {
-            Id = p.Id,
-            Name = p.Name,
-            Slug = p.Slug,
-            CategoryId = p.CategoryId,
-            CategoryName = p.Category?.Name ?? "",
-            ProductType = p.GetType().Name,
-            CreatedAt = p.CreatedAt
-        }).ToList();
+            sw.Restart();
+            var esProducts = await _searchService.GetAllProductsAsync();
+            sw.Stop();
+            results.EsTimeMs = sw.Elapsed.TotalMilliseconds;
+            results.EsCount = esProducts.Count;
+            results.EsData = esProducts;
+        }
 
-        await _cacheService.SetAsync(cacheKey, docs, TimeSpan.FromMinutes(5));
+        // ── Cache Cold (Miss) ──
+        sw.Restart();
+        var cached = await _cacheService.GetAsync<List<ProductDocument>>(cacheKey);
+        if (cached is null)
+        {
+            if (_featureManager.UseElasticsearch)
+            {
+                cached = await _searchService.GetAllProductsAsync();
+            }
+            else
+            {
+                cached = readModelProducts.Select(p => new ProductDocument
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Slug = p.Slug,
+                    CategoryId = p.CategoryId,
+                    CategoryName = p.CategoryName,
+                    ProductType = p.ProductType
+                }).ToList();
+            }
+            await _cacheService.SetAsync(cacheKey, cached, TimeSpan.FromMinutes(5));
+        }
+        sw.Stop();
+        results.CacheColdMs = sw.Elapsed.TotalMilliseconds;
+        results.CacheColdData = cached;
 
-        // ── Cached read ──
+        // ── Cache Hot (Hit) ──
         sw.Restart();
         var cachedDocs = await _cacheService.GetAsync<List<ProductDocument>>(cacheKey);
         sw.Stop();
         results.CacheHotMs = sw.Elapsed.TotalMilliseconds;
         results.CacheCount = cachedDocs?.Count ?? 0;
+        results.CacheHotData = cachedDocs;
 
         return Json(results);
     }
@@ -226,7 +310,10 @@ public class BenchmarkController : Controller
         await _searchService.ReindexAllAsync();
         sw.Stop();
 
-        return Json(new { success = true, timeMs = sw.Elapsed.TotalMilliseconds });
+        var esCount = await _searchService.GetDocumentCountAsync();
+        var totalCount = await _context.DefenseProducts.CountAsync();
+
+        return Json(new { success = true, timeMs = sw.Elapsed.TotalMilliseconds, count = esCount, total = totalCount });
     }
     /// <summary>
     /// Tüm TPT verilerini ProductReadModels (CQRS Read Model) tablosuna senkronize eder
@@ -299,7 +386,30 @@ public class BenchmarkController : Controller
         
         sw.Stop();
 
-        return Json(new { success = true, timeMs = sw.Elapsed.TotalMilliseconds, count = readModels.Count });
+        return Json(new { success = true, timeMs = sw.Elapsed.TotalMilliseconds, count = readModels.Count, total = readModels.Count });
+    }
+
+    /// <summary>
+    /// Arama indeksleri ve SQL CQRS tablolarındaki mevcut kayıt durumlarını döner.
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> GetIndexStatus()
+    {
+        int esCount = 0;
+        if (_featureManager.UseElasticsearch)
+        {
+            esCount = await _searchService.GetDocumentCountAsync();
+        }
+        
+        int sqlReadModelCount = await _context.ProductReadModels.CountAsync();
+        int totalProductsCount = await _context.DefenseProducts.CountAsync();
+        
+        return Json(new {
+            esCount = esCount,
+            sqlReadModelCount = sqlReadModelCount,
+            totalProductsCount = totalProductsCount,
+            useElasticsearch = _featureManager.UseElasticsearch
+        });
     }
 }
 
@@ -308,13 +418,18 @@ public class BenchmarkResult
     public string Scenario { get; set; } = "";
     public double SqlTimeMs { get; set; }
     public int SqlCount { get; set; }
+    public object? SqlData { get; set; }
     public double? SqlReadModelTimeMs { get; set; }
     public int? SqlReadModelCount { get; set; }
+    public object? SqlReadModelData { get; set; }
     public double? EsTimeMs { get; set; }
     public int? EsCount { get; set; }
+    public object? EsData { get; set; }
     public double? CacheColdMs { get; set; }
+    public object? CacheColdData { get; set; }
     public double? CacheHotMs { get; set; }
     public int? CacheCount { get; set; }
+    public object? CacheHotData { get; set; }
 }
 
 public class SearchRequest

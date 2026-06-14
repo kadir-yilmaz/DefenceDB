@@ -1,4 +1,5 @@
 using DefenceDB.BLL.Abstract;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DefenceDB.WebUI.Middleware;
 
@@ -9,17 +10,26 @@ public class VisitorTrackingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<VisitorTrackingMiddleware> _logger;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     public VisitorTrackingMiddleware(
         RequestDelegate next,
-        ILogger<VisitorTrackingMiddleware> logger)
+        ILogger<VisitorTrackingMiddleware> logger,
+        IServiceScopeFactory scopeFactory)
     {
         _next = next;
         _logger = logger;
+        _scopeFactory = scopeFactory;
     }
 
-    public async Task InvokeAsync(HttpContext context, IServiceProvider serviceProvider)
+    public async Task InvokeAsync(HttpContext context)
     {
+        // Request verilerini asenkron thread'e geçmeden önce kopyalıyoruz (ObjectDisposedException engellemek için)
+        var isGet = context.Request.Method == "GET";
+        var path = context.Request.Path;
+        var ipAddress = GetClientIpAddress(context);
+        var userAgent = context.Request.Headers["User-Agent"].ToString();
+
         // Önce response'u gönder
         await _next(context);
 
@@ -29,15 +39,12 @@ public class VisitorTrackingMiddleware
             try
             {
                 // Sadece GET isteklerini ve HTML sayfalarını say
-                if (context.Request.Method == "GET" && 
-                    !context.Request.Path.StartsWithSegments("/api") &&
-                    !IsStaticFile(context.Request.Path))
+                if (isGet && 
+                    !path.StartsWithSegments("/api") &&
+                    !IsStaticFile(path))
                 {
-                    var ipAddress = GetClientIpAddress(context);
-                    var userAgent = context.Request.Headers["User-Agent"].ToString();
-
                     // Yeni scope oluştur (DbContext thread-safe olması için)
-                    using var scope = serviceProvider.CreateScope();
+                    using var scope = _scopeFactory.CreateScope();
                     var visitorService = scope.ServiceProvider.GetRequiredService<IVisitorService>();
                     
                     await visitorService.TrackVisitorAsync(ipAddress, userAgent);

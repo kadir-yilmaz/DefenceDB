@@ -1,8 +1,8 @@
 namespace DefenceDB.BLL.Abstract;
 
 /// <summary>
-/// Dağıtık veya bellek-içi önbellekleme soyutlaması.
-/// Redis aktifse RedisCacheService, değilse MemoryCacheService kullanılır.
+/// Bellek-içi önbellekleme soyutlaması.
+/// Varsayılan implementasyon: MemoryCacheService (In-Memory).
 /// </summary>
 public interface ICacheService
 {

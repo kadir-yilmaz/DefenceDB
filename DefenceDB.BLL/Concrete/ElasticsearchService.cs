@@ -179,6 +179,26 @@ public class ElasticsearchService : ISearchService
         }
     }
 
+    public async Task<int> GetDocumentCountAsync()
+    {
+        try
+        {
+            var response = await _client.SearchAsync<ProductDocument>(s => s
+                .Index(IndexName)
+                .Size(0)
+            );
+            if (response.IsValidResponse)
+            {
+                return (int)response.Total;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Elasticsearch GetDocumentCount hatası");
+        }
+        return 0;
+    }
+
     /// <summary>
     /// EF entity'yi flat ProductDocument'a dönüştürür.
     /// </summary>

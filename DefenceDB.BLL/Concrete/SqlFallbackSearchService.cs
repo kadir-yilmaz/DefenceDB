@@ -75,6 +75,7 @@ public class SqlFallbackSearchService : ISearchService
     public Task ReindexAllAsync() => Task.CompletedTask;
     public Task IndexProductAsync(ProductDocument product) => Task.CompletedTask;
     public Task RemoveProductAsync(int productId) => Task.CompletedTask;
+    public Task<int> GetDocumentCountAsync() => Task.FromResult(0);
 
     /// <summary>
     /// EF entity'yi flat ProductDocument'a dönüştürür.

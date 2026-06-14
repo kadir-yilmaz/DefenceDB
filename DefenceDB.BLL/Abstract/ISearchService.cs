@@ -25,4 +25,7 @@ public interface ISearchService
 
     /// <summary>Tek bir ürünü indeksten sil</summary>
     Task RemoveProductAsync(int productId);
+
+    /// <summary>İndeksteki toplam doküman sayısını getirir</summary>
+    Task<int> GetDocumentCountAsync();
 }

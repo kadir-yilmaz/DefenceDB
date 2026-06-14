@@ -1,12 +1,11 @@
 @{
     ViewData["Title"] = "Performans Benchmark";
     var useEs = ViewData["UseElasticsearch"] as bool? ?? false;
-    var useRedis = ViewData["UseRedis"] as bool? ?? false;
 }
 
 <style>
     /* ═══════════════════════════════════════════════════════════
-       BENCHMARK DASHBOARD — GLASSMORPHIC DARK THEME
+       BENCHMARK DASHBOARD — GLASSMORPHIC DARK THEME v2
        ═══════════════════════════════════════════════════════════ */
 
     /* Override the global * transition from site.css that causes flicker */
@@ -25,6 +24,12 @@
     }
     .benchmark-hero .bench-search-input {
         transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+    }
+    .benchmark-hero .stat-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease !important;
+    }
+    .benchmark-hero .history-row {
+        transition: background 0.2s ease !important;
     }
 
     /* Force dark background on entire page to prevent white flash */
@@ -133,7 +138,6 @@
         border: 1px solid rgba(148, 163, 184, 0.1);
         border-radius: 16px;
         padding: 1.75rem;
-        transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
     }
@@ -178,7 +182,6 @@
         border-radius: 10px;
         border: none;
         cursor: pointer;
-        transition: all 0.25s ease;
         display: inline-flex;
         align-items: center;
         gap: 8px;
@@ -346,45 +349,7 @@
         color: #64748b;
     }
 
-    /* Speedometer-style metric */
-    .metric-circle {
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        font-family: 'JetBrains Mono', monospace;
-        position: relative;
-    }
-
-    .metric-circle::before {
-        content: '';
-        position: absolute;
-        inset: -3px;
-        border-radius: 50%;
-        padding: 3px;
-        background: conic-gradient(var(--metric-color, #3b82f6) var(--metric-pct, 0%), rgba(148, 163, 184, 0.1) 0%);
-        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-        -webkit-mask-composite: xor;
-        mask-composite: exclude;
-    }
-
-    .metric-value {
-        font-size: 1.2rem;
-        font-weight: 800;
-        color: var(--metric-color, #3b82f6);
-    }
-
-    .metric-unit {
-        font-size: 0.65rem;
-        color: #94a3b8;
-        font-weight: 600;
-    }
-
-    /* Architecture diagram */
+    /* Architecture badges */
     .arch-badge {
         display: inline-flex;
         align-items: center;
@@ -399,8 +364,316 @@
     .arch-badge.sql { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.25); }
     .arch-badge.sql-flat { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25); }
     .arch-badge.es { background: rgba(168, 85, 247, 0.15); color: #a78bfa; border: 1px solid rgba(168, 85, 247, 0.25); }
-    .arch-badge.redis { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.25); }
     .arch-badge.cache { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25); }
+
+    /* ═══════════════ STAT CARDS ═══════════════ */
+    .stat-card {
+        background: rgba(30, 41, 59, 0.4);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(148, 163, 184, 0.08);
+        border-radius: 14px;
+        padding: 1.25rem 1.5rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 2px;
+        background: var(--stat-accent, linear-gradient(90deg, #3b82f6, #60a5fa));
+    }
+    .stat-card:hover {
+        border-color: rgba(148, 163, 184, 0.15);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
+    .stat-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    .stat-value {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #f1f5f9;
+        line-height: 1;
+        margin-bottom: 0.25rem;
+    }
+    .stat-label {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.78rem;
+        color: #94a3b8;
+        font-weight: 500;
+    }
+
+    /* ═══════════════ ARCHITECTURE DIAGRAM (SVG) ═══════════════ */
+    .arch-diagram {
+        background: rgba(15, 23, 42, 0.5);
+        border: 1px solid rgba(148, 163, 184, 0.08);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-top: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .arch-diagram svg {
+        display: block;
+        width: 100%;
+        height: auto;
+    }
+    svg g rect {
+        transition: stroke-width 0.3s ease, stroke 0.3s ease, filter 0.3s ease;
+    }
+    svg path {
+        transition: stroke 0.3s ease, stroke-width 0.3s ease;
+    }
+
+    /* ═══════════════ BATTLE SIMULATOR ═══════════════ */
+    .battle-container {
+        margin-top: 2rem;
+    }
+    .vs-badge {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 900;
+        font-size: 2.2rem;
+        background: linear-gradient(135deg, #ef4444, #f59e0b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.4));
+        margin-bottom: 0.5rem;
+    }
+    .battle-label {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.78rem;
+        color: #94a3b8;
+        font-weight: 600;
+        margin-bottom: 6px;
+        display: block;
+    }
+    .racetrack {
+        background: #020617;
+        border: 1px solid rgba(148, 163, 184, 0.12);
+        border-radius: 8px;
+        height: 38px;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        padding: 0 10px;
+    }
+    .racetrack::after {
+        content: '🏁';
+        position: absolute;
+        right: 10px;
+        font-size: 1.1rem;
+        z-index: 2;
+    }
+    .race-bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, transparent, var(--race-color, #3b82f6));
+        position: absolute;
+        left: 0;
+        top: 0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-right: 30px;
+        transition: width 0.05s linear;
+    }
+    .race-car {
+        font-size: 1.2rem;
+        color: #fff;
+        filter: drop-shadow(0 0 8px var(--race-color, #3b82f6));
+        transform: scaleX(1);
+        position: absolute;
+        right: 5px;
+    }
+    .battle-stats {
+        background: rgba(15, 23, 42, 0.3);
+        border: 1px solid rgba(148, 163, 184, 0.06);
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-family: 'Inter', sans-serif;
+    }
+    .battle-stat-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        color: #94a3b8;
+        margin-bottom: 4px;
+    }
+    .battle-stat-row:last-child { margin-bottom: 0; }
+    .battle-stat-row strong {
+        font-family: 'JetBrains Mono', monospace;
+        color: #f1f5f9;
+    }
+    .battle-announcement {
+        border-radius: 10px;
+        padding: 1rem;
+        font-family: 'Outfit', sans-serif;
+        font-size: 1rem;
+        color: #f1f5f9;
+        margin-top: 1rem;
+        border: 1px dashed rgba(148, 163, 184, 0.15);
+        background: rgba(30, 41, 59, 0.3);
+    }
+
+    /* ═══════════════ LIVE DEVELOPER CONSOLE ═══════════════ */
+    .console-container {
+        background: rgba(15, 23, 42, 0.4);
+        border: 1px solid rgba(148, 163, 184, 0.08);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+    .console-box {
+        background: #020617;
+        border: 1px solid rgba(148, 163, 184, 0.12);
+        border-radius: 10px;
+        padding: 1rem;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-size: 0.8rem;
+        height: 180px;
+        overflow-y: auto;
+        box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
+    }
+    .console-line {
+        margin-bottom: 4px;
+        line-height: 1.4;
+        white-space: pre-wrap;
+    }
+    .console-line.info { color: #38bdf8; }
+    .console-line.cmd { color: #a78bfa; font-weight: 600; }
+    .console-line.sql { color: #60a5fa; }
+    .console-line.cqrs { color: #34d399; }
+    .console-line.es { color: #c084fc; }
+    .console-line.cache { color: #fbbf24; }
+    .console-line.success { color: #4ade80; }
+    .console-line.warning { color: #f87171; }
+
+    /* ═══════════════ EXPANDABLE HISTORY DETAILS ═══════════════ */
+    .bg-dark-card {
+        background: rgba(15, 23, 42, 0.8) !important;
+    }
+    .detail-container {
+        border: 1px solid rgba(148, 163, 184, 0.1);
+        border-radius: 10px;
+        padding: 1.25rem;
+        background: #0f172a;
+    }
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1.2fr;
+        gap: 1.5rem;
+    }
+    @@media (max-width: 768px) {
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    .detail-title {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #e2e8f0;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .performance-bar-wrap {
+        margin-bottom: 12px;
+    }
+    .performance-bar-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        color: #94a3b8;
+        margin-bottom: 4px;
+    }
+    .performance-bar-outer {
+        background: #1e293b;
+        height: 12px;
+        border-radius: 9999px;
+        overflow: hidden;
+        position: relative;
+    }
+    .performance-bar-inner {
+        height: 100%;
+        border-radius: 9999px;
+        background: var(--bar-color, #3b82f6);
+        transition: width 0.5s ease-out;
+    }
+    .query-code-block {
+        background: #020617;
+        border: 1px solid rgba(148, 163, 184, 0.1);
+        border-radius: 6px;
+        padding: 10px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.75rem;
+        color: #cbd5e1;
+        max-height: 110px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+    }
+    .perf-tier {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        font-family: 'JetBrains Mono', monospace;
+    }
+    .perf-tier.tier-s { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); } /* S Tier: < 2ms */
+    .perf-tier.tier-a { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); } /* A Tier: 2-20ms */
+    .perf-tier.tier-b { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); } /* B Tier: 20-100ms */
+    .perf-tier.tier-c { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); } /* C Tier: > 100ms */
+    
+    .recommendation-text {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        line-height: 1.4;
+        background: rgba(30, 41, 59, 0.3);
+        border-left: 3px solid #3b82f6;
+        padding: 8px 12px;
+        border-radius: 0 6px 6px 0;
+    }
+
+    /* ═══════════════ GENERAL ESTHETIC & SCENARIOS ═══════════════ */
+    .winner-badge {
+        font-size: 0.7rem;
+    }
+    .history-row {
+        cursor: pointer;
+    }
+    .history-row:hover td {
+        color: #fff !important;
+    }
+
+    /* Section fade-in */
+    @@keyframes fadeSlideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in-section {
+        animation: fadeSlideUp 0.5s ease-out forwards;
+    }
+
+    /* Test history table and stats white text colors */
+    .history-table th,
+    .history-empty,
+    .history-stats-bar,
+    .history-stats-bar span,
+    .history-stats-bar .hs-val {
+        color: #ffffff !important;
+    }
 </style>
 
 <script>
@@ -416,144 +689,430 @@
     <div class="container position-relative" style="z-index: 1;">
 
         <!-- Header -->
-        <div class="text-center mb-4 pt-4">
-            <h1 class="bench-title">
-                <i class="bi bi-speedometer2 me-2"></i>Performans Benchmark
-            </h1>
-            <p class="bench-subtitle">
-                TPT (SQL Server) vs Elasticsearch vs Redis — Gerçek zamanlı karşılaştırma
-            </p>
-            <div class="d-flex justify-content-center gap-3 mt-3 flex-wrap">
-                <span class="status-badge @(useEs ? "status-active" : "status-inactive")">
-                    <span class="status-dot"></span>
-                    Elasticsearch
-                </span>
-                <span class="status-badge @(useRedis ? "status-active" : "status-inactive")">
-                    <span class="status-dot"></span>
-                    Redis Cache
-                </span>
-                <span class="status-badge status-active">
-                    <span class="status-dot"></span>
-                    SQL Server (TPT)
-                </span>
-                <span class="status-badge status-active">
-                    <span class="status-dot" style="background:#34d399;"></span>
-                    SQL Read Model (Flat)
-                </span>
-            </div>
-        </div>
-
-        <!-- Scenario Cards -->
-        <div class="row g-4 mt-2">
-
-            <!-- Scenario 1: Get All Products -->
-            <div class="col-lg-4">
-                <div class="glass-card h-100">
-                    <div class="d-flex align-items-start justify-content-between mb-2">
-                        <div>
-                            <span class="card-title-sm d-block">
-                                <i class="bi bi-collection-fill text-primary me-2"></i>Tüm Ürünler
-                            </span>
-                            <span class="card-desc d-block">
-                                TPT (JOIN) vs Read Model vs ES
-                            </span>
-                        </div>
-                        <span class="arch-badge sql">TPT</span>
-                        <span class="arch-badge sql-flat ms-1">CQRS</span>
-                    </div>
-                    <button class="bench-btn bench-btn-primary w-100" onclick="runScenario('GetAllProducts', this)">
-                        <i class="bi bi-play-fill"></i> Çalıştır
-                    </button>
-                    <div class="result-panel" id="result-GetAllProducts">
-                        <div class="text-center text-muted" style="font-size: 0.85rem; padding: 1rem;">
-                            <i class="bi bi-arrow-up-circle"></i> Testi başlatmak için butona tıklayın
-                        </div>
-                    </div>
+        <div class="row align-items-center mb-4 pt-4">
+            <div class="col-lg-7 text-center text-lg-start">
+                <h1 class="bench-title">
+                    <i class="bi bi-speedometer2 me-2"></i>Performans Benchmark
+                </h1>
+                <p class="bench-subtitle mb-2">
+                    TPT (SQL Server) vs Elasticsearch vs In-Memory Cache — Gerçek zamanlı karşılaştırma
+                </p>
+                <div class="d-flex justify-content-center justify-content-lg-start gap-2 flex-wrap mt-2">
+                    <span class="status-badge @(useEs ? "status-active" : "status-inactive")">
+                        <span class="status-dot"></span>
+                        Elasticsearch
+                    </span>
+                    <span class="status-badge status-active">
+                        <span class="status-dot"></span>
+                        SQL Server (TPT)
+                    </span>
+                    <span class="status-badge status-active">
+                        <span class="status-dot" style="background:#34d399;"></span>
+                        SQL Read Model (Flat)
+                    </span>
+                    <span class="status-badge status-active">
+                        <span class="status-dot" style="background:#fbbf24;"></span>
+                        In-Memory Cache
+                    </span>
                 </div>
             </div>
-
-            <!-- Scenario 2: Text Search -->
-            <div class="col-lg-4">
-                <div class="glass-card h-100">
-                    <div class="d-flex align-items-start justify-content-between mb-2">
-                        <div>
-                            <span class="card-title-sm d-block">
-                                <i class="bi bi-search text-purple me-2" style="color: #a78bfa;"></i>Metin Arama
-                            </span>
-                            <span class="card-desc d-block">
-                                SQL LIKE vs Read Model LIKE vs ES
-                            </span>
+            <div class="col-lg-5 text-center text-lg-end mt-3 mt-lg-0">
+                <div class="d-flex flex-column flex-sm-row justify-content-center justify-content-lg-end gap-2">
+                    @if(useEs) {
+                        <div class="d-inline-block text-start">
+                            <button id="btnEsReindex" class="bench-btn bench-btn-success w-100" onclick="reindex(this)">
+                                <i class="bi bi-arrow-repeat me-1"></i> ES Reindex
+                            </button>
+                            <div id="statusEs" class="text-muted small mt-1 text-center text-lg-end" style="font-size: 0.72rem; font-family: 'JetBrains Mono', monospace;">
+                                ES Durum: Yükleniyor...
+                            </div>
                         </div>
-                        <span class="arch-badge es">ES</span>
-                    </div>
-                    <div class="mb-2">
-                        <input type="text" class="bench-search-input" id="searchQuery" placeholder="Arama terimi girin... (ör: hava)" value="hava" />
-                    </div>
-                    <button class="bench-btn bench-btn-purple w-100" onclick="runTextSearch(this)">
-                        <i class="bi bi-play-fill"></i> Ara & Karşılaştır
-                    </button>
-                    <div class="result-panel" id="result-TextSearch">
-                        <div class="text-center text-muted" style="font-size: 0.85rem; padding: 1rem;">
-                            <i class="bi bi-arrow-up-circle"></i> Arama testi için butona tıklayın
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Scenario 3: Cache Test -->
-            <div class="col-lg-4">
-                <div class="glass-card h-100">
-                    <div class="d-flex align-items-start justify-content-between mb-2">
-                        <div>
-                            <span class="card-title-sm d-block">
-                                <i class="bi bi-lightning-charge-fill me-2" style="color: #fbbf24;"></i>Cache Hit
-                            </span>
-                            <span class="card-desc d-block">
-                                Uncached SQL vs @(useRedis ? "Redis" : "Memory") Cache
-                            </span>
-                        </div>
-                        <span class="arch-badge @(useRedis ? "redis" : "cache")">@(useRedis ? "Redis" : "Mem")</span>
-                    </div>
-                    <button class="bench-btn bench-btn-amber w-100" onclick="runScenario('CacheTest', this)">
-                        <i class="bi bi-play-fill"></i> Çalıştır
-                    </button>
-                    <div class="result-panel" id="result-CacheTest">
-                        <div class="text-center text-muted" style="font-size: 0.85rem; padding: 1rem;">
-                            <i class="bi bi-arrow-up-circle"></i> Cache testini başlatın
+                    }
+                    <div class="d-inline-block text-start">
+                        <button id="btnSyncReadModels" class="bench-btn w-100" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);" onclick="syncReadModels(this)">
+                            <i class="bi bi-database-fill-down me-1"></i> Read Table Reindex
+                        </button>
+                        <div id="statusReadModel" class="text-muted small mt-1 text-center text-lg-end" style="font-size: 0.72rem; font-family: 'JetBrains Mono', monospace;">
+                            Read Table: Yükleniyor...
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Run All + Reindex -->
-        <div class="d-flex justify-content-center gap-3 mt-4 flex-wrap">
-            <button class="bench-btn bench-btn-primary" onclick="runAllScenarios(this)">
-                <i class="bi bi-play-circle-fill"></i> Tümünü Çalıştır
-            </button>
-            @if(useEs) {
-                <button class="bench-btn bench-btn-success" onclick="reindex(this)">
-                    <i class="bi bi-arrow-repeat"></i> ES Reindex
-                </button>
-            }
-            <button class="bench-btn" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);" onclick="syncReadModels(this)">
-                <i class="bi bi-database-fill-down"></i> Sync SQL Read Model
-            </button>
+        <!-- ═══════════════ LIVE STAT CARDS ═══════════════ -->
+        <div class="row g-3 mb-4 fade-in-section">
+            <div class="col-6 col-lg-3">
+                <div class="stat-card" style="--stat-accent: linear-gradient(90deg, #3b82f6, #60a5fa);">
+                    <span class="stat-icon"><i class="bi bi-play-circle-fill" style="color: #60a5fa;"></i></span>
+                    <div class="stat-value" id="stat-totalRuns">0</div>
+                    <div class="stat-label">Toplam Test</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card" style="--stat-accent: linear-gradient(90deg, #f59e0b, #fbbf24);">
+                    <span class="stat-icon"><i class="bi bi-clock-history" style="color: #fbbf24;"></i></span>
+                    <div class="stat-value" id="stat-avgSql">—</div>
+                    <div class="stat-label">Ort. SQL Süresi</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card" style="--stat-accent: linear-gradient(90deg, #4ade80, #22c55e);">
+                    <span class="stat-icon"><i class="bi bi-trophy-fill" style="color: #4ade80;"></i></span>
+                    <div class="stat-value" id="stat-fastestTech">—</div>
+                    <div class="stat-label">En Hızlı Teknoloji</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card" style="--stat-accent: linear-gradient(90deg, #a855f7, #c084fc);">
+                    <span class="stat-icon"><i class="bi bi-lightning-charge-fill" style="color: #c084fc;"></i></span>
+                    <div class="stat-value" id="stat-speedGain">—</div>
+                    <div class="stat-label">Max Cache Kazancı</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════ UNIFIED PERFORMANCE BATTLE SIMULATOR ═══════════════ -->
+        <div class="glass-card mb-4 fade-in-section">
+            <div class="row align-items-center mb-4">
+                <div class="col-lg-6 text-center text-lg-start">
+                    <h3 class="chart-title mb-1">
+                        <i class="bi bi-swords text-danger me-2"></i>Performans Savaş Simülatörü
+                    </h3>
+                    <p class="card-desc mb-0">Seçeceğiniz senaryoda tüm veri erişim teknolojilerini eşzamanlı olarak yarıştırın.</p>
+                </div>
+                <!-- Scenario and Query Selectors -->
+                <div class="col-lg-6 mt-3 mt-lg-0">
+                    <div class="d-flex flex-column flex-sm-row gap-2 justify-content-lg-end">
+                        <div class="flex-grow-1" style="max-width: 300px;">
+                            <select id="battleScenarioSelect" class="bench-search-input" onchange="onScenarioChange()" style="height: 40px;">
+                                <option value="GetAllProducts" selected>Tüm Ürünleri Getir (TPT vs Read Model vs ES)</option>
+                                <option value="TextSearch">Metin Arama (SQL LIKE vs ES Full-Text)</option>
+                                <option value="CacheTest">Bellek Hit / Miss Performansı (SQL vs Cache)</option>
+                            </select>
+                        </div>
+                        <div id="battleQueryContainer" class="flex-grow-1" style="max-width: 200px; display: none;">
+                            <input type="text" id="battleQueryInput" class="bench-search-input" value="hava" placeholder="Arama terimi..." style="height: 40px;" />
+                        </div>
+                        <button class="bench-btn bench-btn-danger px-4" id="startBattleBtn" onclick="runUnifiedBattle()" style="height: 40px; font-weight: 700;">
+                            <i class="bi bi-fire me-1"></i> SAVAŞI BAŞLAT!
+                        </button>
+                        <button class="bench-btn px-4" id="startAllBattleBtn" onclick="runAllUnifiedBattles()" style="height: 40px; font-weight: 700; background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3);">
+                            <i class="bi bi-swords me-1"></i> TÜMÜNÜ SAVAŞTIR!
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Racetracks Container (5 Lanes) -->
+            <div class="row g-4 mb-2">
+                <div class="col-12">
+                    <div class="p-3 rounded-3" style="background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(148, 163, 184, 0.08);">
+                        
+                        <!-- Lane 1: SQL Server TPT -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="battle-label font-outfit" style="color: #60a5fa;"><i class="bi bi-database me-1"></i> SQL Server TPT (20+ JOIN)</span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span id="val-sql" class="badge bg-dark border border-primary text-primary" style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">Henüz yarışmadı</span>
+                                    <button id="btn-data-sql" class="bench-btn py-0 px-2 d-none" style="font-size:0.72rem; height:20px; background:rgba(96,165,250,0.15); color:#60a5fa; border:1px solid rgba(96,165,250,0.3); font-weight:600;" onclick="showLaneData('sql')"><i class="bi bi-braces"></i> Veriyi Gör</button>
+                                </div>
+                            </div>
+                            <div class="racetrack">
+                                <div class="race-bar" id="lane-bar-sql" style="--race-color: #3b82f6; width: 0%;">
+                                    <span class="race-car"><i class="bi bi-rocket-takeoff-fill"></i></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lane 2: SQL Read Model -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="battle-label font-outfit" style="color: #34d399;"><i class="bi bi-table me-1"></i> SQL Read Model (Flat, CQRS)</span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span id="val-flat" class="badge bg-dark border border-success text-success" style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">Henüz yarışmadı</span>
+                                    <button id="btn-data-flat" class="bench-btn py-0 px-2 d-none" style="font-size:0.72rem; height:20px; background:rgba(52,211,153,0.15); color:#34d399; border:1px solid rgba(52,211,153,0.3); font-weight:600;" onclick="showLaneData('flat')"><i class="bi bi-braces"></i> Veriyi Gör</button>
+                                </div>
+                            </div>
+                            <div class="racetrack">
+                                <div class="race-bar" id="lane-bar-flat" style="--race-color: #10b981; width: 0%;">
+                                    <span class="race-car"><i class="bi bi-rocket-takeoff-fill"></i></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lane 3: Elasticsearch -->
+                        <div class="mb-3" id="lane-wrapper-es">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="battle-label font-outfit" style="color: #a78bfa;"><i class="bi bi-search me-1"></i> Elasticsearch (Full-Text)</span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span id="val-es" class="badge bg-dark border border-purple text-purple" style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">Henüz yarışmadı</span>
+                                    <button id="btn-data-es" class="bench-btn py-0 px-2 d-none" style="font-size:0.72rem; height:20px; background:rgba(167,139,250,0.15); color:#a78bfa; border:1px solid rgba(167,139,250,0.3); font-weight:600;" onclick="showLaneData('es')"><i class="bi bi-braces"></i> Veriyi Gör</button>
+                                </div>
+                            </div>
+                            <div class="racetrack">
+                                <div class="race-bar" id="lane-bar-es" style="--race-color: #a855f7; width: 0%;">
+                                    <span class="race-car"><i class="bi bi-rocket-takeoff-fill"></i></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lane 4: Cache Cold -->
+                        <div class="mb-3" id="lane-wrapper-cacheCold">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="battle-label font-outfit" style="color: #fb7185;"><i class="bi bi-snow me-1"></i> In-Memory Cache Cold (Miss)</span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span id="val-cacheCold" class="badge bg-dark border border-danger text-danger" style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">Henüz yarışmadı</span>
+                                    <button id="btn-data-cacheCold" class="bench-btn py-0 px-2 d-none" style="font-size:0.72rem; height:20px; background:rgba(244,63,94,0.15); color:#f43f5e; border:1px solid rgba(244,63,94,0.3); font-weight:600;" onclick="showLaneData('cacheCold')"><i class="bi bi-braces"></i> Veriyi Gör</button>
+                                </div>
+                            </div>
+                            <div class="racetrack">
+                                <div class="race-bar" id="lane-bar-cacheCold" style="--race-color: #f43f5e; width: 0%;">
+                                    <span class="race-car"><i class="bi bi-rocket-takeoff-fill"></i></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lane 5: Cache Hot -->
+                        <div class="mb-0" id="lane-wrapper-cacheHot">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="battle-label font-outfit" style="color: #fbbf24;"><i class="bi bi-lightning-charge me-1"></i> In-Memory Cache Hot (Hit)</span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span id="val-cacheHot" class="badge bg-dark border border-warning text-warning" style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">Henüz yarışmadı</span>
+                                    <button id="btn-data-cacheHot" class="bench-btn py-0 px-2 d-none" style="font-size:0.72rem; height:20px; background:rgba(251,191,36,0.15); color:#fbbf24; border:1px solid rgba(251,191,36,0.3); font-weight:600;" onclick="showLaneData('cacheHot')"><i class="bi bi-braces"></i> Veriyi Gör</button>
+                                </div>
+                            </div>
+                            <div class="racetrack">
+                                <div class="race-bar" id="lane-bar-cacheHot" style="--race-color: #fbbf24; width: 0%;">
+                                    <span class="race-car"><i class="bi bi-rocket-takeoff-fill"></i></span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Battle Announcement Banner -->
+            <div class="battle-announcement text-center d-none" id="battleAnnouncement" style="margin-top: 10px;">
+            </div>
         </div>
 
         <!-- Chart -->
-        <div class="chart-container">
-            <div class="d-flex align-items-center justify-content-between mb-2">
+        <div class="chart-container fade-in-section">
+            <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap">
                 <span class="chart-title"><i class="bi bi-bar-chart-fill me-2" style="color: #60a5fa;"></i>Sonuç Grafiği</span>
-                <div class="d-flex gap-3">
+                <div class="d-flex gap-3 flex-wrap">
                     <span style="font-size:0.75rem; color: #60a5fa; font-family:'Inter',sans-serif;">● SQL Server TPT</span>
                     <span style="font-size:0.75rem; color: #34d399; font-family:'Inter',sans-serif;">● SQL Read Model</span>
                     <span style="font-size:0.75rem; color: #a78bfa; font-family:'Inter',sans-serif;">● Elasticsearch</span>
-                    <span style="font-size:0.75rem; color: #fbbf24; font-family:'Inter',sans-serif;">● Cache</span>
+                    <span style="font-size:0.75rem; color: #fb7185; font-family:'Inter',sans-serif;">● Cache Cold</span>
+                    <span style="font-size:0.75rem; color: #fbbf24; font-family:'Inter',sans-serif;">● Cache Hot</span>
                 </div>
             </div>
             <div style="position: relative; height: 300px; width: 100%;">
                 <canvas id="benchmarkChart"></canvas>
+            </div>
+        </div>
+
+
+
+        <!-- ═══════════════ ARCHITECTURE DIAGRAM (SVG) ═══════════════ -->
+        <div class="arch-diagram fade-in-section">
+            <div class="d-flex align-items-center mb-3">
+                <span class="chart-title mb-0"><i class="bi bi-diagram-3-fill me-2" style="color: #38bdf8;"></i>Sistem Mimarisi & Canlı İstek Yolu</span>
+            </div>
+            <div style="width: 100%; overflow-x: auto;">
+                <svg viewBox="0 0 800 240" class="w-100" style="min-width: 700px; max-height: 280px;">
+                    <defs>
+                        <!-- Gradients for nodes -->
+                        <linearGradient id="grad-client" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#475569" />
+                            <stop offset="100%" stop-color="#1e293b" />
+                        </linearGradient>
+                        <linearGradient id="grad-controller" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#0ea5e9" />
+                            <stop offset="100%" stop-color="#0369a1" />
+                        </linearGradient>
+                        <linearGradient id="grad-sql" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#3b82f6" />
+                            <stop offset="100%" stop-color="#1d4ed8" />
+                        </linearGradient>
+                        <linearGradient id="grad-flat" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#10b981" />
+                            <stop offset="100%" stop-color="#047857" />
+                        </linearGradient>
+                        <linearGradient id="grad-cache" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#f59e0b" />
+                            <stop offset="100%" stop-color="#b45309" />
+                        </linearGradient>
+                        <linearGradient id="grad-es" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#a855f7" />
+                            <stop offset="100%" stop-color="#6d28d9" />
+                        </linearGradient>
+                    </defs>
+
+                    <!-- Connections -->
+                    <path id="flow-client-controller" d="M 130 120 L 210 120" stroke="#334155" stroke-width="3" fill="none" />
+                    <path id="flow-controller-sql" d="M 330 100 C 370 60, 390 40, 450 40" stroke="#334155" stroke-width="3" fill="none" />
+                    <path id="flow-controller-flat" d="M 330 120 L 450 120" stroke="#334155" stroke-width="3" fill="none" />
+                    <path id="flow-controller-cache" d="M 330 140 C 370 180, 390 200, 450 200" stroke="#334155" stroke-width="3" fill="none" />
+                    <path id="flow-sql-sync" d="M 510 70 L 510 90" stroke="#475569" stroke-width="2" stroke-dasharray="4,4" fill="none" />
+                    @if(useEs) {
+                        <path id="flow-controller-es" d="M 330 120 C 400 120, 500 120, 670 120" stroke="#334155" stroke-width="3" fill="none" />
+                    }
+
+                    <!-- Flowing Dots -->
+                    <circle id="dot-client-controller" r="5" fill="#38bdf8" opacity="0"><animateMotion dur="1.2s" repeatCount="indefinite" path="M 130 120 L 210 120" /></circle>
+                    <circle id="dot-controller-sql" r="5" fill="#60a5fa" opacity="0"><animateMotion dur="1.2s" repeatCount="indefinite" path="M 330 100 C 370 60, 390 40, 450 40" /></circle>
+                    <circle id="dot-controller-flat" r="5" fill="#34d399" opacity="0"><animateMotion dur="1.2s" repeatCount="indefinite" path="M 330 120 L 450 120" /></circle>
+                    <circle id="dot-controller-cache" r="5" fill="#fbbf24" opacity="0"><animateMotion dur="1.2s" repeatCount="indefinite" path="M 330 140 C 370 180, 390 200, 450 200" /></circle>
+                    @if(useEs) {
+                        <circle id="dot-controller-es" r="5" fill="#a78bfa" opacity="0"><animateMotion dur="1.2s" repeatCount="indefinite" path="M 330 120 C 400 120, 500 120, 670 120" /></circle>
+                    }
+
+                    <!-- Nodes -->
+                    <!-- 1. Client -->
+                    <g id="node-client" transform="translate(30, 90)">
+                        <rect width="100" height="60" rx="8" fill="url(#grad-client)" stroke="#475569" stroke-width="1.5" />
+                        <text x="50" y="28" fill="#e2e8f0" font-family="Outfit" font-size="12" font-weight="bold" text-anchor="middle">🖥️ Client</text>
+                        <text x="50" y="44" fill="#94a3b8" font-family="Inter" font-size="10" text-anchor="middle">Browser</text>
+                    </g>
+
+                    <!-- 2. Controller -->
+                    <g id="node-controller" transform="translate(210, 90)">
+                        <rect width="120" height="60" rx="8" fill="url(#grad-controller)" stroke="#0284c7" stroke-width="1.5" />
+                        <text x="60" y="28" fill="#e2e8f0" font-family="Outfit" font-size="12" font-weight="bold" text-anchor="middle">⚙️ ASP.NET Core</text>
+                        <text x="60" y="44" fill="#bae6fd" font-family="Inter" font-size="10" text-anchor="middle">Controller / BLL</text>
+                    </g>
+
+                    <!-- 3. SQL Server TPT -->
+                    <g id="node-sql" transform="translate(450, 10)">
+                        <rect width="120" height="60" rx="8" fill="url(#grad-sql)" stroke="#2563eb" stroke-width="1.5" />
+                        <text x="60" y="28" fill="#e2e8f0" font-family="Outfit" font-size="12" font-weight="bold" text-anchor="middle">🗄️ SQL TPT</text>
+                        <text x="60" y="44" fill="#93c5fd" font-family="Inter" font-size="9" text-anchor="middle">20+ JOINs Table</text>
+                    </g>
+
+                    <!-- 4. SQL Read Model -->
+                    <g id="node-flat" transform="translate(450, 90)">
+                        <rect width="120" height="60" rx="8" fill="url(#grad-flat)" stroke="#059669" stroke-width="1.5" />
+                        <text x="60" y="28" fill="#e2e8f0" font-family="Outfit" font-size="12" font-weight="bold" text-anchor="middle">📋 Read Model</text>
+                        <text x="60" y="44" fill="#a7f3d0" font-family="Inter" font-size="9" text-anchor="middle">CQRS Düz Tablo</text>
+                    </g>
+
+                    <!-- 5. In-Memory Cache -->
+                    <g id="node-cache" transform="translate(450, 170)">
+                        <rect width="120" height="60" rx="8" fill="url(#grad-cache)" stroke="#d97706" stroke-width="1.5" />
+                        <text x="60" y="28" fill="#e2e8f0" font-family="Outfit" font-size="12" font-weight="bold" text-anchor="middle">⚡ Memory Cache</text>
+                        <text x="60" y="44" fill="#fde047" font-family="Inter" font-size="9" text-anchor="middle">Ultra Hızlı RAM</text>
+                    </g>
+
+                    <!-- 6. Elasticsearch -->
+                    @if(useEs) {
+                        <g id="node-es" transform="translate(650, 90)">
+                            <rect width="120" height="60" rx="8" fill="url(#grad-es)" stroke="#7c3aed" stroke-width="1.5" />
+                            <text x="60" y="28" fill="#e2e8f0" font-family="Outfit" font-size="12" font-weight="bold" text-anchor="middle">🔍 Elasticsearch</text>
+                            <text x="60" y="44" fill="#ddd6fe" font-family="Inter" font-size="9" text-anchor="middle">Full-Text Search</text>
+                        </g>
+                    }
+                </svg>
+            </div>
+        </div>
+
+        <!-- ═══════════════ TEST HISTORY TABLE ═══════════════ -->
+        <div class="history-container fade-in-section">
+            <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                <span class="chart-title mb-0"><i class="bi bi-clock-history me-2" style="color: #fbbf24;"></i>Test Geçmişi</span>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="history-stats-bar" id="historyStats">
+                        <span><i class="bi bi-hash"></i> Toplam: <span class="hs-val" id="hs-total">0</span></span>
+                        <span><i class="bi bi-speedometer"></i> Ort. SQL: <span class="hs-val" id="hs-avgSql">—</span></span>
+                    </div>
+                    <button class="bench-btn" style="background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); padding: 6px 14px; font-size: 0.75rem;" onclick="clearHistory()">
+                        <i class="bi bi-trash3"></i> Temizle
+                    </button>
+                </div>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Senaryo</th>
+                            <th>SQL TPT</th>
+                            <th>Read Model</th>
+                            <th>Elasticsearch</th>
+                            <th>Cache Cold</th>
+                            <th>Cache Hot</th>
+                            <th>Kayıt</th>
+                            <th>Kazanan</th>
+                            <th>Saat</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody">
+                        <tr>
+                            <td colspan="10" class="history-empty">
+                                <i class="bi bi-inbox me-1"></i> Henüz test çalıştırılmadı. Yukarıdaki butonlardan birini kullanın.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══════════════ LIVE PERFORMANCE CONSOLE ═══════════════ -->
+        <div class="console-container fade-in-section">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="chart-title mb-0"><i class="bi bi-terminal-fill me-2" style="color: #38bdf8;"></i>Sistem Performans Günlükleri (Console Logs)</span>
+                <button class="bench-btn py-1 px-3" style="background: rgba(148, 163, 184, 0.1); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.2); padding: 4px 10px; font-size: 0.7rem;" onclick="clearConsole()">
+                    <i class="bi bi-x-circle me-1"></i> Temizle
+                </button>
+            </div>
+            <div class="console-box" id="consoleBox">
+                <div class="console-line text-muted">[14:10:53] [System] DefenceDB Performans Konsolu aktif. Test çalıştırmalarını bekliyor...</div>
+            </div>
+        </div>
+
+        <!-- ═══════════════ JSON RAW RESPONSE VIEW ═══════════════ -->
+        <div class="console-container fade-in-section mt-4" id="jsonResponseSection" style="display: none;">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="chart-title mb-0">
+                    <i class="bi bi-braces me-2" style="color: #fbbf24;"></i>Son Gelen JSON Verisi (Raw JSON Response)
+                </span>
+                <div class="d-flex gap-2">
+                    <button class="bench-btn py-1 px-3" style="background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); padding: 4px 10px; font-size: 0.75rem;" onclick="openJsonModal()">
+                        <i class="bi bi-fullscreen me-1"></i> Tam Ekran Gör
+                    </button>
+                    <button class="bench-btn py-1 px-3" style="background: rgba(148, 163, 184, 0.1); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.2); padding: 4px 10px; font-size: 0.75rem;" onclick="copyJsonText()">
+                        <i class="bi bi-clipboard me-1"></i> Kopyala
+                    </button>
+                </div>
+            </div>
+            <div class="console-box" id="jsonResponseBox" style="height: 220px; border-color: rgba(251, 191, 36, 0.25);">
+                <pre class="m-0 text-success" id="jsonRawPre" style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.4; white-space: pre-wrap; word-break: break-all;"></pre>
+            </div>
+        </div>
+
+        <!-- Full Screen JSON Modal -->
+        <div class="modal fade" id="jsonFullscreenModal" tabindex="-1" aria-labelledby="jsonFullscreenModalLabel" aria-hidden="true" style="backdrop-filter: blur(12px); z-index: 1060;">
+            <div class="modal-dialog modal-fullscreen modal-dialog-scrollable">
+                <div class="modal-content" style="background: #020617; border: 1px solid rgba(148, 163, 184, 0.15);">
+                    <div class="modal-header" style="border-bottom: 1px solid rgba(148, 163, 184, 0.1);">
+                        <h5 class="modal-title text-white" id="jsonFullscreenModalLabel">
+                            <i class="bi bi-braces text-warning me-2"></i>Detaylı JSON Verisi
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <pre class="m-0 text-success" id="modalJsonRawPre" style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; line-height: 1.5; white-space: pre-wrap; word-break: break-all;"></pre>
+                    </div>
+                    <div class="modal-footer" style="border-top: 1px solid rgba(148, 163, 184, 0.1);">
+                        <button type="button" class="bench-btn" style="background: rgba(148, 163, 184, 0.1); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.2);" onclick="copyJsonTextModal()">
+                            <i class="bi bi-clipboard me-1"></i> Kopyala
+                        </button>
+                        <button type="button" class="bench-btn bench-btn-primary" data-bs-dismiss="modal">Kapat</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -563,6 +1122,15 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script>
+        // ── State ─────────────────────────────────────────
+        const history = [];
+        const sparkData = {
+            GetAllProducts: [],
+            TextSearch: [],
+            CacheTest: []
+        };
+        let isBattleRunning = false;
+
         // ── Chart Setup ────────────────────────────────────
         const ctx = document.getElementById('benchmarkChart').getContext('2d');
         const benchChart = new Chart(ctx, {
@@ -571,7 +1139,7 @@
                 labels: [],
                 datasets: [
                     {
-                        label: 'SQL Server (ms)',
+                        label: 'SQL Server TPT (ms)',
                         data: [],
                         backgroundColor: 'rgba(96, 165, 250, 0.7)',
                         borderColor: '#60a5fa',
@@ -593,6 +1161,15 @@
                         data: [],
                         backgroundColor: 'rgba(167, 139, 250, 0.7)',
                         borderColor: '#a78bfa',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        barPercentage: 0.7,
+                    },
+                    {
+                        label: 'Cache Cold (ms)',
+                        data: [],
+                        backgroundColor: 'rgba(244, 63, 94, 0.7)',
+                        borderColor: '#f43f5e',
                         borderWidth: 1,
                         borderRadius: 6,
                         barPercentage: 0.7,
@@ -652,180 +1229,447 @@
             }
         });
 
-        function addToChart(label, sqlMs, sqlFlatMs, esMs, cacheMs) {
+        function addToChart(label, sqlMs, sqlFlatMs, esMs, cacheColdMs, cacheHotMs) {
             benchChart.data.labels.push(label);
             benchChart.data.datasets[0].data.push(sqlMs || 0);
             benchChart.data.datasets[1].data.push(sqlFlatMs || 0);
             benchChart.data.datasets[2].data.push(esMs || 0);
-            benchChart.data.datasets[3].data.push(cacheMs || 0);
+            benchChart.data.datasets[3].data.push(cacheColdMs || 0);
+            benchChart.data.datasets[4].data.push(cacheHotMs || 0);
             benchChart.update();
         }
 
-        // ── Scenario Runners ───────────────────────────────
-        function getSpeedClass(ms) {
-            if (ms < 5) return 'fast';
-            if (ms < 50) return 'fast';
-            if (ms < 200) return 'medium';
-            return 'slow';
+        // ── Console Logger ─────────────────────────────────
+        function logToConsole(message, type = 'info') {
+            const consoleBox = document.getElementById('consoleBox');
+            if (!consoleBox) return;
+            const timeStr = new Date().toLocaleTimeString('tr-TR');
+            const logLine = document.createElement('div');
+            logLine.className = `console-line ${type}`;
+            logLine.textContent = `[${timeStr}] [${type.toUpperCase()}] ${message}`;
+            consoleBox.appendChild(logLine);
+            consoleBox.scrollTop = consoleBox.scrollHeight;
         }
 
-        function formatResult(data) {
-            let html = '';
+        function clearConsole() {
+            const consoleBox = document.getElementById('consoleBox');
+            if (consoleBox) {
+                consoleBox.innerHTML = `<div class="console-line text-muted">[${new Date().toLocaleTimeString('tr-TR')}] [System] Konsol temizlendi. Yeni testler bekleniyor...</div>`;
+            }
+        }
 
-            html += `<div class="result-row">
-                <span class="result-label"><span class="arch-badge sql">SQL</span> TPT Query</span>
-                <span>
-                    <span class="result-value ${getSpeedClass(data.sqlTimeMs)}">${data.sqlTimeMs.toFixed(2)} ms</span>
-                    <span class="result-count">(${data.sqlCount} kayıt)</span>
-                </span>
-            </div>`;
+        // ── Live Diagram Animations ────────────────────────
+        function animateDiagramPath(tech) {
+            const paths = ['client-controller', 'controller-sql', 'controller-flat', 'controller-cache', 'controller-es'];
+            const nodes = ['client', 'controller', 'sql', 'flat', 'cache', 'es'];
+            
+            // Clear all active classes/attributes
+            paths.forEach(p => {
+                const pathEl = document.getElementById('flow-' + p);
+                const dotEl = document.getElementById('dot-' + p);
+                if (pathEl) {
+                    pathEl.setAttribute('stroke', '#334155');
+                    pathEl.setAttribute('stroke-width', '3');
+                }
+                if (dotEl) {
+                    dotEl.setAttribute('opacity', '0');
+                }
+            });
+            nodes.forEach(n => {
+                const nodeEl = document.getElementById('node-' + n);
+                if (nodeEl) {
+                    nodeEl.querySelector('rect').setAttribute('stroke-width', '1.5');
+                    nodeEl.querySelector('rect').setAttribute('filter', 'none');
+                }
+            });
 
-            if (data.sqlReadModelTimeMs !== null && data.sqlReadModelTimeMs !== undefined) {
-                html += `<div class="result-row">
-                    <span class="result-label"><span class="arch-badge sql-flat">SQL</span> Read Model</span>
-                    <span>
-                        <span class="result-value ${getSpeedClass(data.sqlReadModelTimeMs)}">${data.sqlReadModelTimeMs.toFixed(2)} ms</span>
-                        <span class="result-count">(${data.sqlReadModelCount} kayıt)</span>
-                    </span>
-                </div>`;
+            // Activate standard paths
+            document.getElementById('flow-client-controller')?.setAttribute('stroke', '#0ea5e9');
+            document.getElementById('dot-client-controller')?.setAttribute('opacity', '1');
+            document.getElementById('node-client')?.querySelector('rect').setAttribute('stroke-width', '3');
+            document.getElementById('node-controller')?.querySelector('rect').setAttribute('stroke-width', '3');
+
+            let targetNode = '';
+            let targetPath = '';
+            let color = '';
+
+            if (tech === 'sql') {
+                targetNode = 'sql';
+                targetPath = 'controller-sql';
+                color = '#3b82f6';
+            } else if (tech === 'flat') {
+                targetNode = 'flat';
+                targetPath = 'controller-flat';
+                color = '#10b981';
+            } else if (tech === 'cache') {
+                targetNode = 'cache';
+                targetPath = 'controller-cache';
+                color = '#fbbf24';
+            } else if (tech === 'es') {
+                targetNode = 'es';
+                targetPath = 'controller-es';
+                color = '#a855f7';
             }
 
-
-            if (data.esTimeMs !== null && data.esTimeMs !== undefined) {
-                html += `<div class="result-row">
-                    <span class="result-label"><span class="arch-badge es">ES</span> Elasticsearch</span>
-                    <span>
-                        <span class="result-value ${getSpeedClass(data.esTimeMs)}">${data.esTimeMs.toFixed(2)} ms</span>
-                        <span class="result-count">(${data.esCount} kayıt)</span>
-                    </span>
-                </div>`;
+            if (targetNode) {
+                const nEl = document.getElementById('node-' + targetNode);
+                if (nEl) {
+                    nEl.querySelector('rect').setAttribute('stroke-width', '3.5');
+                    nEl.querySelector('rect').setAttribute('stroke', color);
+                }
             }
-            if (data.cacheColdMs !== null && data.cacheColdMs !== undefined) {
-                html += `<div class="result-row">
-                    <span class="result-label"><span class="arch-badge cache">Cold</span> Cache Miss</span>
-                    <span class="result-value ${getSpeedClass(data.cacheColdMs)}">${data.cacheColdMs.toFixed(2)} ms</span>
-                </div>`;
-            }
-
-            if (data.cacheHotMs !== null && data.cacheHotMs !== undefined) {
-                html += `<div class="result-row">
-                    <span class="result-label"><span class="arch-badge redis">Hot</span> Cache Hit</span>
-                    <span>
-                        <span class="result-value ${getSpeedClass(data.cacheHotMs)}">${data.cacheHotMs.toFixed(2)} ms</span>
-                        ${data.cacheCount ? `<span class="result-count">(${data.cacheCount} kayıt)</span>` : ''}
-                    </span>
-                </div>`;
-            }
-
-            // Speed comparison
-            if (data.esTimeMs !== null && data.esTimeMs !== undefined && data.sqlTimeMs > 0 && data.esTimeMs > 0) {
-                const ratio = (data.sqlTimeMs / data.esTimeMs).toFixed(1);
-                if (ratio > 1) {
-                    html += `<div class="result-row" style="border-top: 1px solid rgba(74, 222, 128, 0.15); margin-top: 4px; padding-top: 10px;">
-                        <span class="result-label" style="color: #4ade80;"><i class="bi bi-lightning-charge-fill"></i> ES ${ratio}x daha hızlı</span>
-                    </div>`;
+            if (targetPath) {
+                const pEl = document.getElementById('flow-' + targetPath);
+                if (pEl) {
+                    pEl.setAttribute('stroke', color);
+                    pEl.setAttribute('stroke-width', '4');
+                }
+                const dEl = document.getElementById('dot-' + targetPath);
+                if (dEl) {
+                    dEl.setAttribute('opacity', '1');
                 }
             }
 
-            return html;
+            // Sync flow animation on sql run
+            if (tech === 'sql') {
+                const syncPath = document.getElementById('flow-sql-sync');
+                if (syncPath) {
+                    syncPath.setAttribute('stroke', '#10b981');
+                    setTimeout(() => {
+                        syncPath.setAttribute('stroke', '#475569');
+                    }, 2000);
+                }
+            }
         }
 
-        async function runScenario(scenario, btn) {
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<span class="bench-spinner"></span> Çalışıyor...';
-            btn.disabled = true;
+        // ── Counting Animation ─────────────────────────────
+        function animateValue(el, start, end, suffix, duration) {
+            const range = end - start;
+            const startTime = performance.now();
+            function step(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const current = start + range * eased;
+                if (suffix === 'x') {
+                    el.textContent = current.toFixed(0) + 'x';
+                } else if (suffix === 'ms') {
+                    el.textContent = current.toFixed(1) + ' ms';
+                } else {
+                    el.textContent = Math.round(current);
+                }
+                if (progress < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+        }
 
-            const panel = document.getElementById('result-' + scenario);
-            panel.innerHTML = '<div class="text-center" style="padding: 1rem;"><span class="bench-spinner"></span></div>';
+        // ── Update Stats ──────────────────────────────────
+        function updateStats() {
+            document.getElementById('stat-totalRuns').textContent = history.length;
 
-            try {
-                const url = scenario === 'CacheTest' ? '/Benchmark/RunCacheTest' : '/Benchmark/RunGetAllProducts';
-                const resp = await fetch(url, { method: 'POST' });
-                const data = await resp.json();
-
-                panel.innerHTML = formatResult(data);
-                addToChart(data.scenario, data.sqlTimeMs, data.sqlReadModelTimeMs, data.esTimeMs, data.cacheHotMs);
-            } catch (err) {
-                panel.innerHTML = `<div class="text-center" style="color: #f87171; padding: 1rem;">
-                    <i class="bi bi-exclamation-triangle-fill"></i> Hata: ${err.message}
-                </div>`;
+            if (history.length === 0) {
+                document.getElementById('stat-avgSql').textContent = '—';
+                document.getElementById('stat-fastestTech').textContent = '—';
+                document.getElementById('stat-speedGain').textContent = '—';
+                document.getElementById('hs-total').textContent = '0';
+                document.getElementById('hs-avgSql').textContent = '—';
+                return;
             }
 
-            btn.innerHTML = originalHtml;
-            btn.disabled = false;
-        }
+            const avgSql = history.reduce((s, h) => s + h.sqlTimeMs, 0) / history.length;
+            const avgEl = document.getElementById('stat-avgSql');
+            animateValue(avgEl, 0, avgSql, 'ms', 600);
 
-        async function runTextSearch(btn) {
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<span class="bench-spinner"></span> Arıyor...';
-            btn.disabled = true;
+            let fastest = { name: 'SQL TPT', ms: Infinity };
+            history.forEach(h => {
+                if (h.sqlTimeMs < fastest.ms) fastest = { name: 'SQL TPT', ms: h.sqlTimeMs };
+                if (h.sqlReadModelTimeMs != null && h.sqlReadModelTimeMs < fastest.ms) fastest = { name: 'Read Model', ms: h.sqlReadModelTimeMs };
+                if (h.esTimeMs != null && h.esTimeMs < fastest.ms) fastest = { name: 'ES', ms: h.esTimeMs };
+                if (h.cacheHotMs != null && h.cacheHotMs < fastest.ms) fastest = { name: 'Cache', ms: h.cacheHotMs };
+            });
+            document.getElementById('stat-fastestTech').textContent = fastest.name;
 
-            const query = document.getElementById('searchQuery').value || 'hava';
-            const panel = document.getElementById('result-TextSearch');
-            panel.innerHTML = '<div class="text-center" style="padding: 1rem;"><span class="bench-spinner"></span></div>';
-
-            try {
-                const resp = await fetch('/Benchmark/RunTextSearch', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: query })
-                });
-                const data = await resp.json();
-
-                panel.innerHTML = formatResult(data);
-                addToChart(data.scenario, data.sqlTimeMs, data.sqlReadModelTimeMs, data.esTimeMs, data.cacheHotMs);
-            } catch (err) {
-                panel.innerHTML = `<div class="text-center" style="color: #f87171; padding: 1rem;">
-                    <i class="bi bi-exclamation-triangle-fill"></i> Hata: ${err.message}
-                </div>`;
+            const cacheRuns = history.filter(h => h.cacheHotMs != null && h.cacheHotMs > 0);
+            if (cacheRuns.length > 0) {
+                const lastCache = cacheRuns[cacheRuns.length - 1];
+                const ratio = Math.round(lastCache.sqlTimeMs / lastCache.cacheHotMs);
+                const gainEl = document.getElementById('stat-speedGain');
+                animateValue(gainEl, 0, ratio, 'x', 800);
+            } else {
+                document.getElementById('stat-speedGain').textContent = '—';
             }
 
-            btn.innerHTML = originalHtml;
-            btn.disabled = false;
+            document.getElementById('hs-total').textContent = history.length;
+            document.getElementById('hs-avgSql').textContent = avgSql.toFixed(1) + ' ms';
         }
 
-        async function runAllScenarios(btn) {
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<span class="bench-spinner"></span> Tüm testler çalışıyor...';
-            btn.disabled = true;
+        // ── Sparklines ────────────────────────────────────
+        function drawSparkline(canvasId, data, color) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas || data.length < 2) return;
+            const ctx2 = canvas.getContext('2d');
+            const w = canvas.width = 60;
+            const h = canvas.height = 24;
+            ctx2.clearRect(0, 0, w, h);
 
-            // Clear chart
+            const max = Math.max(...data);
+            const min = Math.min(...data);
+            const range = max - min || 1;
+            const step = w / (data.length - 1);
+
+            ctx2.beginPath();
+            ctx2.strokeStyle = color;
+            ctx2.lineWidth = 1.5;
+            ctx2.lineJoin = 'round';
+
+            data.forEach((val, i) => {
+                const x = i * step;
+                const y = h - 2 - ((val - min) / range) * (h - 4);
+                if (i === 0) ctx2.moveTo(x, y);
+                else ctx2.lineTo(x, y);
+            });
+            ctx2.stroke();
+
+            ctx2.lineTo((data.length - 1) * step, h);
+            ctx2.lineTo(0, h);
+            ctx2.closePath();
+            const grad = ctx2.createLinearGradient(0, 0, 0, h);
+            grad.addColorStop(0, color.replace(')', ', 0.2)').replace('rgb', 'rgba'));
+            grad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx2.fillStyle = grad;
+            ctx2.fill();
+        }
+
+        // ── History Table & Expandable Details ─────────────
+        function toggleHistoryDetail(num) {
+            const el = document.getElementById('history-detail-' + num);
+            if (el) {
+                el.classList.toggle('d-none');
+            }
+        }
+
+        function addToHistory(data) {
+            const entry = {
+                num: history.length + 1,
+                scenario: data.scenario,
+                sqlTimeMs: data.sqlTimeMs,
+                sqlReadModelTimeMs: data.sqlReadModelTimeMs,
+                esTimeMs: data.esTimeMs,
+                cacheColdMs: data.cacheColdMs,
+                cacheHotMs: data.cacheHotMs,
+                count: data.sqlCount || data.esCount || data.cacheCount || 0,
+                time: new Date().toLocaleTimeString('tr-TR')
+            };
+
+            const times = [];
+            times.push({ name: 'SQL TPT', ms: entry.sqlTimeMs });
+            if (entry.sqlReadModelTimeMs != null) times.push({ name: 'Read Model', ms: entry.sqlReadModelTimeMs });
+            if (entry.esTimeMs != null) times.push({ name: 'ES', ms: entry.esTimeMs });
+            if (entry.cacheColdMs != null) times.push({ name: 'Cache Cold', ms: entry.cacheColdMs });
+            if (entry.cacheHotMs != null) times.push({ name: 'Cache Hot', ms: entry.cacheHotMs });
+            times.sort((a, b) => a.ms - b.ms);
+            entry.winner = times[0]?.name || '—';
+            entry.slowest = times[times.length - 1]?.name || '—';
+
+            history.push(entry);
+
+            const scenarioKey = data.scenario.includes('Tüm') ? 'GetAllProducts' : data.scenario.includes('Metin') ? 'TextSearch' : 'CacheTest';
+            sparkData[scenarioKey].push(entry.sqlTimeMs);
+            if (sparkData[scenarioKey].length > 8) sparkData[scenarioKey].shift();
+            drawSparkline('spark-' + scenarioKey, sparkData[scenarioKey], 'rgb(96, 165, 250)');
+
+            const meta = document.getElementById('meta-' + scenarioKey);
+            if (meta) {
+                meta.querySelector('span').textContent = 'Son: ' + entry.time;
+            }
+
+            renderHistory();
+            updateStats();
+        }
+
+        function renderHistory() {
+            const body = document.getElementById('historyBody');
+            if (history.length === 0) {
+                body.innerHTML = `<tr><td colspan="10" class="history-empty"><i class="bi bi-inbox me-1"></i> Henüz test çalıştırılmadı.</td></tr>`;
+                return;
+            }
+
+            body.innerHTML = history.slice().reverse().map(h => {
+                function cellClass(name, ms) {
+                    if (ms == null) return '';
+                    if (name === h.winner) return 'cell-fastest';
+                    if (name === h.slowest) return 'cell-slowest';
+                    return '';
+                }
+                function fmt(ms) { return ms != null ? ms.toFixed(2) + ' ms' : '—'; }
+
+                // Speed bars calculation relative to slowest
+                const baseSlow = Math.max(h.sqlTimeMs, h.sqlReadModelTimeMs || 0, h.esTimeMs || 0, h.cacheColdMs || 0, h.cacheHotMs || 0);
+                function getPct(ms) {
+                    if (!ms) return 0;
+                    return Math.max(1, (ms / baseSlow) * 100);
+                }
+
+                // Query code segments
+                let sqlQuery = "";
+                let cqrsQuery = "SELECT Id, Name, CategoryName, ProductType, SpecificPropertiesJson FROM ProductReadModels";
+                let cacheQuery = "_cache.TryGetValue(\"benchmark:cache\", out var entry) // local RAM read";
+                let esQuery = `POST /defenseproducts/_search \n{ "query": { "match": { "name": "..." } } }`;
+
+                if (h.scenario.includes("Tüm")) {
+                    sqlQuery = "SELECT p.Id, p.Name, p.CategoryId, t.ArmorThickness, f.AesaRadarType, ... \nFROM DefenseProducts p \nLEFT JOIN LandVehicles t ON p.Id = t.Id \nLEFT JOIN FighterAircrafts f ON p.Id = f.Id \n-- (22 LEFT JOINs across TPT inheritance)";
+                } else if (h.scenario.includes("Metin")) {
+                    sqlQuery = "SELECT p.Id, p.Name ... FROM DefenseProducts p \nWHERE LOWER(p.Name) LIKE '%hava%' OR LOWER(p.Description) LIKE '%hava%' \n-- (Heavy string scans on sub-tables)";
+                    cqrsQuery = "SELECT Id, Name, SpecificPropertiesJson FROM ProductReadModels \nWHERE LOWER(Name) LIKE '%hava%' OR LOWER(Description) LIKE '%hava%' \n-- (Single Flat table string scan)";
+                } else {
+                    sqlQuery = "SELECT * FROM DefenseProducts p \nLEFT JOIN Images ... -- (Uncached Database Query)";
+                    cqrsQuery = "SELECT * FROM ProductReadModels -- (Flat database check)";
+                }
+
+                // Optimization tip
+                let optimizationTip = "";
+                if (h.winner === 'Cache Hot') {
+                    optimizationTip = `<strong>Öneri:</strong> In-Memory Cache Hot bu senaryoda <strong>${(h.sqlTimeMs / h.cacheHotMs).toFixed(0)}x daha hızlı</strong>. Sıkça değişmeyen, yoğun talep gören listeleme sayfaları için Memory Cache kullanımı veritabanını tamamen rahatlatır.`;
+                } else if (h.winner === 'Read Model') {
+                    optimizationTip = `<strong>Öneri:</strong> SQL Read Model, TPT JOIN patlamasını ortadan kaldırarak performansı <strong>${(h.sqlTimeMs / h.sqlReadModelTimeMs).toFixed(0)}x artırdı</strong>. Bu senaryo için CQRS Flat Table okuması mükemmel bir denge sağlar.`;
+                } else if (h.winner === 'ES') {
+                    optimizationTip = `<strong>Öneri:</strong> Elasticsearch full-text arama kabiliyeti sayesinde SQL LIKE aramalarına göre <strong>${(h.sqlTimeMs / h.esTimeMs).toFixed(0)}x daha hızlı</strong>. Metin aramalarında ES tercih edilmelidir.`;
+                } else if (h.winner === 'Cache Cold') {
+                    optimizationTip = `<strong>Öneri:</strong> Cache Cold (Miss) ilk isteği veritabanından/ES'den alıp belleğe yazarken bir kerelik gecikme oluşturur. Sonraki tüm istekler Cache Hot olarak ultra hızlı tamamlanır.`;
+                }
+
+                // Performance Tiers
+                function getTierBadge(ms) {
+                    if (!ms) return '';
+                    if (ms < 2) return '<span class="perf-tier tier-s">Tier S (Ultra Fast)</span>';
+                    if (ms < 20) return '<span class="perf-tier tier-a">Tier A (Excellent)</span>';
+                    if (ms < 100) return '<span class="perf-tier tier-b">Tier B (Good)</span>';
+                    return '<span class="perf-tier tier-c">Tier C (Slow)</span>';
+                }
+
+                return `
+                <tr class="history-row" onclick="toggleHistoryDetail(${h.num})">
+                    <td>${h.num} <i class="bi bi-chevron-down ms-1" style="font-size:0.7rem; color:#64748b;"></i></td>
+                    <td class="scenario-cell">${h.scenario}</td>
+                    <td class="${cellClass('SQL TPT', h.sqlTimeMs)}">${fmt(h.sqlTimeMs)}</td>
+                    <td class="${cellClass('Read Model', h.sqlReadModelTimeMs)}">${fmt(h.sqlReadModelTimeMs)}</td>
+                    <td class="${cellClass('ES', h.esTimeMs)}">${fmt(h.esTimeMs)}</td>
+                    <td class="${cellClass('Cache Cold', h.cacheColdMs)}">${fmt(h.cacheColdMs)}</td>
+                    <td class="${cellClass('Cache Hot', h.cacheHotMs)}">${fmt(h.cacheHotMs)}</td>
+                    <td style="color: #94a3b8;">${h.count}</td>
+                    <td><span class="winner-badge"><i class="bi bi-trophy-fill text-warning"></i> ${h.winner}</span></td>
+                    <td style="color: #64748b; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;">${h.time}</td>
+                </tr>
+                <tr id="history-detail-${h.num}" class="d-none bg-dark-card">
+                    <td colspan="10" class="p-3">
+                        <div class="detail-container">
+                            <div class="detail-grid">
+                                <div>
+                                    <div class="detail-title"><i class="bi bi-activity text-info"></i> Performans Spektrumu</div>
+                                    
+                                    <div class="performance-bar-wrap">
+                                        <div class="performance-bar-label"><span>SQL Server TPT</span> <span>${fmt(h.sqlTimeMs)} ${getTierBadge(h.sqlTimeMs)}</span></div>
+                                        <div class="performance-bar-outer"><div class="performance-bar-inner" style="--bar-color: #3b82f6; width: ${getPct(h.sqlTimeMs)}%;"></div></div>
+                                    </div>
+                                    
+                                    ${h.sqlReadModelTimeMs ? `
+                                    <div class="performance-bar-wrap">
+                                        <div class="performance-bar-label"><span>SQL Read Model</span> <span>${fmt(h.sqlReadModelTimeMs)} ${getTierBadge(h.sqlReadModelTimeMs)}</span></div>
+                                        <div class="performance-bar-outer"><div class="performance-bar-inner" style="--bar-color: #10b981; width: ${getPct(h.sqlReadModelTimeMs)}%;"></div></div>
+                                    </div>` : ''}
+
+                                    ${h.esTimeMs ? `
+                                    <div class="performance-bar-wrap">
+                                        <div class="performance-bar-label"><span>Elasticsearch</span> <span>${fmt(h.esTimeMs)} ${getTierBadge(h.esTimeMs)}</span></div>
+                                        <div class="performance-bar-outer"><div class="performance-bar-inner" style="--bar-color: #a855f7; width: ${getPct(h.esTimeMs)}%;"></div></div>
+                                    </div>` : ''}
+
+                                    ${h.cacheColdMs ? `
+                                    <div class="performance-bar-wrap">
+                                        <div class="performance-bar-label"><span>Memory Cache Miss (Cold)</span> <span>${fmt(h.cacheColdMs)} ${getTierBadge(h.cacheColdMs)}</span></div>
+                                        <div class="performance-bar-outer"><div class="performance-bar-inner" style="--bar-color: #f43f5e; width: ${getPct(h.cacheColdMs)}%;"></div></div>
+                                    </div>` : ''}
+
+                                    ${h.cacheHotMs ? `
+                                    <div class="performance-bar-wrap">
+                                        <div class="performance-bar-label"><span>Memory Cache Hit (Hot)</span> <span>${fmt(h.cacheHotMs)} ${getTierBadge(h.cacheHotMs)}</span></div>
+                                        <div class="performance-bar-outer"><div class="performance-bar-inner" style="--bar-color: #fbbf24; width: ${getPct(h.cacheHotMs)}%;"></div></div>
+                                    </div>` : ''}
+
+                                    <div class="recommendation-text mt-3">
+                                        ${optimizationTip}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="detail-title"><i class="bi bi-code-slash text-warning"></i> Arka Plan Sorgu Detayları</div>
+                                    
+                                    <div class="mb-2">
+                                        <span class="battle-label">SQL Server TPT Query (Complex JOINs):</span>
+                                        <div class="query-code-block">${sqlQuery}</div>
+                                    </div>
+                                    
+                                    <div class="mb-2">
+                                        <span class="battle-label">SQL Read Model Query (CQRS Single Table):</span>
+                                        <div class="query-code-block">${cqrsQuery}</div>
+                                    </div>
+                                    
+                                    ${h.esTimeMs ? `
+                                    <div class="mb-2">
+                                        <span class="battle-label">Elasticsearch Query (JSON REST Request):</span>
+                                        <div class="query-code-block">${esQuery}</div>
+                                    </div>` : ''}
+
+                                    ${h.cacheHotMs ? `
+                                    <div>
+                                        <span class="battle-label">In-Memory Cache (RAM Lookup):</span>
+                                        <div class="query-code-block">${cacheQuery}</div>
+                                    </div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        function clearHistory() {
+            history.length = 0;
+            sparkData.GetAllProducts = [];
+            sparkData.TextSearch = [];
+            sparkData.CacheTest = [];
+
             benchChart.data.labels = [];
             benchChart.data.datasets.forEach(d => d.data = []);
             benchChart.update();
 
-            // Run each scenario sequentially
-            const getAllBtn = document.querySelector('[onclick*="GetAllProducts"]');
-            await runScenario('GetAllProducts', getAllBtn);
+            renderHistory();
+            updateStats();
+            logToConsole("Test geçmişi temizlendi.", "info");
 
-            await new Promise(r => setTimeout(r, 300));
-
-            const searchBtn = document.querySelector('[onclick*="runTextSearch"]');
-            await runTextSearch(searchBtn);
-
-            await new Promise(r => setTimeout(r, 300));
-
-            const cacheBtn = document.querySelector('[onclick*="CacheTest"]');
-            await runScenario('CacheTest', cacheBtn);
-
-            btn.innerHTML = originalHtml;
-            btn.disabled = false;
+            onScenarioChange();
         }
 
         async function reindex(btn) {
             const originalHtml = btn.innerHTML;
             btn.innerHTML = '<span class="bench-spinner"></span> Reindex...';
             btn.disabled = true;
+            logToConsole("Elasticsearch veri dizini yeniden indeksleme komutu gönderildi...", "cmd");
 
             try {
                 const resp = await fetch('/Benchmark/Reindex', { method: 'POST' });
                 const data = await resp.json();
+                displayRawJson(data);
                 if (data.success) {
+                    logToConsole(`ES Reindex tamamlandı. Süre: ${data.timeMs.toFixed(0)} ms`, "success");
                     alert(`Reindex tamamlandı! Süre: ${data.timeMs.toFixed(0)} ms`);
+                    fetchCounts();
                 } else {
+                    logToConsole("ES Reindex başarısız: " + data.message, "warning");
                     alert(data.message || 'Reindex başarısız');
                 }
             } catch (err) {
+                logToConsole(`Reindex işleminde hata: ${err.message}`, "warning");
                 alert('Reindex hatası: ' + err.message);
             }
 
@@ -837,21 +1681,425 @@
             const originalHtml = btn.innerHTML;
             btn.innerHTML = '<span class="bench-spinner"></span> Senkronize ediliyor...';
             btn.disabled = true;
+            logToConsole("CQRS Read Model Flat tablosu SQL verileriyle eşitleniyor (Sync)...", "cmd");
 
             try {
                 const resp = await fetch('/Benchmark/SyncReadModels', { method: 'POST' });
                 const data = await resp.json();
+                displayRawJson(data);
                 if (data.success) {
+                    logToConsole(`CQRS Read Model eşitlendi! Aktarılan kayıt: ${data.count}. Süre: ${data.timeMs.toFixed(0)} ms`, "success");
                     alert(`Read Model Senkronizasyonu Tamamlandı! \nSüre: ${data.timeMs.toFixed(0)} ms \nAktarılan Kayıt: ${data.count}`);
+                    fetchCounts();
                 } else {
+                    logToConsole("Sync işlemi başarısız.", "warning");
                     alert('Senkronizasyon başarısız');
                 }
             } catch (err) {
+                logToConsole(`Eşitlemede hata oluştu: ${err.message}`, "warning");
                 alert('Senkronizasyon hatası: ' + err.message);
             }
 
             btn.innerHTML = originalHtml;
             btn.disabled = false;
         }
+
+        // ── Canlı Durum ve Kayıt Sayısı Gösterimi ───────────
+        async function fetchCounts() {
+            try {
+                const resp = await fetch('/Benchmark/GetIndexStatus');
+                if (resp.ok) {
+                    const data = await resp.json();
+                    updateStatusUI(data);
+                }
+            } catch (err) {
+                console.error("Durum bilgileri çekilemedi:", err);
+            }
+        }
+
+        function updateStatusUI(data) {
+            const { esCount, sqlReadModelCount, totalProductsCount } = data;
+            
+            const statusEsEl = document.getElementById('statusEs');
+            if (statusEsEl) {
+                if (esCount === 0) {
+                    statusEsEl.innerHTML = `<span class="text-danger">⚠️ İndeks Boş (0 / ${totalProductsCount})</span>`;
+                } else if (esCount !== totalProductsCount) {
+                    statusEsEl.innerHTML = `<span class="text-warning">⚠️ Eksik İndeks (${esCount} / ${totalProductsCount})</span>`;
+                } else {
+                    statusEsEl.innerHTML = `<span class="text-success">✅ İndekslendi (${esCount} / ${totalProductsCount})</span>`;
+                }
+            }
+            
+            const statusReadModelEl = document.getElementById('statusReadModel');
+            if (statusReadModelEl) {
+                if (sqlReadModelCount === 0) {
+                    statusReadModelEl.innerHTML = `<span class="text-danger">⚠️ Tablo Boş (0 / ${totalProductsCount})</span>`;
+                } else if (sqlReadModelCount !== totalProductsCount) {
+                    statusReadModelEl.innerHTML = `<span class="text-warning">⚠️ Eksik Tablo (${sqlReadModelCount} / ${totalProductsCount})</span>`;
+                } else {
+                    statusReadModelEl.innerHTML = `<span class="text-success">✅ Eşitlendi (${sqlReadModelCount} / ${totalProductsCount})</span>`;
+                }
+            }
+        }
+
+        // ── JSON Veri Gösterimi ve Modal İşlemleri ───────────
+        let lastReceivedJson = null;
+
+        function displayRawJson(data) {
+            lastReceivedJson = data;
+            document.getElementById('jsonResponseSection').style.display = 'block';
+            document.getElementById('jsonRawPre').textContent = JSON.stringify(data, null, 4);
+        }
+
+        function openJsonModal() {
+            if (!lastReceivedJson) return;
+            document.getElementById('modalJsonRawPre').textContent = JSON.stringify(lastReceivedJson, null, 4);
+            const myModal = new bootstrap.Modal(document.getElementById('jsonFullscreenModal'));
+            myModal.show();
+        }
+
+        function copyJsonText() {
+            if (!lastReceivedJson) return;
+            navigator.clipboard.writeText(JSON.stringify(lastReceivedJson, null, 4));
+            alert("JSON verisi panoya kopyalandı!");
+        }
+
+        function copyJsonTextModal() {
+            copyJsonText();
+        }
+
+        // ── Unified Performance Battle Simulator Logic ─────
+        let lastBattleData = null;
+
+        function onScenarioChange() {
+            const scenario = document.getElementById('battleScenarioSelect').value;
+            const queryContainer = document.getElementById('battleQueryContainer');
+            if (scenario === 'TextSearch') {
+                queryContainer.style.display = 'block';
+            } else {
+                queryContainer.style.display = 'none';
+            }
+
+            // Reset labels, widths, and data buttons
+            const lanes = ['sql', 'flat', 'es', 'cacheCold', 'cacheHot'];
+            lanes.forEach(k => {
+                const bar = document.getElementById('lane-bar-' + k);
+                if (bar) bar.style.width = '0%';
+                const lbl = document.getElementById('val-' + k);
+                if (lbl) {
+                    lbl.textContent = 'Henüz yarışmadı';
+                    lbl.className = 'badge bg-dark border border-secondary text-secondary';
+                }
+                const btn = document.getElementById('btn-data-' + k);
+                if (btn) btn.classList.add('d-none');
+            });
+        }
+
+        async function runUnifiedBattle() {
+            if (isBattleRunning) return;
+            isBattleRunning = true;
+
+            const btn = document.getElementById('startBattleBtn');
+            const scenario = document.getElementById('battleScenarioSelect').value;
+            const query = document.getElementById('battleQueryInput').value || 'hava';
+            const announce = document.getElementById('battleAnnouncement');
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="bench-spinner"></span> Çarpışıyor...';
+            announce.classList.add('d-none');
+
+            // Reset all race bars and data buttons
+            const bars = {
+                sql: document.getElementById('lane-bar-sql'),
+                flat: document.getElementById('lane-bar-flat'),
+                es: document.getElementById('lane-bar-es'),
+                cacheCold: document.getElementById('lane-bar-cacheCold'),
+                cacheHot: document.getElementById('lane-bar-cacheHot')
+            };
+
+            const labels = {
+                sql: document.getElementById('val-sql'),
+                flat: document.getElementById('val-flat'),
+                es: document.getElementById('val-es'),
+                cacheCold: document.getElementById('val-cacheCold'),
+                cacheHot: document.getElementById('val-cacheHot')
+            };
+
+            for (let k in bars) {
+                if (bars[k]) {
+                    bars[k].style.width = '0%';
+                }
+                if (labels[k]) {
+                    labels[k].className = 'badge bg-dark border border-secondary text-secondary';
+                    labels[k].textContent = 'Yarışıyor...';
+                }
+                const db = document.getElementById('btn-data-' + k);
+                if (db) db.classList.add('d-none');
+            }
+
+            logToConsole(`Performans Savaşı Başlatıldı! Senaryo: ${scenario}`, "cmd");
+
+            try {
+                let url = '';
+                let fetchOptions = { method: 'POST' };
+
+                if (scenario === 'GetAllProducts') {
+                    url = '/Benchmark/RunGetAllProducts';
+                } else if (scenario === 'TextSearch') {
+                    url = '/Benchmark/RunTextSearch';
+                    fetchOptions.headers = { 'Content-Type': 'application/json' };
+                    fetchOptions.body = JSON.stringify({ query: query });
+                } else {
+                    url = '/Benchmark/RunCacheTest';
+                }
+
+                const resp = await fetch(url, fetchOptions);
+                const data = await resp.json();
+
+                displayRawJson(data);
+
+                // Define actual values
+                const times = {
+                    sql: data.sqlTimeMs,
+                    flat: data.sqlReadModelTimeMs,
+                    es: data.esTimeMs,
+                    cacheCold: data.cacheColdMs,
+                    cacheHot: data.cacheHotMs
+                };
+
+                const counts = {
+                    sql: data.sqlCount,
+                    flat: data.sqlReadModelCount || data.sqlCount,
+                    es: data.esCount,
+                    cacheCold: null,
+                    cacheHot: data.cacheCount
+                };
+
+                // Run race simulation
+                await simulateRace(times, counts, bars, labels, announce);
+
+                // Show "Veriyi Gör" buttons for active lanes
+                lastBattleData = data;
+                for (let k in times) {
+                    if (times[k] !== null && times[k] !== undefined && times[k] > 0) {
+                        const db = document.getElementById('btn-data-' + k);
+                        if (db) db.classList.remove('d-none');
+                    }
+                }
+
+                // Add to history and charts AFTER the race finishes
+                addToChart(data.scenario, data.sqlTimeMs, data.sqlReadModelTimeMs, data.esTimeMs, data.cacheColdMs, data.cacheHotMs);
+                addToHistory(data);
+
+                logToConsole(`Savaş tamamlandı! Senaryo: ${data.scenario}`, "success");
+
+            } catch (err) {
+                logToConsole(`Savaş sırasında hata oluştu: ${err.message}`, "warning");
+                for (let k in labels) {
+                    if (labels[k]) {
+                        labels[k].textContent = 'Hata';
+                        labels[k].className = 'badge bg-dark border border-danger text-danger';
+                    }
+                }
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-fire me-1"></i> SAVAŞI BAŞLAT!';
+                isBattleRunning = false;
+            }
+        }
+
+        function showLaneData(tech) {
+            if (!lastBattleData) return;
+            let targetData = null;
+            let title = '';
+            if (tech === 'sql') {
+                targetData = lastBattleData.sqlData;
+                title = 'SQL Server TPT Gelen Veri';
+            } else if (tech === 'flat') {
+                targetData = lastBattleData.sqlReadModelData;
+                title = 'SQL Read Model Gelen Veri';
+            } else if (tech === 'es') {
+                targetData = lastBattleData.esData;
+                title = 'Elasticsearch Gelen Veri';
+            } else if (tech === 'cacheCold') {
+                targetData = lastBattleData.cacheColdData;
+                title = 'Cache Cold Gelen Veri';
+            } else if (tech === 'cacheHot') {
+                targetData = lastBattleData.cacheHotData;
+                title = 'Cache Hot Gelen Veri';
+            }
+
+            document.getElementById('modalJsonRawPre').textContent = JSON.stringify(targetData, null, 4);
+            document.getElementById('jsonFullscreenModalLabel').innerHTML = `<i class="bi bi-braces text-warning me-2"></i>${title}`;
+            const myModal = new bootstrap.Modal(document.getElementById('jsonFullscreenModal'));
+            myModal.show();
+        }
+
+        async function runAllUnifiedBattles() {
+            if (isBattleRunning) return;
+
+            const scenarios = ['GetAllProducts', 'TextSearch', 'CacheTest'];
+            const selectEl = document.getElementById('battleScenarioSelect');
+            const startAllBtn = document.getElementById('startAllBattleBtn');
+            const originalText = startAllBtn.innerHTML;
+
+            startAllBtn.disabled = true;
+            startAllBtn.innerHTML = '<span class="bench-spinner"></span> Savaşlar Sürmekte...';
+
+            logToConsole("Toplu Savaş Başlatıldı! Tüm servisler sırayla savaştırılıyor...", "cmd");
+
+            // Reset chart for comparison
+            benchChart.data.labels = [];
+            benchChart.data.datasets.forEach(d => d.data = []);
+            benchChart.update();
+
+            for (let i = 0; i < scenarios.length; i++) {
+                selectEl.value = scenarios[i];
+                onScenarioChange();
+
+                // Wait for the scenario's battle to complete
+                await runUnifiedBattle();
+
+                if (i < scenarios.length - 1) {
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+            }
+
+            startAllBtn.disabled = false;
+            startAllBtn.innerHTML = originalText;
+        }
+
+        async function simulateRace(times, counts, bars, labels, announce) {
+            return new Promise((resolve) => {
+                // Find min active time
+                let minTime = Infinity;
+                let activeKeys = [];
+                let inactiveKeys = [];
+
+                for (let k in times) {
+                    if (times[k] !== null && times[k] !== undefined && times[k] > 0) {
+                        activeKeys.push(k);
+                        if (times[k] < minTime) {
+                            minTime = times[k];
+                        }
+                    } else {
+                        inactiveKeys.push(k);
+                    }
+                }
+
+                // Immediately mark inactive keys
+                inactiveKeys.forEach(k => {
+                    if (labels[k]) {
+                        labels[k].textContent = 'Kullanılmıyor';
+                        labels[k].className = 'badge bg-dark border border-secondary text-secondary opacity-50';
+                    }
+                    if (bars[k]) {
+                        bars[k].style.width = '0%';
+                    }
+                });
+
+                // Progress state for active lanes
+                const progress = {};
+                activeKeys.forEach(k => {
+                    progress[k] = 0;
+                    if (labels[k]) {
+                        labels[k].textContent = 'Koşuyor...';
+                    }
+                });
+
+                // Calculate step increments based on relative speeds, capped so slowest finishes in max ~3 seconds (min increment of 0.8% per tick)
+                const step = 4.0; 
+                const increments = {};
+                activeKeys.forEach(k => {
+                    const ratio = minTime / times[k];
+                    increments[k] = Math.max(0.8, step * ratio);
+                });
+
+                const raceInterval = setInterval(() => {
+                    let allFinished = true;
+
+                    activeKeys.forEach(k => {
+                        if (progress[k] < 100) {
+                            progress[k] += increments[k] + (Math.random() - 0.2) * 0.2; 
+                            if (progress[k] >= 100) {
+                                progress[k] = 100;
+                                // Display final result
+                                const timeStr = times[k].toFixed(2) + ' ms';
+                                const countStr = counts[k] !== null && counts[k] !== undefined ? ` (${counts[k]} kayıt)` : '';
+                                labels[k].textContent = timeStr + countStr;
+                                
+                                // Set color based on speed relative to winner
+                                if (times[k] === minTime) {
+                                    labels[k].className = 'badge bg-success border border-success text-white fw-bold animate__animated animate__pulse';
+                                } else {
+                                    labels[k].className = 'badge bg-dark border border-secondary text-light';
+                                }
+                            } else {
+                                allFinished = false;
+                            }
+                            if (bars[k]) {
+                                bars[k].style.width = progress[k] + '%';
+                            }
+                        }
+                    });
+
+                    if (allFinished) {
+                        clearInterval(raceInterval);
+
+                        // Show announcement
+                        let winnerKey = '';
+                        let minVal = Infinity;
+                        for (let k in times) {
+                            if (times[k] !== null && times[k] !== undefined && times[k] > 0 && times[k] < minVal) {
+                                minVal = times[k];
+                                winnerKey = k;
+                            }
+                        }
+
+                        const techNames = {
+                            sql: 'SQL Server TPT',
+                            flat: 'SQL Read Model',
+                            es: 'Elasticsearch',
+                            cacheCold: 'Memory Cache Cold',
+                            cacheHot: 'Memory Cache Hot'
+                        };
+
+                        announce.className = 'battle-announcement text-center animate__animated animate__fadeIn mt-3';
+                        announce.classList.remove('d-none');
+                        
+                        let comparisonText = '';
+                        let maxVal = 0;
+                        let loserKey = '';
+                        for (let k in times) {
+                            if (times[k] !== null && times[k] !== undefined && times[k] > 0 && times[k] > maxVal) {
+                                maxVal = times[k];
+                                loserKey = k;
+                            }
+                        }
+
+                        if (winnerKey && loserKey && winnerKey !== loserKey) {
+                            const ratio = (times[loserKey] / times[winnerKey]).toFixed(1);
+                            comparisonText = `<strong>${techNames[winnerKey]}</strong>, en yavaş olan <strong>${techNames[loserKey]}</strong> karşısında <strong>${ratio}x kat daha hızlı</strong> performans gösterdi.`;
+                        }
+
+                        announce.innerHTML = `
+                            <div style="font-size: 1.1rem; font-weight: 700; color: #4ade80;">
+                                🎉 Savaş Tamamlandı! Kazanan: ${techNames[winnerKey]} (${times[winnerKey].toFixed(2)} ms)
+                            </div>
+                            <div class="mt-2" style="font-size: 0.88rem; color: #cbd5e1;">
+                                ${comparisonText}
+                            </div>
+                        `;
+
+                        resolve();
+                    }
+                }, 25);
+            });
+        }
+
+        // Initialize Styles and fetch counts
+        onScenarioChange();
+        fetchCounts();
     </script>
 }

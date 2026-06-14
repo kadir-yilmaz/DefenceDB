@@ -6,8 +6,8 @@ using Microsoft.Extensions.Logging;
 namespace DefenceDB.BLL.Concrete;
 
 /// <summary>
-/// Bellek-içi önbellek (in-memory) — Redis kapalıyken fallback olarak kullanılır.
-/// Shared hosting (canlı site) için varsayılan implementasyon.
+/// Varsayılan bellek-içi önbellek (in-memory) implementasyonu.
+/// Shared hosting (canlı site) için kullanılan implementasyon.
 /// </summary>
 public class MemoryCacheService : ICacheService
 {
