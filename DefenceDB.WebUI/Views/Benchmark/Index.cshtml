@@ -362,6 +362,55 @@
         text-align: left;
     }
 
+    /* JSON Syntax Highlighting */
+    .json-key { color: #f43f5e; font-weight: 600; }     /* Rose keys */
+    .json-string { color: #34d399; }                  /* Emerald strings */
+    .json-number { color: #38bdf8; }                  /* Sky numbers */
+    .json-boolean { color: #fbbf24; font-weight: bold; } /* Amber booleans */
+    .json-null { color: #94a3b8; font-style: italic; }   /* Gray nulls */
+
+    /* Split-Screen Thumbnail Selection */
+    .view-thumbnail-card {
+        border: 1px solid rgba(148, 163, 184, 0.12) !important;
+        background: rgba(15, 23, 42, 0.3) !important;
+        border-radius: 10px;
+        padding: 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .view-thumbnail-card:hover {
+        border-color: rgba(96, 165, 250, 0.4) !important;
+        background: rgba(30, 41, 59, 0.4) !important;
+        transform: translateY(-1px);
+    }
+    .view-thumbnail-card.active {
+        border-color: #3b82f6 !important;
+        background: rgba(59, 130, 246, 0.08) !important;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15);
+    }
+    .thumb-icon-container {
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        background: rgba(148, 163, 184, 0.08);
+        color: #94a3b8;
+        transition: all 0.25s ease;
+    }
+    .view-thumbnail-card.active .thumb-icon-container {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+    }
+    .hover-white:hover {
+        color: #ffffff !important;
+    }
+
     /* ═══════════════ LIVE DEVELOPER CONSOLE ═══════════════ */
     .console-container {
         background: rgba(15, 23, 42, 0.4);
@@ -616,14 +665,27 @@
                                 <div id="time-card-sql" class="fs-2 fw-bold text-white mb-1">— ms</div>
                                 <div id="count-card-sql" class="text-muted small">— kayıt</div>
                             </div>
+                            <!-- Query Container -->
                             <div class="mb-2 text-start">
-                                <span class="text-muted" style="font-size: 0.72rem; font-weight: 600;">Oluşan TPT SQL Sorgusu:</span>
-                                <pre id="query-card-sql" class="query-code-block m-0 mt-1" style="height: 120px; color: #60a5fa;"></pre>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted" style="font-size: 0.72rem; font-weight: 600;">Oluşan TPT SQL Sorgusu:</span>
+                                    <button id="btn-zoom-query-sql" class="btn btn-sm btn-link p-0 text-primary" style="font-size: 0.72rem; text-decoration: none; display: none;" onclick="openZoomModal('sql', 'query')">
+                                        <i class="bi bi-arrows-angle-expand me-1"></i>Büyüt
+                                    </button>
+                                </div>
+                                <pre id="query-card-sql" class="query-code-block m-0" style="height: 100px; color: #60a5fa;"></pre>
+                            </div>
+                            <!-- Data Preview Container -->
+                            <div class="mb-2 text-start">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted" style="font-size: 0.72rem; font-weight: 600;">Gelen Veri Ön İzleme:</span>
+                                    <button id="btn-zoom-data-sql" class="btn btn-sm btn-link p-0 text-primary" style="font-size: 0.72rem; text-decoration: none; display: none;" onclick="openZoomModal('sql', 'data')">
+                                        <i class="bi bi-arrows-angle-expand me-1"></i>Büyüt
+                                    </button>
+                                </div>
+                                <pre id="data-card-sql" class="query-code-block m-0" style="height: 100px; color: #a78bfa;"></pre>
                             </div>
                         </div>
-                        <button id="btn-data-sql" class="bench-btn w-100 py-1" style="font-size:0.75rem; background:rgba(96,165,250,0.15); color:#60a5fa; border:1px solid rgba(96,165,250,0.3); display:none;" onclick="showLaneData('sql')">
-                            <i class="bi bi-braces me-1"></i> Veriyi Gör
-                        </button>
                     </div>
                 </div>
 
@@ -639,14 +701,27 @@
                                 <div id="time-card-flat" class="fs-2 fw-bold text-white mb-1">— ms</div>
                                 <div id="count-card-flat" class="text-muted small">— kayıt</div>
                             </div>
+                            <!-- Query Container -->
                             <div class="mb-2 text-start">
-                                <span class="text-muted" style="font-size: 0.72rem; font-weight: 600;">Oluşan Flat SQL Sorgusu:</span>
-                                <pre id="query-card-flat" class="query-code-block m-0 mt-1" style="height: 120px; color: #34d399;"></pre>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted" style="font-size: 0.72rem; font-weight: 600;">Oluşan Flat SQL Sorgusu:</span>
+                                    <button id="btn-zoom-query-flat" class="btn btn-sm btn-link p-0 text-success" style="font-size: 0.72rem; text-decoration: none; display: none;" onclick="openZoomModal('flat', 'query')">
+                                        <i class="bi bi-arrows-angle-expand me-1"></i>Büyüt
+                                    </button>
+                                </div>
+                                <pre id="query-card-flat" class="query-code-block m-0" style="height: 100px; color: #34d399;"></pre>
+                            </div>
+                            <!-- Data Preview Container -->
+                            <div class="mb-2 text-start">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted" style="font-size: 0.72rem; font-weight: 600;">Gelen Veri Ön İzleme:</span>
+                                    <button id="btn-zoom-data-flat" class="btn btn-sm btn-link p-0 text-success" style="font-size: 0.72rem; text-decoration: none; display: none;" onclick="openZoomModal('flat', 'data')">
+                                        <i class="bi bi-arrows-angle-expand me-1"></i>Büyüt
+                                    </button>
+                                </div>
+                                <pre id="data-card-flat" class="query-code-block m-0" style="height: 100px; color: #34d399;"></pre>
                             </div>
                         </div>
-                        <button id="btn-data-flat" class="bench-btn w-100 py-1" style="font-size:0.75rem; background:rgba(52,211,153,0.15); color:#34d399; border:1px solid rgba(52,211,153,0.3); display:none;" onclick="showLaneData('flat')">
-                            <i class="bi bi-braces me-1"></i> Veriyi Gör
-                        </button>
                     </div>
                 </div>
 
@@ -662,14 +737,27 @@
                                 <div id="time-card-es" class="fs-2 fw-bold text-white mb-1">— ms</div>
                                 <div id="count-card-es" class="text-muted small">— kayıt</div>
                             </div>
+                            <!-- Query Container -->
                             <div class="mb-2 text-start">
-                                <span class="text-muted" style="font-size: 0.72rem; font-weight: 600;">ES Arama İsteği (REST):</span>
-                                <pre id="query-card-es" class="query-code-block m-0 mt-1" style="height: 120px; color: #a78bfa;"></pre>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted" style="font-size: 0.72rem; font-weight: 600;">ES Arama İsteği (REST):</span>
+                                    <button id="btn-zoom-query-es" class="btn btn-sm btn-link p-0 text-purple" style="font-size: 0.72rem; text-decoration: none; display: none;" onclick="openZoomModal('es', 'query')">
+                                        <i class="bi bi-arrows-angle-expand me-1"></i>Büyüt
+                                    </button>
+                                </div>
+                                <pre id="query-card-es" class="query-code-block m-0" style="height: 100px; color: #a78bfa;"></pre>
+                            </div>
+                            <!-- Data Preview Container -->
+                            <div class="mb-2 text-start">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted" style="font-size: 0.72rem; font-weight: 600;">Gelen Veri Ön İzleme:</span>
+                                    <button id="btn-zoom-data-es" class="btn btn-sm btn-link p-0 text-purple" style="font-size: 0.72rem; text-decoration: none; display: none;" onclick="openZoomModal('es', 'data')">
+                                        <i class="bi bi-arrows-angle-expand me-1"></i>Büyüt
+                                    </button>
+                                </div>
+                                <pre id="data-card-es" class="query-code-block m-0" style="height: 100px; color: #a78bfa;"></pre>
                             </div>
                         </div>
-                        <button id="btn-data-es" class="bench-btn w-100 py-1" style="font-size:0.75rem; background:rgba(167,139,250,0.15); color:#a78bfa; border:1px solid rgba(167,139,250,0.3); display:none;" onclick="showLaneData('es')">
-                            <i class="bi bi-braces me-1"></i> Veriyi Gör
-                        </button>
                     </div>
                 </div>
 
@@ -685,14 +773,27 @@
                                 <div id="time-card-cache" class="fs-2 fw-bold text-white mb-1">— ms</div>
                                 <div id="count-card-cache" class="text-muted small">— kayıt</div>
                             </div>
+                            <!-- Query Container -->
                             <div class="mb-2 text-start">
-                                <span class="text-muted" style="font-size: 0.72rem; font-weight: 600;">Bellek Arama Detayı:</span>
-                                <pre id="query-card-cache" class="query-code-block m-0 mt-1" style="height: 120px; color: #fbbf24;"></pre>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted" style="font-size: 0.72rem; font-weight: 600;">Bellek Arama Detayı:</span>
+                                    <button id="btn-zoom-query-cache" class="btn btn-sm btn-link p-0 text-warning" style="font-size: 0.72rem; text-decoration: none; display: none;" onclick="openZoomModal('cache', 'query')">
+                                        <i class="bi bi-arrows-angle-expand me-1"></i>Büyüt
+                                    </button>
+                                </div>
+                                <pre id="query-card-cache" class="query-code-block m-0" style="height: 100px; color: #fbbf24;"></pre>
+                            </div>
+                            <!-- Data Preview Container -->
+                            <div class="mb-2 text-start">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted" style="font-size: 0.72rem; font-weight: 600;">Gelen Veri Ön İzleme:</span>
+                                    <button id="btn-zoom-data-cache" class="btn btn-sm btn-link p-0 text-warning" style="font-size: 0.72rem; text-decoration: none; display: none;" onclick="openZoomModal('cache', 'data')">
+                                        <i class="bi bi-arrows-angle-expand me-1"></i>Büyüt
+                                    </button>
+                                </div>
+                                <pre id="data-card-cache" class="query-code-block m-0" style="height: 100px; color: #fbbf24;"></pre>
                             </div>
                         </div>
-                        <button id="btn-data-cache" class="bench-btn w-100 py-1" style="font-size:0.75rem; background:rgba(251,191,36,0.15); color:#fbbf24; border:1px solid rgba(251,191,36,0.3); display:none;" onclick="showLaneData('cache')">
-                            <i class="bi bi-braces me-1"></i> Veriyi Gör
-                        </button>
                     </div>
                 </div>
 
@@ -874,44 +975,89 @@
             </div>
         </div>
 
-        <!-- ═══════════════ JSON RAW RESPONSE VIEW ═══════════════ -->
-        <div class="console-container fade-in-section mt-4" id="jsonResponseSection" style="display: none;">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="chart-title mb-0">
-                    <i class="bi bi-braces me-2" style="color: #fbbf24;"></i>Son Gelen JSON Verisi (Raw JSON Response)
-                </span>
-                <div class="d-flex gap-2">
-                    <button class="bench-btn py-1 px-3" style="background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); padding: 4px 10px; font-size: 0.75rem;" onclick="openJsonModal()">
-                        <i class="bi bi-fullscreen me-1"></i> Tam Ekran Gör
-                    </button>
-                    <button class="bench-btn py-1 px-3" style="background: rgba(148, 163, 184, 0.1); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.2); padding: 4px 10px; font-size: 0.75rem;" onclick="copyJsonText()">
-                        <i class="bi bi-clipboard me-1"></i> Kopyala
-                    </button>
-                </div>
-            </div>
-            <div class="console-box" id="jsonResponseBox" style="height: 220px; border-color: rgba(251, 191, 36, 0.25);">
-                <pre class="m-0 text-success" id="jsonRawPre" style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.4; white-space: pre-wrap; word-break: break-all;"></pre>
-            </div>
-        </div>
+        <!-- Custom Split-Screen Detail Modal -->
+        <div class="modal fade" id="benchmarkDetailModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(16px); z-index: 1070;">
+            <div class="modal-dialog modal-dialog-centered modal-xl">
+                <div class="modal-content" style="background: #090d16; border: 1px solid rgba(148, 163, 184, 0.15); border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+                    <div class="row g-0" style="min-height: 550px;">
+                        <!-- Left Pane (75% width) -->
+                        <div class="col-md-9 d-flex flex-column p-4" style="background: #020617; position: relative;">
+                            <!-- Top Bar of Left Pane -->
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="text-white m-0 d-flex align-items-center" id="detailModalLeftTitle" style="font-family: 'Outfit', sans-serif;">
+                                    <i class="bi bi-braces text-warning me-2" id="detailModalLeftIcon"></i>
+                                    <span id="detailModalTitleText">Veri Detayı</span>
+                                </h5>
+                                <button class="bench-btn py-1 px-3" style="background: rgba(148, 163, 184, 0.1); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.2); padding: 4px 10px; font-size: 0.75rem;" onclick="copyDetailText()">
+                                    <i class="bi bi-clipboard me-1"></i> Kopyala
+                                </button>
+                            </div>
+                            <!-- Main Content Area -->
+                            <div class="flex-grow-1" style="position: relative; overflow: hidden; border: 1px solid rgba(148, 163, 184, 0.08); border-radius: 8px;">
+                                <pre class="m-0 p-3" id="detailModalContent" style="font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.5; white-space: pre-wrap; word-break: break-all; height: 450px; overflow-y: auto; color: #cbd5e1;"></pre>
+                            </div>
+                        </div>
 
-        <!-- Full Screen JSON Modal -->
-        <div class="modal fade" id="jsonFullscreenModal" tabindex="-1" aria-labelledby="jsonFullscreenModalLabel" aria-hidden="true" style="backdrop-filter: blur(12px); z-index: 1060;">
-            <div class="modal-dialog modal-fullscreen modal-dialog-scrollable">
-                <div class="modal-content" style="background: #020617; border: 1px solid rgba(148, 163, 184, 0.15);">
-                    <div class="modal-header" style="border-bottom: 1px solid rgba(148, 163, 184, 0.1);">
-                        <h5 class="modal-title text-white" id="jsonFullscreenModalLabel">
-                            <i class="bi bi-braces text-warning me-2"></i>Detaylı JSON Verisi
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body p-4">
-                        <pre class="m-0 text-success" id="modalJsonRawPre" style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; line-height: 1.5; white-space: pre-wrap; word-break: break-all;"></pre>
-                    </div>
-                    <div class="modal-footer" style="border-top: 1px solid rgba(148, 163, 184, 0.1);">
-                        <button type="button" class="bench-btn" style="background: rgba(148, 163, 184, 0.1); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.2);" onclick="copyJsonTextModal()">
-                            <i class="bi bi-clipboard me-1"></i> Kopyala
-                        </button>
-                        <button type="button" class="bench-btn bench-btn-primary" data-bs-dismiss="modal">Kapat</button>
+                        <!-- Right Pane (25% width) -->
+                        <div class="col-md-3 d-flex flex-column p-4 justify-content-between" style="border-left: 1px solid rgba(148, 163, 184, 0.1); background: #090d16; position: relative;">
+                            <!-- Close button in top-right of right panel -->
+                            <button type="button" class="btn p-1 text-muted hover-white" style="position: absolute; top: 15px; right: 15px; background: transparent; border: none; font-size: 1.25rem;" data-bs-dismiss="modal" aria-label="Close">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+
+                            <!-- Top portion of right panel -->
+                            <div>
+                                <!-- Title -->
+                                <h6 class="text-muted text-uppercase fw-bold mb-3" style="font-size: 0.75rem; letter-spacing: 1px; font-family: 'Inter', sans-serif;" id="detailModalRightTitle">Görünümler</h6>
+                                
+                                <!-- Thumbnail-style navigation options (like e-commerce gallery images) -->
+                                <div class="d-flex flex-column gap-2 mb-4">
+                                    <!-- Option 1: Query/SQL -->
+                                    <div class="view-thumbnail-card active" id="thumb-query" onclick="switchDetailTab('query')">
+                                        <div class="thumb-icon-container">
+                                            <i class="bi bi-code-slash" style="font-size: 1.2rem;"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-white fw-bold" style="font-size: 0.8rem; font-family: 'Outfit', sans-serif;">Sorgu / İstek</div>
+                                            <div class="text-muted" style="font-size: 0.7rem;" id="thumb-query-sub">SQL / ES Kodu</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Option 2: JSON Response Data -->
+                                    <div class="view-thumbnail-card" id="thumb-data" onclick="switchDetailTab('data')">
+                                        <div class="thumb-icon-container">
+                                            <i class="bi bi-braces" style="font-size: 1.2rem;"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-white fw-bold" style="font-size: 0.8rem; font-family: 'Outfit', sans-serif;">Gelen Veri</div>
+                                            <div class="text-muted" style="font-size: 0.7rem;" id="thumb-data-sub">Formatlanmış JSON</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Technical Stats Info -->
+                                <h6 class="text-muted text-uppercase fw-bold mb-2" style="font-size: 0.75rem; letter-spacing: 1px; font-family: 'Inter', sans-serif;">Metrikler</h6>
+                                <div class="d-flex flex-column gap-2 mb-4" style="font-family: 'Inter', sans-serif; font-size: 0.8rem;">
+                                    <div class="d-flex justify-content-between py-1" style="border-bottom: 1px solid rgba(148, 163, 184, 0.05);">
+                                        <span class="text-muted">Teknoloji:</span>
+                                        <span class="text-white fw-bold" id="detail-stat-tech">—</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between py-1" style="border-bottom: 1px solid rgba(148, 163, 184, 0.05);">
+                                        <span class="text-muted">Süre:</span>
+                                        <span class="text-success fw-bold" id="detail-stat-time">— ms</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between py-1" style="border-bottom: 1px solid rgba(148, 163, 184, 0.05);">
+                                        <span class="text-muted">Kayıt Sayısı:</span>
+                                        <span class="text-info fw-bold" id="detail-stat-count">—</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bottom portion of right panel -->
+                            <div style="font-size: 0.7rem; color: #64748b; font-family: 'Inter', sans-serif; border-top: 1px solid rgba(148, 163, 184, 0.1); padding-top: 15px;">
+                                <span>DefenceDB Performans Karşılaştırma Analiz Raporu. Detaylar ve istekler canlı üretilmiştir.</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1185,7 +1331,6 @@
             try {
                 const resp = await fetch('/Benchmark/Reindex', { method: 'POST' });
                 const data = await resp.json();
-                displayRawJson(data);
                 if (data.success) {
                     logToConsole(`ES Reindex tamamlandı. Süre: ${data.timeMs.toFixed(0)} ms`, "success");
                     alert(`Reindex tamamlandı! Süre: ${data.timeMs.toFixed(0)} ms`);
@@ -1212,7 +1357,6 @@
             try {
                 const resp = await fetch('/Benchmark/SyncReadModels', { method: 'POST' });
                 const data = await resp.json();
-                displayRawJson(data);
                 if (data.success) {
                     logToConsole(`CQRS Read Model eşitlendi! Aktarılan kayıt: ${data.count}. Süre: ${data.timeMs.toFixed(0)} ms`, "success");
                     alert(`Read Model Senkronizasyonu Tamamlandı! \nSüre: ${data.timeMs.toFixed(0)} ms \nAktarılan Kayıt: ${data.count}`);
@@ -1270,30 +1414,109 @@
         }
 
         // ── JSON Veri Gösterimi ve Modal İşlemleri ───────────
-        let lastReceivedJson = null;
         let lastStepData = {};
+        let activeTech = 'sql';
+        let activeTab = 'query';
 
-        function displayRawJson(data) {
-            lastReceivedJson = data;
-            document.getElementById('jsonResponseSection').style.display = 'block';
-            document.getElementById('jsonRawPre').textContent = JSON.stringify(data, null, 4);
+        // Custom regex-based JSON syntax highlighter and beautifier
+        function syntaxHighlightJson(json) {
+            if (!json) return '';
+            if (typeof json !== 'string') {
+                json = JSON.stringify(json, null, 4);
+            }
+            // Escape HTML characters
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            // Regex to match JSON components
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function (match) {
+                let cls = 'json-number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    } else {
+                        cls = 'json-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'json-boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'json-null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
         }
 
-        function openJsonModal() {
-            if (!lastReceivedJson) return;
-            document.getElementById('modalJsonRawPre').textContent = JSON.stringify(lastReceivedJson, null, 4);
-            const myModal = new bootstrap.Modal(document.getElementById('jsonFullscreenModal'));
+        function openZoomModal(tech, tab) {
+            if (!lastStepData || !lastStepData[tech] || !lastStepData[tech].success) return;
+            activeTech = tech;
+            activeTab = tab;
+            
+            // Show modal
+            const myModal = new bootstrap.Modal(document.getElementById('benchmarkDetailModal'));
             myModal.show();
+            
+            // Update modal UI
+            updateModalContent();
         }
 
-        function copyJsonText() {
-            if (!lastReceivedJson) return;
-            navigator.clipboard.writeText(JSON.stringify(lastReceivedJson, null, 4));
-            alert("JSON verisi panoya kopyalandı!");
+        function switchDetailTab(tab) {
+            activeTab = tab;
+            updateModalContent();
         }
 
-        function copyJsonTextModal() {
-            copyJsonText();
+        function updateModalContent() {
+            const res = lastStepData[activeTech];
+            if (!res) return;
+
+            const techNames = {
+                sql: 'SQL Server TPT',
+                flat: 'SQL Read Model',
+                es: 'Elasticsearch',
+                cache: 'In-Memory Cache'
+            };
+
+            // Update stats on right
+            document.getElementById('detail-stat-tech').textContent = techNames[activeTech];
+            document.getElementById('detail-stat-time').textContent = `${res.timeMs.toFixed(2)} ms`;
+            document.getElementById('detail-stat-count').textContent = `${res.count} kayıt`;
+
+            // Update sub-text of thumbnails to reflect active tech names
+            document.getElementById('thumb-query-sub').textContent = activeTech === 'es' ? 'ES Query Body' : 'SQL Sorgusu';
+            document.getElementById('thumb-data-sub').textContent = 'Formatlanmış JSON';
+
+            // Toggle active thumbnail styling
+            if (activeTab === 'query') {
+                document.getElementById('thumb-query').classList.add('active');
+                document.getElementById('thumb-data').classList.remove('active');
+
+                // Left pane header
+                document.getElementById('detailModalTitleText').textContent = `${techNames[activeTech]} - Sorgu/İstek Detayı`;
+                document.getElementById('detailModalLeftIcon').className = 'bi bi-code-slash text-primary me-2';
+
+                // Display query
+                document.getElementById('detailModalContent').textContent = res.sql || 'Sorgu bulunamadı.';
+            } else {
+                document.getElementById('thumb-query').classList.remove('active');
+                document.getElementById('thumb-data').classList.add('active');
+
+                // Left pane header
+                document.getElementById('detailModalTitleText').textContent = `${techNames[activeTech]} - Gelen JSON Verisi`;
+                document.getElementById('detailModalLeftIcon').className = 'bi bi-braces text-warning me-2';
+
+                // Display beautified JSON
+                document.getElementById('detailModalContent').innerHTML = syntaxHighlightJson(res.data);
+            }
+        }
+
+        function copyDetailText() {
+            const res = lastStepData[activeTech];
+            if (!res) return;
+            let text = '';
+            if (activeTab === 'query') {
+                text = res.sql || '';
+            } else {
+                text = JSON.stringify(res.data, null, 4);
+            }
+            navigator.clipboard.writeText(text);
+            alert("Veri panoya kopyalandı!");
         }
 
         // ── Performance Test Logic ────────────────────────
@@ -1367,7 +1590,15 @@
                 document.getElementById(`time-card-${t}`).className = 'fs-2 fw-bold text-white mb-1';
                 document.getElementById(`count-card-${t}`).textContent = '— kayıt';
                 document.getElementById(`query-card-${t}`).textContent = '';
-                document.getElementById(`btn-data-${t}`).style.display = 'none';
+                
+                const dataCard = document.getElementById(`data-card-${t}`);
+                if (dataCard) dataCard.textContent = '';
+
+                const btnZoomQuery = document.getElementById(`btn-zoom-query-${t}`);
+                if (btnZoomQuery) btnZoomQuery.style.display = 'none';
+
+                const btnZoomData = document.getElementById(`btn-zoom-data-${t}`);
+                if (btnZoomData) btnZoomData.style.display = 'none';
                 
                 const badge = document.getElementById(`badge-card-${t}`);
                 badge.textContent = 'Hazır';
@@ -1398,7 +1629,15 @@
                 document.getElementById(`time-card-${t}`).className = 'fs-4 text-warning mb-1';
                 document.getElementById(`count-card-${t}`).textContent = '—';
                 document.getElementById(`query-card-${t}`).textContent = '';
-                document.getElementById(`btn-data-${t}`).style.display = 'none';
+                
+                const dataCard = document.getElementById(`data-card-${t}`);
+                if (dataCard) dataCard.textContent = '';
+
+                const btnZoomQuery = document.getElementById(`btn-zoom-query-${t}`);
+                if (btnZoomQuery) btnZoomQuery.style.display = 'none';
+
+                const btnZoomData = document.getElementById(`btn-zoom-data-${t}`);
+                if (btnZoomData) btnZoomData.style.display = 'none';
 
                 const badge = document.getElementById(`badge-card-${t}`);
                 badge.textContent = 'Test Ediliyor...';
@@ -1436,7 +1675,17 @@
                         document.getElementById(`time-card-${tech}`).className = 'fs-2 fw-bold text-success mb-1';
                         document.getElementById(`count-card-${tech}`).textContent = `${res.count} kayıt`;
                         document.getElementById(`query-card-${tech}`).textContent = res.sql || 'Sorgu bulunamadı.';
-                        document.getElementById(`btn-data-${tech}`).style.display = 'block';
+                        
+                        const dataCard = document.getElementById(`data-card-${tech}`);
+                        if (dataCard) {
+                            dataCard.innerHTML = syntaxHighlightJson(res.data);
+                        }
+
+                        const btnZoomQuery = document.getElementById(`btn-zoom-query-${tech}`);
+                        if (btnZoomQuery) btnZoomQuery.style.display = 'inline-block';
+
+                        const btnZoomData = document.getElementById(`btn-zoom-data-${tech}`);
+                        if (btnZoomData) btnZoomData.style.display = 'inline-block';
 
                         const badge = document.getElementById(`badge-card-${tech}`);
                         badge.textContent = 'Tamamlandı';
@@ -1452,7 +1701,15 @@
                     document.getElementById(`time-card-${tech}`).className = 'fs-2 fw-bold text-danger mb-1';
                     document.getElementById(`count-card-${tech}`).textContent = '—';
                     document.getElementById(`query-card-${tech}`).textContent = err.message;
-                    document.getElementById(`btn-data-${tech}`).style.display = 'none';
+                    
+                    const dataCard = document.getElementById(`data-card-${tech}`);
+                    if (dataCard) dataCard.textContent = '';
+
+                    const btnZoomQuery = document.getElementById(`btn-zoom-query-${tech}`);
+                    if (btnZoomQuery) btnZoomQuery.style.display = 'none';
+
+                    const btnZoomData = document.getElementById(`btn-zoom-data-${tech}`);
+                    if (btnZoomData) btnZoomData.style.display = 'none';
 
                     const badge = document.getElementById(`badge-card-${tech}`);
                     badge.textContent = 'Hata';
@@ -1464,8 +1721,6 @@
 
             // Wait for all steps to finish
             await Promise.all(promises);
-
-            displayRawJson(lastStepData);
 
             // Add to chart and history
             const sqlRes = lastStepData['sql'];
@@ -1543,17 +1798,6 @@
             btn.disabled = false;
             btn.innerHTML = '<i class="bi bi-play-fill me-1"></i> TESTİ BAŞLAT!';
             isTestRunning = false;
-        }
-
-        function showLaneData(tech) {
-            if (!lastStepData || !lastStepData[tech]) return;
-            const targetData = lastStepData[tech].data;
-            const title = `${tech.toUpperCase()} Gelen JSON Verisi`;
-
-            document.getElementById('modalJsonRawPre').textContent = JSON.stringify(targetData, null, 4);
-            document.getElementById('jsonFullscreenModalLabel').innerHTML = `<i class="bi bi-braces text-warning me-2"></i>${title}`;
-            const myModal = new bootstrap.Modal(document.getElementById('jsonFullscreenModal'));
-            myModal.show();
         }
 
         // Initialize view states and fetch statuses
