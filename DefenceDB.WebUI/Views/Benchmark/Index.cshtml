@@ -363,11 +363,33 @@
     }
 
     /* JSON Syntax Highlighting */
-    .json-key { color: #f43f5e; font-weight: 600; }     /* Rose keys */
-    .json-string { color: #34d399; }                  /* Emerald strings */
-    .json-number { color: #38bdf8; }                  /* Sky numbers */
-    .json-boolean { color: #fbbf24; font-weight: bold; } /* Amber booleans */
-    .json-null { color: #94a3b8; font-style: italic; }   /* Gray nulls */
+    .json-key { color: #fda4af; font-weight: 600; }     /* Bright light rose keys */
+    .json-string { color: #6ee7b7; }                  /* Bright light emerald strings */
+    .json-number { color: #7dd3fc; }                  /* Bright light sky numbers */
+    .json-boolean { color: #fde047; font-weight: bold; } /* Bright light amber booleans */
+    .json-null { color: #cbd5e1; font-style: italic; }   /* Light gray nulls */
+
+    /* Modal pre content text styling */
+    #detailModalContent {
+        font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+        font-size: 0.74rem !important; /* Make font slightly smaller as requested */
+        color: #f8fafc !important; /* Make text much brighter */
+        line-height: 1.6 !important;
+    }
+
+    #detailModalContent::-webkit-scrollbar {
+        width: 8px;
+    }
+    #detailModalContent::-webkit-scrollbar-track {
+        background: #020617;
+    }
+    #detailModalContent::-webkit-scrollbar-thumb {
+        background: #1e293b;
+        border-radius: 4px;
+    }
+    #detailModalContent::-webkit-scrollbar-thumb:hover {
+        background: #334155;
+    }
 
     /* Split-Screen Thumbnail Selection */
     .view-thumbnail-card {
@@ -975,94 +997,94 @@
             </div>
         </div>
 
-        <!-- Custom Split-Screen Detail Modal -->
-        <div class="modal fade" id="benchmarkDetailModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(16px); z-index: 1070;">
-            <div class="modal-dialog modal-dialog-centered modal-xl">
-                <div class="modal-content" style="background: #090d16; border: 1px solid rgba(148, 163, 184, 0.15); border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
-                    <div class="row g-0" style="min-height: 550px;">
-                        <!-- Left Pane (75% width) -->
-                        <div class="col-md-9 d-flex flex-column p-4" style="background: #020617; position: relative;">
-                            <!-- Top Bar of Left Pane -->
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="text-white m-0 d-flex align-items-center" id="detailModalLeftTitle" style="font-family: 'Outfit', sans-serif;">
-                                    <i class="bi bi-braces text-warning me-2" id="detailModalLeftIcon"></i>
-                                    <span id="detailModalTitleText">Veri Detayı</span>
-                                </h5>
-                                <button class="bench-btn py-1 px-3" style="background: rgba(148, 163, 184, 0.1); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.2); padding: 4px 10px; font-size: 0.75rem;" onclick="copyDetailText()">
-                                    <i class="bi bi-clipboard me-1"></i> Kopyala
-                                </button>
+    </div>
+</div>
+
+<!-- Custom Split-Screen Detail Modal -->
+<div class="modal fade" id="benchmarkDetailModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(16px); z-index: 1070;">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content" style="background: #090d16; border: 1px solid rgba(148, 163, 184, 0.15); border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+            <div class="row g-0" style="min-height: 550px;">
+                <!-- Left Pane (75% width) -->
+                <div class="col-md-9 d-flex flex-column p-4" style="background: #020617; position: relative;">
+                    <!-- Top Bar of Left Pane -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="text-white m-0 d-flex align-items-center" id="detailModalLeftTitle" style="font-family: 'Outfit', sans-serif;">
+                            <i class="bi bi-braces text-warning me-2" id="detailModalLeftIcon"></i>
+                            <span id="detailModalTitleText">Veri Detayı</span>
+                        </h5>
+                        <button class="bench-btn py-1 px-3" style="background: rgba(148, 163, 184, 0.1); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.2); padding: 4px 10px; font-size: 0.75rem;" onclick="copyDetailText()">
+                            <i class="bi bi-clipboard me-1"></i> Kopyala
+                        </button>
+                    </div>
+                    <!-- Main Content Area -->
+                    <div class="flex-grow-1" style="position: relative; overflow: hidden; border: 1px solid rgba(148, 163, 184, 0.08); border-radius: 8px;">
+                        <pre class="m-0 p-3" id="detailModalContent" style="font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.5; white-space: pre-wrap; word-break: break-all; height: 450px; overflow-y: auto; color: #cbd5e1;"></pre>
+                    </div>
+                </div>
+
+                <!-- Right Pane (25% width) -->
+                <div class="col-md-3 d-flex flex-column p-4 justify-content-between" style="border-left: 1px solid rgba(148, 163, 184, 0.1); background: #090d16; position: relative;">
+                    <!-- Close button in top-right of right panel -->
+                    <button type="button" class="btn p-1 text-muted hover-white" style="position: absolute; top: 15px; right: 15px; background: transparent; border: none; font-size: 1.25rem;" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+
+                    <!-- Top portion of right panel -->
+                    <div>
+                        <!-- Title -->
+                        <h6 class="text-muted text-uppercase fw-bold mb-3" style="font-size: 0.75rem; letter-spacing: 1px; font-family: 'Inter', sans-serif;" id="detailModalRightTitle">Görünümler</h6>
+                        
+                        <!-- Thumbnail-style navigation options (like e-commerce gallery images) -->
+                        <div class="d-flex flex-column gap-2 mb-4">
+                            <!-- Option 1: Query/SQL -->
+                            <div class="view-thumbnail-card active" id="thumb-query" onclick="switchDetailTab('query')">
+                                <div class="thumb-icon-container">
+                                    <i class="bi bi-code-slash" style="font-size: 1.2rem;"></i>
+                                </div>
+                                <div>
+                                    <div class="text-white fw-bold" style="font-size: 0.8rem; font-family: 'Outfit', sans-serif;">Sorgu / İstek</div>
+                                    <div class="text-muted" style="font-size: 0.7rem;" id="thumb-query-sub">SQL / ES Kodu</div>
+                                </div>
                             </div>
-                            <!-- Main Content Area -->
-                            <div class="flex-grow-1" style="position: relative; overflow: hidden; border: 1px solid rgba(148, 163, 184, 0.08); border-radius: 8px;">
-                                <pre class="m-0 p-3" id="detailModalContent" style="font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.5; white-space: pre-wrap; word-break: break-all; height: 450px; overflow-y: auto; color: #cbd5e1;"></pre>
+                            
+                            <!-- Option 2: JSON Response Data -->
+                            <div class="view-thumbnail-card" id="thumb-data" onclick="switchDetailTab('data')">
+                                <div class="thumb-icon-container">
+                                    <i class="bi bi-braces" style="font-size: 1.2rem;"></i>
+                                </div>
+                                <div>
+                                    <div class="text-white fw-bold" style="font-size: 0.8rem; font-family: 'Outfit', sans-serif;">Gelen Veri</div>
+                                    <div class="text-muted" style="font-size: 0.7rem;" id="thumb-data-sub">Formatlanmış JSON</div>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Right Pane (25% width) -->
-                        <div class="col-md-3 d-flex flex-column p-4 justify-content-between" style="border-left: 1px solid rgba(148, 163, 184, 0.1); background: #090d16; position: relative;">
-                            <!-- Close button in top-right of right panel -->
-                            <button type="button" class="btn p-1 text-muted hover-white" style="position: absolute; top: 15px; right: 15px; background: transparent; border: none; font-size: 1.25rem;" data-bs-dismiss="modal" aria-label="Close">
-                                <i class="bi bi-x-lg"></i>
-                            </button>
-
-                            <!-- Top portion of right panel -->
-                            <div>
-                                <!-- Title -->
-                                <h6 class="text-muted text-uppercase fw-bold mb-3" style="font-size: 0.75rem; letter-spacing: 1px; font-family: 'Inter', sans-serif;" id="detailModalRightTitle">Görünümler</h6>
-                                
-                                <!-- Thumbnail-style navigation options (like e-commerce gallery images) -->
-                                <div class="d-flex flex-column gap-2 mb-4">
-                                    <!-- Option 1: Query/SQL -->
-                                    <div class="view-thumbnail-card active" id="thumb-query" onclick="switchDetailTab('query')">
-                                        <div class="thumb-icon-container">
-                                            <i class="bi bi-code-slash" style="font-size: 1.2rem;"></i>
-                                        </div>
-                                        <div>
-                                            <div class="text-white fw-bold" style="font-size: 0.8rem; font-family: 'Outfit', sans-serif;">Sorgu / İstek</div>
-                                            <div class="text-muted" style="font-size: 0.7rem;" id="thumb-query-sub">SQL / ES Kodu</div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Option 2: JSON Response Data -->
-                                    <div class="view-thumbnail-card" id="thumb-data" onclick="switchDetailTab('data')">
-                                        <div class="thumb-icon-container">
-                                            <i class="bi bi-braces" style="font-size: 1.2rem;"></i>
-                                        </div>
-                                        <div>
-                                            <div class="text-white fw-bold" style="font-size: 0.8rem; font-family: 'Outfit', sans-serif;">Gelen Veri</div>
-                                            <div class="text-muted" style="font-size: 0.7rem;" id="thumb-data-sub">Formatlanmış JSON</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Technical Stats Info -->
-                                <h6 class="text-muted text-uppercase fw-bold mb-2" style="font-size: 0.75rem; letter-spacing: 1px; font-family: 'Inter', sans-serif;">Metrikler</h6>
-                                <div class="d-flex flex-column gap-2 mb-4" style="font-family: 'Inter', sans-serif; font-size: 0.8rem;">
-                                    <div class="d-flex justify-content-between py-1" style="border-bottom: 1px solid rgba(148, 163, 184, 0.05);">
-                                        <span class="text-muted">Teknoloji:</span>
-                                        <span class="text-white fw-bold" id="detail-stat-tech">—</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between py-1" style="border-bottom: 1px solid rgba(148, 163, 184, 0.05);">
-                                        <span class="text-muted">Süre:</span>
-                                        <span class="text-success fw-bold" id="detail-stat-time">— ms</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between py-1" style="border-bottom: 1px solid rgba(148, 163, 184, 0.05);">
-                                        <span class="text-muted">Kayıt Sayısı:</span>
-                                        <span class="text-info fw-bold" id="detail-stat-count">—</span>
-                                    </div>
-                                </div>
+                        <!-- Technical Stats Info -->
+                        <h6 class="text-muted text-uppercase fw-bold mb-2" style="font-size: 0.75rem; letter-spacing: 1px; font-family: 'Inter', sans-serif;">Metrikler</h6>
+                        <div class="d-flex flex-column gap-2 mb-4" style="font-family: 'Inter', sans-serif; font-size: 0.8rem;">
+                            <div class="d-flex justify-content-between py-1" style="border-bottom: 1px solid rgba(148, 163, 184, 0.05);">
+                                <span class="text-muted">Teknoloji:</span>
+                                <span class="text-white fw-bold" id="detail-stat-tech">—</span>
                             </div>
-
-                            <!-- Bottom portion of right panel -->
-                            <div style="font-size: 0.7rem; color: #64748b; font-family: 'Inter', sans-serif; border-top: 1px solid rgba(148, 163, 184, 0.1); padding-top: 15px;">
-                                <span>DefenceDB Performans Karşılaştırma Analiz Raporu. Detaylar ve istekler canlı üretilmiştir.</span>
+                            <div class="d-flex justify-content-between py-1" style="border-bottom: 1px solid rgba(148, 163, 184, 0.05);">
+                                <span class="text-muted">Süre:</span>
+                                <span class="text-success fw-bold" id="detail-stat-time">— ms</span>
+                            </div>
+                            <div class="d-flex justify-content-between py-1" style="border-bottom: 1px solid rgba(148, 163, 184, 0.05);">
+                                <span class="text-muted">Kayıt Sayısı:</span>
+                                <span class="text-info fw-bold" id="detail-stat-count">—</span>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Bottom portion of right panel -->
+                    <div style="font-size: 0.7rem; color: #64748b; font-family: 'Inter', sans-serif; border-top: 1px solid rgba(148, 163, 184, 0.1); padding-top: 15px;">
+                        <span>DefenceDB Performans Karşılaştırma Analiz Raporu. Detaylar ve istekler canlı üretilmiştir.</span>
                     </div>
                 </div>
             </div>
         </div>
-
     </div>
 </div>
 
