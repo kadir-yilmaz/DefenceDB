@@ -42,6 +42,136 @@ body {
     min-height: 100vh;
 }
 
+/* === PRODUCT IMAGE MANAGER === */
+.admin-image-panel {
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.admin-image-panel .card-body {
+    background: linear-gradient(180deg, var(--admin-surface), var(--admin-bg-secondary));
+}
+
+.admin-image-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.admin-image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.admin-image-card {
+    position: relative;
+    border: 1px solid var(--admin-border);
+    border-radius: var(--radius-sm);
+    background: var(--admin-surface);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.admin-image-card:hover {
+    border-color: var(--admin-border-hover);
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.12);
+    transform: translateY(-1px);
+}
+
+.admin-image-card.is-main {
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.22), 0 14px 34px rgba(15, 23, 42, 0.12);
+}
+
+.admin-image-preview {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    display: block;
+    background: var(--admin-bg-secondary);
+}
+
+.admin-image-actions {
+    position: absolute;
+    top: 0.55rem;
+    right: 0.55rem;
+    display: flex;
+    gap: 0.35rem;
+    z-index: 2;
+}
+
+.admin-image-delete {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.2);
+}
+
+.admin-image-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-top: 1px solid var(--admin-border);
+}
+
+.admin-image-radio {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+    margin: 0;
+    color: var(--admin-text-secondary);
+    font-size: 0.86rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.admin-image-radio .form-check-input {
+    margin: 0;
+    cursor: pointer;
+}
+
+.admin-image-card.is-main .admin-image-radio {
+    color: #b45309;
+}
+
+.admin-image-card > .set-new-main-btn,
+.admin-image-card > .delete-new-img-btn {
+    display: none !important;
+}
+
+.admin-image-select {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+    color: var(--admin-text-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.admin-image-upload {
+    border: 1px dashed var(--admin-border-hover);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.65);
+    padding: 1rem;
+}
+
+.admin-image-upload .form-control {
+    min-height: 46px;
+}
+
 /* Mobile only elements - hide on desktop */
 .mobile-profile-btn,
 .mobile-profile-dropdown {

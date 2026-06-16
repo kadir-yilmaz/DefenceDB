@@ -209,7 +209,7 @@
         <!-- Resim Yükleme (Tam Genişlik) -->
         <div class="row mt-4">
             <div class="col-12 animate-in" style="animation-delay: 0.15s;">
-                <div class="card border-primary shadow-sm">
+                <div class="card border-primary shadow-sm admin-image-panel">
                     <div class="card-header bg-primary text-white">
                         <i class="bi bi-images me-1"></i> Ürün Resimleri
                     </div>
@@ -218,7 +218,7 @@
                         <input type="file" name="UploadedImages" id="imageUpload" multiple accept="image/*" class="form-control" />
                         <input type="hidden" name="NewMainImageIndex" id="NewMainImageIndex" value="-1" />
                         
-                        <div id="imagePreviewContainer" class="d-flex flex-wrap gap-2 mt-3">
+                        <div id="imagePreviewContainer" class="admin-image-grid mt-3 mb-0">
                             <!-- JS ile önizlemeler buraya eklenecek -->
                         </div>
                     </div>
@@ -541,11 +541,10 @@
                     reader.onload = function(e) {
                         var isMain = (index === newMainImageIndex);
                         
-                        var card = $('<div class="position-relative" style="width: 100px; height: 100px;"></div>');
+                        var card = $('<div class="admin-image-card ' + (isMain ? 'is-main' : '') + '"></div>');
                         
                         var img = $('<img>').attr('src', e.target.result)
-                            .addClass('img-thumbnail border ' + (isMain ? 'border-primary border-3' : ''))
-                            .css({width: '100px', height: '100px', objectFit: 'cover'});
+                            .addClass('admin-image-preview');
                         
                         // Kapak Yap Butonu (Sol Üst)
                         var starBtn = $('<button type="button" class="btn btn-sm position-absolute top-0 start-0 m-1 p-0 px-1 set-new-main-btn" ' +
@@ -560,7 +559,14 @@
                             '<i class="bi bi-x"></i>' +
                             '</button>');
                         
-                        card.append(img).append(starBtn).append(deleteBtn);
+                        var footer = $('<div class="admin-image-footer"></div>');
+                        var radioLabel = $('<label class="admin-image-radio"></label>');
+                        var radio = $('<input type="radio" class="form-check-input set-new-main-btn" name="NewMainImageChoice" data-index="' + index + '"' + (isMain ? ' checked' : '') + '>');
+                        var footerDeleteBtn = $('<button type="button" class="btn btn-outline-danger btn-sm delete-new-img-btn" data-index="' + index + '" title="Kaldır"><i class="bi bi-trash me-1"></i>Kaldır</button>');
+                        radioLabel.append(radio).append('<span>Vitrin görseli</span>');
+                        footer.append(radioLabel).append(footerDeleteBtn);
+
+                        card.append(img).append(starBtn).append(deleteBtn).append(footer);
                         container.append(card);
                     };
                     reader.readAsDataURL(file);

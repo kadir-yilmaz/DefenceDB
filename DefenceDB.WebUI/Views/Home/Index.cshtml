@@ -182,10 +182,14 @@
             @foreach (var prod in showcaseProducts)
             {
                 var mainImage = prod.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? prod.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
+                var categoryName = prod.Category?.Name;
                 <div class="col-md-6 col-lg-3 reveal-card" style="--delay: @(showIndex * 45)ms;">
                     <div class="card-premium h-100 d-flex flex-column" style="cursor: pointer; border-color: rgba(251, 191, 36, 0.25) !important; box-shadow: 0 4px 25px rgba(251, 191, 36, 0.05);" onclick="handleProductClick(event, '/Product/Detail/@(prod.Id)-@(prod.Slug)')">
                         <span class="showcase-star" aria-label="Öne çıkan"><i class="bi bi-star-fill text-warning" style="font-size: 0.9rem;"></i></span>
-                        <span class="category-badge bg-warning text-dark border-0 fw-bold">@prod.Category.Name</span>
+                        @if (!string.IsNullOrWhiteSpace(categoryName))
+                        {
+                            <span class="category-badge bg-warning text-dark border-0 fw-bold">@categoryName</span>
+                        }
                         <div class="card-img-wrapper" style="position: relative;">
                             <img src="@mainImage" alt="@prod.Name" onerror="handleImageError(this, '@prod.Name')" />
                         </div>
@@ -334,15 +338,22 @@
         @foreach (var prod in recentProducts)
         {
             var mainImage = prod.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? prod.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
+            var categoryName = prod.Category?.Name;
             <div class="reveal-card" style="--delay: @(prodIndex * 35)ms;">
                 <div class="card-premium card-compact h-100 d-flex flex-column" style="cursor: pointer;" onclick="handleProductClick(event, '/Product/Detail/@(prod.Id)-@(prod.Slug)')">
-                    <span class="category-badge">@prod.Category.Name</span>
+                    @if (!string.IsNullOrWhiteSpace(categoryName))
+                    {
+                        <span class="category-badge">@categoryName</span>
+                    }
                     <div class="card-img-wrapper">
                         <img src="@mainImage" alt="@prod.Name" onerror="handleImageError(this, '@prod.Name')" />
                     </div>
                     <div class="card-body p-0 d-flex flex-column flex-grow-1">
                         <div class="d-flex justify-content-between align-items-start mb-1">
                             <h5 class="card-title text-truncate text-primary-theme m-0" style="max-width: 100%;" title="@prod.Name">@prod.Name</h5>
+                        </div>
+                        <div class="text-muted-theme mb-1" style="font-size: 0.72rem;">
+                            <i class="bi bi-calendar-event me-1 text-warning"></i>@prod.CreatedAt.ToString("dd.MM.yyyy")
                         </div>
                         
                         @if (!string.IsNullOrEmpty(prod.NatoReportingName))

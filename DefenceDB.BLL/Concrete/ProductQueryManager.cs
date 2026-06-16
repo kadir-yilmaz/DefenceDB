@@ -122,7 +122,7 @@ public class ProductQueryManager : IProductQueryService
         if (_featureManager.UseElasticsearch)
         {
             var docs = await _searchService.GetAllProductsAsync();
-            return docs.Select(MapToEntity).ToList();
+            return await MapDocumentsAsync(docs);
         }
         return await _context.DefenseProducts
             .Include(p => p.Category)
@@ -136,7 +136,7 @@ public class ProductQueryManager : IProductQueryService
         if (_featureManager.UseElasticsearch)
         {
             var docs = _searchService.GetAllProductsAsync().GetAwaiter().GetResult();
-            return docs.Select(MapToEntity).ToList().AsQueryable();
+            return MapDocumentsAsync(docs).GetAwaiter().GetResult().AsQueryable();
         }
         return _context.DefenseProducts
             .Include(p => p.Category)
@@ -150,7 +150,7 @@ public class ProductQueryManager : IProductQueryService
         if (_featureManager.UseElasticsearch)
         {
             var docs = await _searchService.GetProductsByCategoryAsync(categoryId);
-            return docs.Select(MapToEntity).ToList();
+            return await MapDocumentsAsync(docs);
         }
         return await _context.DefenseProducts
             .Include(p => p.Category)
@@ -225,7 +225,7 @@ public class ProductQueryManager : IProductQueryService
         if (_featureManager.UseElasticsearch)
         {
             var docs = await _searchService.GetAllProductsAsync();
-            return docs.Where(d => d.IsActive).Take(count).Select(MapToEntity).ToList();
+            return await MapDocumentsAsync(docs.Where(d => d.IsActive).Take(count));
         }
         return await _context.DefenseProducts
             .Include(p => p.Category)
@@ -241,7 +241,7 @@ public class ProductQueryManager : IProductQueryService
         if (_featureManager.UseElasticsearch)
         {
             var docs = await _searchService.GetAllProductsAsync();
-            return docs.Where(d => d.IsActive && d.IsShowcase).Select(MapToEntity).ToList();
+            return await MapDocumentsAsync(docs.Where(d => d.IsActive && d.IsShowcase));
         }
         return await _context.DefenseProducts
             .Include(p => p.Category)
@@ -256,7 +256,7 @@ public class ProductQueryManager : IProductQueryService
         if (_featureManager.UseElasticsearch)
         {
             var docs = await _searchService.SearchAsync(query, 20);
-            return docs.Select(MapToEntity).ToList();
+            return await MapDocumentsAsync(docs);
         }
         if (string.IsNullOrWhiteSpace(query))
             return new List<DefenseProduct>();
@@ -280,5 +280,69 @@ public class ProductQueryManager : IProductQueryService
     public async Task<ProductImage?> GetProductImageByIdAsync(int imageId)
     {
         return await _context.ProductImages.FindAsync(imageId);
+    }
+
+    private async Task<List<DefenseProduct>> MapDocumentsAsync(IEnumerable<ProductDocument> documents)
+    {
+        var docs = documents.ToList();
+        if (!docs.Any())
+            return new List<DefenseProduct>();
+
+        var missingCategoryIds = docs
+            .Where(d => string.IsNullOrWhiteSpace(d.CategoryName) || string.IsNullOrWhiteSpace(d.CategorySlug))
+            .Select(d => d.CategoryId)
+            .Distinct()
+            .ToList();
+
+        if (missingCategoryIds.Any())
+        {
+            var categories = await _context.Categories
+                .AsNoTracking()
+                .Where(c => missingCategoryIds.Contains(c.Id))
+                .ToDictionaryAsync(c => c.Id);
+
+            foreach (var doc in docs)
+            {
+                if (categories.TryGetValue(doc.CategoryId, out var category))
+                {
+                    if (string.IsNullOrWhiteSpace(doc.CategoryName))
+                        doc.CategoryName = category.Name;
+
+                    if (string.IsNullOrWhiteSpace(doc.CategorySlug))
+                        doc.CategorySlug = category.Slug;
+                }
+            }
+        }
+
+        var missingImageIds = docs
+            .Where(d => string.IsNullOrWhiteSpace(d.MainImageUrl))
+            .Select(d => d.Id)
+            .Distinct()
+            .ToList();
+
+        if (missingImageIds.Any())
+        {
+            var images = await _context.ProductImages
+                .AsNoTracking()
+                .Where(i => missingImageIds.Contains(i.ProductId))
+                .ToListAsync();
+
+            var imageByProductId = images
+                .GroupBy(i => i.ProductId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? g.First().ImagePath);
+
+            foreach (var doc in docs)
+            {
+                if (string.IsNullOrWhiteSpace(doc.MainImageUrl) &&
+                    imageByProductId.TryGetValue(doc.Id, out var imagePath))
+                {
+                    doc.MainImageUrl = imagePath;
+                }
+            }
+        }
+
+        return docs.Select(MapToEntity).ToList();
     }
 }

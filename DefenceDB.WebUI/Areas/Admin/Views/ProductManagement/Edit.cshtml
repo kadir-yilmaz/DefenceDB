@@ -235,14 +235,14 @@
         <!-- Resim Yükleme (Tam Genişlik) -->
         <div class="row mt-4">
             <div class="col-12 animate-in" style="animation-delay: 0.15s;">
-                <div class="card border-warning shadow-sm">
+                <div class="card border-warning shadow-sm admin-image-panel">
                     <div class="card-header bg-warning text-dark fw-bold">
                         <i class="bi bi-images me-1"></i> Ürün Resimleri
                     </div>
                     <div class="card-body">
                         @if(Model.Images != null && Model.Images.Any())
                         {
-                            <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="admin-image-toolbar">
                                 <p class="text-muted small mb-0" id="imageCountText">Mevcut Resimler (@Model.Images.Count / 10)</p>
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="form-check m-0">
@@ -256,19 +256,19 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="d-flex flex-wrap gap-2 mb-4">
+                            <div class="admin-image-grid">
                                 @foreach(var img in Model.Images)
                                 {
-                                    <div class="position-relative" id="img-container-@img.Id">
+                                    <div class="admin-image-card @(img.IsMainImage ? "is-main" : "")" id="img-container-@img.Id">
                                         <!-- Toplu seçim checkbox -->
-                                        <div class="position-absolute bottom-0 end-0 m-1" style="z-index: 10;">
-                                            <input type="checkbox" class="form-check-input image-select-cb" value="@img.Id" style="width: 1.25rem; height: 1.25rem; cursor: pointer; box-shadow: 0 0 5px rgba(0,0,0,0.8); border: 1px solid #fff;" />
+                                        <div class="d-none">
+                                            <input type="checkbox" value="@img.Id" disabled />
                                         </div>
 
-                                        <img src="@img.ImagePath" class="img-thumbnail border img-thumb-main @(img.IsMainImage ? "border-primary border-3" : "")" style="width: 100px; height: 100px; object-fit: cover;" />
+                                        <img src="@img.ImagePath" class="admin-image-preview img-thumb-main" alt="Ürün görseli" />
                                         
                                         <!-- Ana Resim Seçme Butonu (Sol Üst) -->
-                                        <button type="button" class="btn btn-sm position-absolute top-0 start-0 m-1 p-0 px-1 set-main-btn" 
+                                        <button type="button" class="d-none set-main-btn" 
                                                 data-id="@img.Id" 
                                                 title="@(img.IsMainImage ? "Kapak Fotoğrafı" : "Kapak Fotoğrafı Yap")"
                                                 style="background: @(img.IsMainImage ? "#fbbf24" : "rgba(15, 23, 42, 0.7)"); border: 1px solid @(img.IsMainImage ? "#d97706" : "rgba(255, 255, 255, 0.2)"); color: @(img.IsMainImage ? "#1e293b" : "#ffffff"); z-index: 5;">
@@ -276,9 +276,26 @@
                                         </button>
 
                                         <!-- Silme Butonu (Sağ Üst) -->
-                                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 p-0 px-1 delete-img-btn" data-id="@img.Id" title="Sil">
-                                            <i class="bi bi-x"></i>
-                                        </button>
+                                        <div class="admin-image-actions">
+                                            <button type="button" class="btn btn-danger btn-sm admin-image-delete delete-img-btn" data-id="@img.Id" title="Sil">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+
+                                        <div class="admin-image-footer">
+                                            <label class="admin-image-radio">
+                                                <input type="radio"
+                                                       class="form-check-input set-main-btn"
+                                                       name="MainImageId"
+                                                       data-id="@img.Id"
+                                                       @(img.IsMainImage ? "checked" : "") />
+                                                <span>Vitrin görseli</span>
+                                            </label>
+                                            <label class="admin-image-select">
+                                                <input type="checkbox" class="form-check-input image-select-cb" value="@img.Id" />
+                                                <span>Seç</span>
+                                            </label>
+                                        </div>
                                     </div>
                                 }
                             </div>
@@ -288,7 +305,7 @@
                         <input type="file" name="UploadedImages" id="imageUpload" multiple accept="image/*" class="form-control" />
                         <input type="hidden" name="NewMainImageIndex" id="NewMainImageIndex" value="-1" />
                         
-                        <div id="imagePreviewContainer" class="d-flex flex-wrap gap-2 mt-3">
+                        <div id="imagePreviewContainer" class="admin-image-grid mt-3 mb-0">
                             <!-- JS ile önizlemeler buraya eklenecek -->
                         </div>
                     </div>
@@ -640,11 +657,10 @@
                     reader.onload = function(e) {
                         var isMain = (index === newMainImageIndex);
                         
-                        var card = $('<div class="position-relative animate-in" style="width: 100px; height: 100px;"></div>');
+                        var card = $('<div class="admin-image-card animate-in ' + (isMain ? 'is-main' : '') + '"></div>');
                         
                         var img = $('<img>').attr('src', e.target.result)
-                            .addClass('img-thumbnail border img-thumb-new ' + (isMain ? 'border-primary border-3' : ''))
-                            .css({width: '100px', height: '100px', objectFit: 'cover'});
+                            .addClass('admin-image-preview img-thumb-new');
                         
                         // Kapak Yap Butonu (Sol Üst)
                         var starBtn = $('<button type="button" class="btn btn-sm position-absolute top-0 start-0 m-1 p-0 px-1 set-new-main-btn" ' +
@@ -659,7 +675,14 @@
                             '<i class="bi bi-x"></i>' +
                             '</button>');
                         
-                        card.append(img).append(starBtn).append(deleteBtn);
+                        var footer = $('<div class="admin-image-footer"></div>');
+                        var radioLabel = $('<label class="admin-image-radio"></label>');
+                        var radio = $('<input type="radio" class="form-check-input set-new-main-btn" name="NewMainImageChoice" data-index="' + index + '"' + (isMain ? ' checked' : '') + '>');
+                        var footerDeleteBtn = $('<button type="button" class="btn btn-outline-danger btn-sm delete-new-img-btn" data-index="' + index + '" title="Kaldır"><i class="bi bi-trash me-1"></i>Kaldır</button>');
+                        radioLabel.append(radio).append('<span>Vitrin görseli</span>');
+                        footer.append(radioLabel).append(footerDeleteBtn);
+
+                        card.append(img).append(starBtn).append(deleteBtn).append(footer);
                         container.append(card);
                     };
                     reader.readAsDataURL(file);
@@ -682,7 +705,7 @@
                 }
 
                 // Eğer mevcut resimlerden hiçbiri kapak fotoğrafı değilse ve yeni yüklenen varsa, ilkini kapak yap
-                var hasExistingMain = $('.img-thumb-main.border-primary').length > 0;
+                var hasExistingMain = $('input[name="MainImageId"]:checked').length > 0;
                 if (newMainImageIndex === -1 && selectedNewFiles.length > 0 && !hasExistingMain) {
                     newMainImageIndex = 0;
                 }
@@ -695,12 +718,9 @@
                 newMainImageIndex = idx;
                 
                 // Eski resimlerin kapak seçili olmasını kaldır
+                $('.admin-image-card').removeClass('is-main');
+                $('input[name="MainImageId"]').prop('checked', false);
                 $('.img-thumb-main').removeClass('border-primary border-3');
-                $('.set-main-btn').css({
-                    'background': 'rgba(15, 23, 42, 0.7)',
-                    'border': '1px solid rgba(255, 255, 255, 0.2)',
-                    'color': '#ffffff'
-                }).find('i').removeClass('bi-star-fill text-dark').addClass('bi-star');
 
                 updateFileInputAndPreviews();
             });
@@ -779,30 +799,20 @@
                     success: function(res) {
                         if (res.success) {
                             // Tüm resimlerin çerçevelerini ve butonlarını sıfırla
+                            $('.admin-image-card').removeClass('is-main');
+                            $('input[name="MainImageId"]').prop('checked', false);
                             $('.img-thumb-main').removeClass('border-primary border-3');
-                            $('.set-main-btn').css({
-                                'background': 'rgba(15, 23, 42, 0.7)',
-                                'border': '1px solid rgba(255, 255, 255, 0.2)',
-                                'color': '#ffffff'
-                            }).find('i').removeClass('bi-star-fill text-dark').addClass('bi-star');
 
                             // Yeni resimler için kapak seçimlerini sıfırla
                             newMainImageIndex = -1;
                             $('#NewMainImageIndex').val(-1);
                             $('.img-thumb-new').removeClass('border-primary border-3');
-                            $('.set-new-main-btn').css({
-                                'background': 'rgba(15, 23, 42, 0.7)',
-                                'border': '1px solid rgba(255, 255, 255, 0.2)',
-                                'color': '#ffffff'
-                            }).find('i').removeClass('bi-star-fill text-dark').addClass('bi-star');
+                            $('input[name="NewMainImageChoice"]').prop('checked', false);
 
                             // Bu resmi ana resim yap
+                            btn.prop('checked', true);
+                            btn.closest('.admin-image-card').addClass('is-main');
                             btn.siblings('.img-thumb-main').addClass('border-primary border-3');
-                            btn.css({
-                                'background': '#fbbf24',
-                                'border': '1px solid #d97706',
-                                'color': '#1e293b'
-                            }).find('i').removeClass('bi-star').addClass('bi-star-fill text-dark');
                         } else {
                             alert(res.message || 'Kapak resmi seçilemedi!');
                         }

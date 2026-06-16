@@ -1,29 +1,35 @@
 using System.Reflection;
+using System.Collections.Concurrent;
 using DefenceDB.BLL.Abstract;
+using DefenceDB.DAL;
 using DefenceDB.EL.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using DefenceDB.DAL;
-using System.Text.Json;
 
 namespace DefenceDB.BLL.Concrete;
 
 /// <summary>
-/// EF Core SaveChanges interceptor'ı.
-/// Ürün ekleme/güncelleme/silme işlemlerinden sonra:
-///   - Elasticsearch indeksini günceller (feature aktifse)
-///   - Cache'i invalidate eder
-/// BLL katmanında yaşar çünkü ICacheService ve ISearchService'e bağımlıdır.
+/// Keeps product cache and Elasticsearch documents in sync after product changes.
 /// </summary>
 public class ElasticSyncInterceptor : SaveChangesInterceptor
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly ConcurrentDictionary<Guid, PendingProductChanges> _pendingChanges = new();
 
     public ElasticSyncInterceptor(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
+    }
+
+    public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+        DbContextEventData eventData,
+        InterceptionResult<int> result,
+        CancellationToken cancellationToken = default)
+    {
+        CaptureChangedProductIds(eventData.Context);
+        return base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
     public override async ValueTask<int> SavedChangesAsync(
@@ -34,20 +40,27 @@ public class ElasticSyncInterceptor : SaveChangesInterceptor
         if (eventData.Context is null)
             return result;
 
+        _pendingChanges.TryRemove(eventData.Context.ContextId.InstanceId, out var pendingChanges);
+        var changedProductIds = pendingChanges?.ChangedProductIds.ToList() ?? new List<int>();
+        var deletedProductIds = pendingChanges?.DeletedProductIds.ToList() ?? new List<int>();
+
+        if (pendingChanges is not null)
+        {
+            changedProductIds.AddRange(pendingChanges.ChangedProducts.Select(p => p.Id).Where(id => id > 0));
+            changedProductIds = changedProductIds.Distinct().ToList();
+        }
+
+        if (!changedProductIds.Any() && !deletedProductIds.Any())
+            return result;
+
         using var scope = _serviceProvider.CreateScope();
         var featureManager = scope.ServiceProvider.GetService<IFeatureManager>();
-        
+
         if (featureManager is null)
             return result;
 
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<ElasticSyncInterceptor>>();
-        var entries = eventData.Context.ChangeTracker.Entries<DefenseProduct>().ToList();
 
-        if (!entries.Any())
-            return result;
-
-        // Cache invalidation
-        // Cache invalidation
         var cacheService = scope.ServiceProvider.GetService<ICacheService>();
         if (cacheService is not null)
         {
@@ -59,40 +72,84 @@ public class ElasticSyncInterceptor : SaveChangesInterceptor
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Cache invalidation hatası");
+                logger.LogWarning(ex, "Cache invalidation failed");
             }
         }
 
-        // Elasticsearch sync
-        if (featureManager.UseElasticsearch)
+        if (!featureManager.UseElasticsearch)
+            return result;
+
+        var searchService = scope.ServiceProvider.GetService<ISearchService>();
+        if (searchService is null)
+            return result;
+
+        foreach (var productId in deletedProductIds)
         {
-            var searchService = scope.ServiceProvider.GetService<ISearchService>();
-            if (searchService is not null)
+            try
             {
-                foreach (var entry in entries)
-                {
-                    try
-                    {
-                        if (entry.State == EntityState.Deleted)
-                        {
-                            await searchService.RemoveProductAsync(entry.Entity.Id);
-                            logger.LogDebug("ES'den silindi: {Id}", entry.Entity.Id);
-                        }
-                        else
-                        {
-                            var doc = MapToDocument(entry.Entity);
-                            await searchService.IndexProductAsync(doc);
-                            logger.LogDebug("ES'ye indekslendi: {Id}", entry.Entity.Id);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.LogWarning(ex, "ES sync hatası — ProductId: {Id}", entry.Entity.Id);
-                    }
-                }
+                await searchService.RemoveProductAsync(productId);
+                logger.LogDebug("Removed product from Elasticsearch: {Id}", productId);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Elasticsearch remove failed for ProductId: {Id}", productId);
             }
         }
+
+        foreach (var productId in changedProductIds)
+        {
+            try
+            {
+                if (eventData.Context is not AppDbContext dbContext)
+                    continue;
+
+                var product = await dbContext.DefenseProducts
+                    .AsNoTracking()
+                    .Include(p => p.Category)
+                    .Include(p => p.Images)
+                    .FirstOrDefaultAsync(p => p.Id == productId, cancellationToken);
+
+                if (product is null)
+                    continue;
+
+                var doc = MapToDocument(product);
+                await searchService.IndexProductAsync(doc);
+                logger.LogDebug("Indexed product in Elasticsearch: {Id}", productId);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Elasticsearch sync failed for ProductId: {Id}", productId);
+            }
+        }
+
         return result;
+    }
+
+    private void CaptureChangedProductIds(DbContext? context)
+    {
+        if (context is null)
+            return;
+
+        var pending = GetPendingChanges(context);
+
+        foreach (var entry in context.ChangeTracker.Entries<DefenseProduct>())
+        {
+            if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
+                pending.ChangedProducts.Add(entry.Entity);
+            else if (entry.State == EntityState.Deleted)
+                pending.DeletedProductIds.Add(entry.Entity.Id);
+        }
+
+        foreach (var entry in context.ChangeTracker.Entries<ProductImage>())
+        {
+            if (entry.State == EntityState.Added || entry.State == EntityState.Modified || entry.State == EntityState.Deleted)
+                pending.ChangedProductIds.Add(entry.Entity.ProductId);
+        }
+    }
+
+    private PendingProductChanges GetPendingChanges(DbContext context)
+    {
+        return _pendingChanges.GetOrAdd(context.ContextId.InstanceId, _ => new PendingProductChanges());
     }
 
     private static ProductDocument MapToDocument(DefenseProduct product)
@@ -135,5 +192,12 @@ public class ElasticSyncInterceptor : SaveChangesInterceptor
         }
 
         return doc;
+    }
+
+    private sealed class PendingProductChanges
+    {
+        public List<DefenseProduct> ChangedProducts { get; } = new();
+        public HashSet<int> ChangedProductIds { get; } = new();
+        public HashSet<int> DeletedProductIds { get; } = new();
     }
 }
