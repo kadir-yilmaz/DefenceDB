@@ -31,17 +31,20 @@
         white-space: nowrap;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
-    .admin-filter-pill:hover {
-        background-color: var(--admin-accent-glow);
-        border-color: var(--admin-accent);
-        color: var(--admin-accent);
-    }
-    .admin-filter-pill.active {
-        background-color: var(--admin-accent) !important;
-        border-color: var(--admin-accent) !important;
-        color: #ffffff !important;
-        font-weight: 600;
-    }
+
+        .admin-filter-pill:hover {
+            background-color: var(--admin-accent-glow);
+            border-color: var(--admin-accent);
+            color: var(--admin-accent);
+        }
+
+        .admin-filter-pill.active {
+            background-color: var(--admin-accent) !important;
+            border-color: var(--admin-accent) !important;
+            color: #ffffff !important;
+            font-weight: 600;
+        }
+
     .admin-filter-select {
         min-width: 210px;
         height: 42px;
@@ -50,7 +53,6 @@
         border-radius: 20px;
     }
 
-    /* Pagination CSS */
     .admin-pagination-wrapper {
         display: flex;
         justify-content: center;
@@ -60,7 +62,7 @@
         border-radius: 12px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     }
-    
+
     .admin-pagination {
         display: flex;
         align-items: center;
@@ -69,66 +71,69 @@
         padding: 0;
         list-style: none;
     }
-    
-    .admin-pagination .page-link-custom {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 32px;
-        height: 36px;
-        padding: 0 10px;
-        border-radius: 8px;
-        background: rgba(99, 102, 241, 0.1);
-        color: #6366f1;
-        font-weight: 600;
-        font-size: 0.9rem;
-        text-decoration: none;
-        transition: all 0.2s ease;
-        border: none;
-    }
-    
-    .admin-pagination .page-link-custom:hover {
-        background: rgba(99, 102, 241, 0.2);
-        color: #4f46e5;
-    }
-    
-    .admin-pagination .active .page-link-custom {
-        background: #4f46e5;
-        color: white;
-        box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
-    }
-    
-    .admin-pagination .disabled .page-link-custom {
-        background: transparent;
-        color: #a1a1aa;
-        cursor: not-allowed;
-    }
-    
-    .admin-pagination .page-link-text {
-        background: transparent;
-        color: #4f46e5;
-        padding: 0 12px;
-    }
-    .admin-pagination .page-link-text:hover {
-        background: rgba(99, 102, 241, 0.05);
-    }
-    
-    .admin-pagination .ellipsis {
-        color: #8b5cf6;
-        padding: 0 4px;
-        font-weight: 700;
-        letter-spacing: 2px;
-        display: flex;
-        align-items: end;
-        height: 100%;
-        padding-bottom: 4px;
-    }
+
+        .admin-pagination .page-link-custom {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 36px;
+            padding: 0 10px;
+            border-radius: 8px;
+            background: rgba(99, 102, 241, 0.1);
+            color: #6366f1;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+            .admin-pagination .page-link-custom:hover {
+                background: rgba(99, 102, 241, 0.2);
+                color: #4f46e5;
+            }
+
+        .admin-pagination .active .page-link-custom {
+            background: #4f46e5;
+            color: white;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+        }
+
+        .admin-pagination .disabled .page-link-custom {
+            background: transparent;
+            color: #a1a1aa;
+            cursor: not-allowed;
+        }
+
+        .admin-pagination .page-link-text {
+            background: transparent;
+            color: #4f46e5;
+            padding: 0 12px;
+        }
+
+            .admin-pagination .page-link-text:hover {
+                background: rgba(99, 102, 241, 0.05);
+            }
+
+        .admin-pagination .ellipsis {
+            color: #8b5cf6;
+            padding: 0 4px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            height: 100%;
+        }
 </style>
 
 @{
     var selectedId = ViewBag.SelectedCategoryId as int?;
-    var selectedCountry = ViewBag.SelectedCountry as string;
-    var countries = ViewBag.Countries as List<string> ?? new List<string>();
+    var selectedCountry = ViewBag.CurrentCountry as string;
+
+    var rawCountries = ViewBag.CountriesList as List<DefenceDB.WebUI.Models.CountryHelper.CountryItem> ?? new List<DefenceDB.WebUI.Models.CountryHelper.CountryItem>();
+    var countries = rawCountries.Select(c => c.Name).OrderBy(n => n).ToList();
+
     var currentCategory = ViewBag.CurrentCategory as Category;
     List<Category> subCategoriesToShow = null;
     int? parentId = null;
@@ -137,7 +142,6 @@
     {
         if (currentCategory.ParentCategoryId == null)
         {
-            // It is a root category, show its children
             if (currentCategory.SubCategories != null && currentCategory.SubCategories.Any())
             {
                 subCategoriesToShow = currentCategory.SubCategories.OrderBy(sc => sc.Id).ToList();
@@ -146,7 +150,6 @@
         }
         else
         {
-            // It is a subcategory/child, show siblings of the same parent
             var allRootCategories = ViewBag.Categories as List<Category> ?? new List<Category>();
             var parentCategory = allRootCategories.FirstOrDefault(c => c.Id == currentCategory.ParentCategoryId);
             if (parentCategory != null && parentCategory.SubCategories != null && parentCategory.SubCategories.Any())
@@ -161,7 +164,7 @@
 @{
     string selectedParentName = "Tüm Ürünler";
     string selectedParentIcon = "bi-grid-fill";
-    
+
     if (parentId != null)
     {
         var allRootCategories = ViewBag.Categories as List<Category> ?? new List<Category>();
@@ -184,7 +187,6 @@
 
 <div class="d-flex align-items-center justify-content-between mb-4">
     <div class="d-flex align-items-center gap-3">
-        <!-- Parent Categories Dropdown -->
         <div class="dropdown" style="z-index: 1050;">
             <button class="admin-filter-pill dropdown-toggle d-flex align-items-center justify-content-between" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="min-width: 220px; height: 42px; cursor: pointer; padding: 0 16px; border: 1px solid var(--admin-border); background-color: var(--admin-surface);">
                 <span class="d-flex align-items-center">
@@ -202,7 +204,7 @@
                 {
                     var rootCount = (cat.Products?.Count ?? 0) + (cat.SubCategories?.Sum(sc => sc.Products?.Count ?? 0) ?? 0);
                     var isRootActive = parentId == cat.Id;
-                    
+
                     <li>
                         <a class="dropdown-item rounded @(isRootActive ? "active" : "") d-flex align-items-center" href="@Url.Action("Index", "ProductManagement", new { categoryId = cat.Id, country = selectedCountry })" style="padding: 8px 16px; margin-bottom: 2px; transition: all 0.2s; font-weight: 500;">
                             @if (!string.IsNullOrEmpty(cat.IconClass))
@@ -216,7 +218,6 @@
             </ul>
         </div>
 
-        <!-- Sub Categories Dropdown -->
         @if (subCategoriesToShow != null && subCategoriesToShow.Any())
         {
             <div class="dropdown" style="z-index: 1050;">
@@ -250,13 +251,14 @@
         }
     </div>
 
-    <!-- Right Side: Countries Dropdown -->
     <div class="dropdown flex-shrink-0" style="z-index: 1050;">
         <button class="admin-filter-pill dropdown-toggle d-flex align-items-center justify-content-between" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="min-width: 180px; height: 42px; cursor: pointer; padding: 0 16px; border: 1px solid var(--admin-border); background-color: var(--admin-surface);">
             <span class="d-flex align-items-center">
                 @if (string.IsNullOrEmpty(selectedCountry))
                 {
-                    <i class="bi bi-globe me-2 text-muted"></i> @:Tüm Ülkeler
+                    <i class="bi bi-globe me-2 text-muted"></i>
+                    // Razor'a bunun düz metin olduğunu bildirmek için önüne @: koyuyoruz
+                    @:Tüm Ülkeler
                 }
                 else
                 {
@@ -284,7 +286,7 @@
             {
                 var flagUrl = CountryHelper.GetFlagUrl(country);
                 <li>
-                    <a class="dropdown-item rounded @(string.Equals(selectedCountry, country, StringComparison.OrdinalIgnoreCase) ? "active" : "") d-flex align-items-center" 
+                    <a class="dropdown-item rounded @(string.Equals(selectedCountry, country, StringComparison.OrdinalIgnoreCase) ? "active" : "") d-flex align-items-center"
                        href="@Url.Action("Index", "ProductManagement", new { categoryId = selectedId, country = country })" style="padding: 8px 16px; margin-bottom: 2px; transition: all 0.2s; font-weight: 500;">
                         @if (!string.IsNullOrEmpty(flagUrl))
                         {
@@ -343,7 +345,7 @@
                                 </span>
                             </td>
                             <td>
-                                <span style="color: var(--admin-text-secondary); display: flex; align-items: center; gap: 5px;">
+                                <span class="admin-badge info" style="color: var(--admin-text-secondary); display: flex; align-items: center; gap: 5px;">
                                     @if (!string.IsNullOrEmpty(CountryHelper.GetFlagUrl(prod.Country)))
                                     {
                                         <img src="@CountryHelper.GetFlagUrl(prod.Country)" alt="@prod.Country" style="width: 16px; height: auto;" />
@@ -354,9 +356,9 @@
                             <td style="color: var(--admin-text-secondary);">@prod.Manufacturer</td>
                             <td>
                                 <div class="form-check form-switch" style="display:flex; align-items:center; height: 100%;">
-                                    <input class="form-check-input showcase-toggle" type="checkbox" 
-                                           role="switch" data-id="@prod.Id" 
-                                           @(prod.IsShowcase ? "checked" : "") style="cursor: pointer; width: 2.5em; height: 1.25em;">
+                                    <input class="form-check-input showcase-toggle" type="checkbox"
+                                           role="switch" data-id="@prod.Id"
+                                    @(prod.IsShowcase ? "checked" : "") style="cursor: pointer; width: 2.5em; height: 1.25em;">
                                 </div>
                             </td>
                             <td class="text-end">
@@ -392,7 +394,7 @@
     <div class="admin-pagination-wrapper">
         <ul class="admin-pagination">
             <li class="@(currentPage == 1 ? "disabled" : "")">
-                <a href="@(currentPage > 1 ? Url.Action("Index", new { categoryId = ViewBag.SelectedCategoryId, country = ViewBag.SelectedCountry, page = currentPage - 1 }) : "#")" class="page-link-custom page-link-text">
+                <a href="@(currentPage > 1 ? Url.Action("Index", new { categoryId = selectedId, country = selectedCountry, page = currentPage - 1 }) : "#")" class="page-link-custom page-link-text">
                     <i class="bi bi-chevron-left me-1" style="font-size: 0.8rem;"></i> Back
                 </a>
             </li>
@@ -402,7 +404,7 @@
                 if (i == 1 || i == totalPages || (i >= currentPage - 1 && i <= currentPage + 1))
                 {
                     <li class="@(i == currentPage ? "active" : "")">
-                        <a href="@Url.Action("Index", new { categoryId = ViewBag.SelectedCategoryId, country = ViewBag.SelectedCountry, page = i })" class="page-link-custom">@i</a>
+                        <a href="@Url.Action("Index", new { categoryId = selectedId, country = selectedCountry, page = i })" class="page-link-custom">@i</a>
                     </li>
                 }
                 else if (i == 2 && currentPage > 3)
@@ -416,7 +418,7 @@
             }
 
             <li class="@(currentPage == totalPages ? "disabled" : "")">
-                <a href="@(currentPage < totalPages ? Url.Action("Index", new { categoryId = ViewBag.SelectedCategoryId, country = ViewBag.SelectedCountry, page = currentPage + 1 }) : "#")" class="page-link-custom page-link-text">
+                <a href="@(currentPage < totalPages ? Url.Action("Index", new { categoryId = selectedId, country = selectedCountry, page = currentPage + 1 }) : "#")" class="page-link-custom page-link-text">
                     Next <i class="bi bi-chevron-right ms-1" style="font-size: 0.8rem;"></i>
                 </a>
             </li>

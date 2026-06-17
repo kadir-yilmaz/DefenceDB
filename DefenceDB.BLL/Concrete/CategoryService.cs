@@ -81,4 +81,12 @@ public class CategoryService : ICategoryService
             .OrderBy(c => c.SortOrder)
             .ToListAsync();
     }
+
+    public async Task<Category?> GetCategoryWithSubCategoriesAsync(int id)
+    {
+        return await _context.Categories
+            .Include(c => c.SubCategories)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == id);
+    }
 }

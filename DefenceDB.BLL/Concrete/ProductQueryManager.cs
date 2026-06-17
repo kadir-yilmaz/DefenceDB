@@ -28,9 +28,7 @@ public class ProductQueryManager : IProductQueryService
 
     public async Task<(List<DefenseProduct> Products, int TotalItems)> GetFilteredProductsAsync(ProductFilterQueryModel queryModel)
     {
-        // -------------------------------------------------------------
-        // SENARYO 1: ELASTICSEARCH AKTİF (Filtreleme ES/Hafızada Biter)
-        // -------------------------------------------------------------
+        // Elasticsearch aktif ise çalışan arama senaryosu
         if (_featureManager.UseElasticsearch)
         {
             List<ProductDocument> docs;
@@ -51,8 +49,18 @@ public class ProductQueryManager : IProductQueryService
 
             var query = docs.AsQueryable();
 
-            // Kategori ve alt kategorileri filtrele (Search yoksa tam ağaç eşlemesi için)
-            if (!string.IsNullOrEmpty(queryModel.CategorySlug) && string.IsNullOrEmpty(queryModel.Search))
+            // Üst kategoriye ait tüm alt kategorilerin kimliklerini bulur ve filtreler
+            if (queryModel.DynamicFilters != null && queryModel.DynamicFilters.ContainsKey("ParentCategorySlugs"))
+            {
+                var allowedSlugs = queryModel.DynamicFilters["ParentCategorySlugs"];
+                var allowedCategoryIds = await _context.Categories
+                    .Where(c => allowedSlugs.Contains(c.Slug))
+                    .Select(c => c.Id)
+                    .ToListAsync();
+
+                query = query.Where(d => allowedCategoryIds.Contains(d.CategoryId));
+            }
+            else if (!string.IsNullOrEmpty(queryModel.CategorySlug) && string.IsNullOrEmpty(queryModel.Search))
             {
                 var category = await _context.Categories.Include(c => c.SubCategories).AsNoTracking().FirstOrDefaultAsync(c => c.Slug == queryModel.CategorySlug);
                 if (category != null)
@@ -65,20 +73,21 @@ public class ProductQueryManager : IProductQueryService
                 }
             }
 
-            // Ülke filtresi
             if (!string.IsNullOrEmpty(queryModel.Country))
             {
                 query = query.Where(d => d.Country != null && d.Country.Equals(queryModel.Country, StringComparison.OrdinalIgnoreCase));
             }
 
-            if (queryModel.DynamicFilters != null && queryModel.DynamicFilters.Any())
+            // Dinamik nitelik filtrelerinin in-memory olarak sorgulanması
+            if (queryModel.DynamicFilters != null && queryModel.DynamicFilters.Any(f => f.Key != "ParentCategorySlugs"))
             {
-                // Sorguyu IEnumerable seviyesine çekerek expression tree kısıtlamalarından tamamen kurtuluyoruz
                 var enumerableQuery = query.AsEnumerable();
 
                 foreach (var filter in queryModel.DynamicFilters)
                 {
                     var key = filter.Key;
+                    if (key == "ParentCategorySlugs") continue;
+
                     var filterValues = filter.Value.Select(v => v.ToLower()).ToList();
 
                     enumerableQuery = enumerableQuery.Where(d => {
@@ -93,7 +102,6 @@ public class ProductQueryManager : IProductQueryService
                     });
                 }
 
-                // Filtrelenmiş listeyi tekrar query nesnesine asQueryable olarak geri yükle
                 query = enumerableQuery.AsQueryable();
             }
 
@@ -107,9 +115,7 @@ public class ProductQueryManager : IProductQueryService
             return (mappedProducts, totalItems);
         }
 
-        // -------------------------------------------------------------
-        // SENARYO 2: ELASTICSEARCH KAPALI (Yedek Plan: SQL Server / PostgreSQL)
-        // -------------------------------------------------------------
+        // Elasticsearch kapalı ise doğrudan veritabanı üzerinden çalışan yedek plan
         var dbQuery = _context.DefenseProducts.Include(p => p.Category).Include(p => p.Images).AsNoTracking();
 
         if (!string.IsNullOrEmpty(queryModel.Search))
@@ -118,7 +124,18 @@ public class ProductQueryManager : IProductQueryService
             dbQuery = dbQuery.Where(p => p.Name.ToLower().Contains(term) || (p.Manufacturer != null && p.Manufacturer.ToLower().Contains(term)));
         }
 
-        if (!string.IsNullOrEmpty(queryModel.CategorySlug))
+        // Üst kategori seçilmişse alt kategori kimliklerini bulur ve veritabanı sorgusuna ekler
+        if (queryModel.DynamicFilters != null && queryModel.DynamicFilters.ContainsKey("ParentCategorySlugs"))
+        {
+            var allowedSlugs = queryModel.DynamicFilters["ParentCategorySlugs"];
+            var allowedCategoryIds = await _context.Categories
+                .Where(c => allowedSlugs.Contains(c.Slug))
+                .Select(c => c.Id)
+                .ToListAsync();
+
+            dbQuery = dbQuery.Where(p => allowedCategoryIds.Contains(p.CategoryId));
+        }
+        else if (!string.IsNullOrEmpty(queryModel.CategorySlug))
         {
             var category = await _context.Categories.Include(c => c.SubCategories).AsNoTracking().FirstOrDefaultAsync(c => c.Slug == queryModel.CategorySlug);
             if (category != null)
@@ -136,13 +153,15 @@ public class ProductQueryManager : IProductQueryService
             dbQuery = dbQuery.Where(p => p.Country != null && p.Country.ToLower() == queryModel.Country.ToLower());
         }
 
-        // Eğer dinamik ek yansıma filtresi varsa veritabanından belleğe çekip filtrele
-        if (queryModel.DynamicFilters != null && queryModel.DynamicFilters.Any())
+        // Kalıtım alan ek niteliklerin yansıma kullanılarak bellek üzerinde filtrelenmesi
+        if (queryModel.DynamicFilters != null && queryModel.DynamicFilters.Any(f => f.Key != "ParentCategorySlugs"))
         {
             var memoryList = await dbQuery.ToListAsync();
             foreach (var filter in queryModel.DynamicFilters)
             {
                 var key = filter.Key;
+                if (key == "ParentCategorySlugs") continue;
+
                 var filterValues = filter.Value.Select(v => v.ToLower()).ToList();
 
                 memoryList = memoryList.Where(p => {
@@ -161,7 +180,6 @@ public class ProductQueryManager : IProductQueryService
             return (memoryList.Skip((vPage - 1) * queryModel.PageSize).Take(queryModel.PageSize).ToList(), tCount);
         }
 
-        // Ek dinamik filtre yoksa doğrudan saf DB veritabanı sayfalaması
         int totalDbItems = await dbQuery.CountAsync();
         int totalDbPages = (int)Math.Ceiling(totalDbItems / (double)queryModel.PageSize);
         int validDbPage = Math.Max(1, Math.Min(queryModel.Page, totalDbPages > 0 ? totalDbPages : 1));
@@ -255,7 +273,7 @@ public class ProductQueryManager : IProductQueryService
                 }
                 catch
                 {
-                    // Ignore parsing errors for safety
+                    // Parsing hataları güvenli geçiş için yoksayılır
                 }
             }
         }

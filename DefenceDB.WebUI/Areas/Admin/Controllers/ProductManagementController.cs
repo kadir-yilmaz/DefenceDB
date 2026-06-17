@@ -40,33 +40,52 @@ public class ProductManagementController : Controller
 
     public async Task<IActionResult> Index(int? categoryId, string? country, int page = 1)
     {
-        // 1. Kategori ID varsa slug yerine doğrudan DB'den çekip model için slug'ı hazırlayalım
         string? categorySlug = null;
+        Category? currentCategory = null;
+        var categorySlugsList = new List<string>();
+
         if (categoryId.HasValue)
         {
-            var category = await _categoryService.GetCategoryByIdAsync(categoryId.Value);
-            if (category != null)
+            currentCategory = await _categoryService.GetCategoryWithSubCategoriesAsync(categoryId.Value);
+
+            if (currentCategory != null)
             {
-                categorySlug = category.Slug;
+                categorySlug = currentCategory.Slug;
+                categorySlugsList.Add(currentCategory.Slug);
+
+                // Alt kategorilerin slug bilgilerini listeye ekler
+                if (currentCategory.SubCategories != null && currentCategory.SubCategories.Any())
+                {
+                    categorySlugsList.AddRange(currentCategory.SubCategories.Select(sc => sc.Slug));
+                }
+
                 ViewBag.SelectedCategoryId = categoryId.Value;
+                ViewBag.CurrentCategory = currentCategory;
             }
         }
 
-        // 2. Query modelimizi dolduralım (Yönetim paneli için sayfa boyutu örn: 50 yapılabilir)
+        // Filtre modelinin hazırlanması
         var queryModel = new ProductFilterQueryModel
         {
-            CategorySlug = categorySlug,
+            CategorySlug = (currentCategory?.SubCategories != null && currentCategory.SubCategories.Any()) ? null : categorySlug,
             Country = country,
             Page = page,
             PageSize = 50
         };
 
+        // Üst kategoriye ait tüm alt kırılımları filtreye dahil eder
+        if (categorySlugsList.Count > 1)
+        {
+            queryModel.DynamicFilters ??= new Dictionary<string, List<string>>();
+            queryModel.DynamicFilters["ParentCategorySlugs"] = categorySlugsList;
+        }
+
         if (!string.IsNullOrEmpty(country)) ViewBag.CurrentCountry = country;
 
-        // 3. Güvenli servis metodumuzu çağıralım
-        var (pagedProducts, totalItems) = await _productQueryService.GetFilteredProductsAsync(queryModel);
+        // Verilerin filtrelenmiş olarak çekilmesi
+        var (products, totalItems) = await _productQueryService.GetFilteredProductsAsync(queryModel);
 
-        // 4. Sayfalama ve ViewBag verilerini dolduralım
+        // Sayfalama hesaplamaları
         int totalPages = (int)Math.Ceiling(totalItems / (double)queryModel.PageSize);
         page = Math.Max(1, Math.Min(page, totalPages > 0 ? totalPages : 1));
 
@@ -74,10 +93,25 @@ public class ProductManagementController : Controller
         ViewBag.CurrentPage = page;
         ViewBag.TotalPages = totalPages;
 
-        // Panelde arama veya filtre için kategoriler listesi gerekiyorsa:
         ViewBag.Categories = await _categoryService.GetCategoriesWithChildrenAsync();
 
-        return View(pagedProducts);
+        // Ülke listesinin JSON dosyasından okunması
+        var jsonPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "data", "countries.json");
+        try
+        {
+            var countriesJson = await System.IO.File.ReadAllTextAsync(jsonPath);
+            var countriesList = System.Text.Json.JsonSerializer.Deserialize<List<DefenceDB.WebUI.Models.CountryHelper.CountryItem>>(
+                countriesJson,
+                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            );
+            ViewBag.CountriesList = countriesList ?? new List<DefenceDB.WebUI.Models.CountryHelper.CountryItem>();
+        }
+        catch
+        {
+            ViewBag.CountriesList = new List<DefenceDB.WebUI.Models.CountryHelper.CountryItem>();
+        }
+
+        return View(products);
     }
 
     [HttpGet]
