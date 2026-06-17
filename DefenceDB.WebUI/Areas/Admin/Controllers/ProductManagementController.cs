@@ -40,60 +40,42 @@ public class ProductManagementController : Controller
 
     public async Task<IActionResult> Index(int? categoryId, string? country, int page = 1)
     {
-        var query = _productQueryService.GetProductsQueryable();
-        
-        var totalCount = await CountAsyncSafe(query);
-        ViewBag.TotalProductCount = totalCount;
-
-        // Debug
-        Console.WriteLine($"Total products in database: {totalCount}");
-
+        // 1. Kategori ID varsa slug yerine doğrudan DB'den çekip model için slug'ı hazırlayalım
+        string? categorySlug = null;
         if (categoryId.HasValue)
         {
-            var selectedCategory = await _categoryService.GetCategoryByIdAsync(categoryId.Value);
-            if (selectedCategory != null)
+            var category = await _categoryService.GetCategoryByIdAsync(categoryId.Value);
+            if (category != null)
             {
-                var categoryIds = new List<int> { selectedCategory.Id };
-                if (selectedCategory.SubCategories != null && selectedCategory.SubCategories.Any())
-                {
-                    categoryIds.AddRange(selectedCategory.SubCategories.Select(sc => sc.Id));
-                }
-                query = query.Where(p => categoryIds.Contains(p.CategoryId));
+                categorySlug = category.Slug;
                 ViewBag.SelectedCategoryId = categoryId.Value;
-                ViewBag.CurrentCategory = selectedCategory;
             }
         }
 
-        if (!string.IsNullOrWhiteSpace(country))
+        // 2. Query modelimizi dolduralım (Yönetim paneli için sayfa boyutu örn: 50 yapılabilir)
+        var queryModel = new ProductFilterQueryModel
         {
-            query = query.Where(p => p.Country != null && p.Country.ToLower() == country.ToLower());
-            ViewBag.SelectedCountry = country;
-        }
+            CategorySlug = categorySlug,
+            Country = country,
+            Page = page,
+            PageSize = 50
+        };
 
-        ViewBag.Categories = await _categoryService.GetCategoriesWithChildrenAsync();
-        
-        ViewBag.Countries = await ToListAsyncSafe(
-            _productQueryService.GetProductsQueryable()
-                .Where(p => !string.IsNullOrWhiteSpace(p.Country))
-                .Select(p => p.Country)
-                .Distinct()
-                .OrderBy(c => c)
-        );
+        if (!string.IsNullOrEmpty(country)) ViewBag.CurrentCountry = country;
 
-        int pageSize = 30;
-        int totalItems = await CountAsyncSafe(query);
-        int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-        
+        // 3. Güvenli servis metodumuzu çağıralım
+        var (pagedProducts, totalItems) = await _productQueryService.GetFilteredProductsAsync(queryModel);
+
+        // 4. Sayfalama ve ViewBag verilerini dolduralım
+        int totalPages = (int)Math.Ceiling(totalItems / (double)queryModel.PageSize);
         page = Math.Max(1, Math.Min(page, totalPages > 0 ? totalPages : 1));
-        
-        var pagedProducts = await ToListAsyncSafe(
-            query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-        );
 
+        ViewBag.TotalProductCount = totalItems;
         ViewBag.CurrentPage = page;
         ViewBag.TotalPages = totalPages;
+
+        // Panelde arama veya filtre için kategoriler listesi gerekiyorsa:
+        ViewBag.Categories = await _categoryService.GetCategoriesWithChildrenAsync();
 
         return View(pagedProducts);
     }

@@ -1,3 +1,5 @@
+using System.Reflection;
+using System.Text.Json;
 using DefenceDB.BLL.Abstract;
 using DefenceDB.DAL;
 using DefenceDB.EL.Models;
@@ -22,6 +24,150 @@ public class ProductQueryManager : IProductQueryService
         _context = context;
         _searchService = searchService;
         _featureManager = featureManager;
+    }
+
+    public async Task<(List<DefenseProduct> Products, int TotalItems)> GetFilteredProductsAsync(ProductFilterQueryModel queryModel)
+    {
+        // -------------------------------------------------------------
+        // SENARYO 1: ELASTICSEARCH AKTİF (Filtreleme ES/Hafızada Biter)
+        // -------------------------------------------------------------
+        if (_featureManager.UseElasticsearch)
+        {
+            List<ProductDocument> docs;
+
+            if (!string.IsNullOrEmpty(queryModel.Search))
+            {
+                docs = await _searchService.SearchAsync(queryModel.Search, 500);
+            }
+            else if (!string.IsNullOrEmpty(queryModel.CategorySlug))
+            {
+                var category = await _context.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.Slug == queryModel.CategorySlug);
+                docs = category != null ? await _searchService.GetProductsByCategoryAsync(category.Id) : new List<ProductDocument>();
+            }
+            else
+            {
+                docs = await _searchService.GetAllProductsAsync();
+            }
+
+            var query = docs.AsQueryable();
+
+            // Kategori ve alt kategorileri filtrele (Search yoksa tam ağaç eşlemesi için)
+            if (!string.IsNullOrEmpty(queryModel.CategorySlug) && string.IsNullOrEmpty(queryModel.Search))
+            {
+                var category = await _context.Categories.Include(c => c.SubCategories).AsNoTracking().FirstOrDefaultAsync(c => c.Slug == queryModel.CategorySlug);
+                if (category != null)
+                {
+                    var targetCategoryIds = new List<int> { category.Id };
+                    if (category.SubCategories != null)
+                        targetCategoryIds.AddRange(category.SubCategories.Select(sc => sc.Id));
+
+                    query = query.Where(d => targetCategoryIds.Contains(d.CategoryId));
+                }
+            }
+
+            // Ülke filtresi
+            if (!string.IsNullOrEmpty(queryModel.Country))
+            {
+                query = query.Where(d => d.Country != null && d.Country.Equals(queryModel.Country, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (queryModel.DynamicFilters != null && queryModel.DynamicFilters.Any())
+            {
+                // Sorguyu IEnumerable seviyesine çekerek expression tree kısıtlamalarından tamamen kurtuluyoruz
+                var enumerableQuery = query.AsEnumerable();
+
+                foreach (var filter in queryModel.DynamicFilters)
+                {
+                    var key = filter.Key;
+                    var filterValues = filter.Value.Select(v => v.ToLower()).ToList();
+
+                    enumerableQuery = enumerableQuery.Where(d => {
+                        if (d.SpecificProperties == null) return false;
+
+                        if (d.SpecificProperties.TryGetValue(key, out var val) && val != null)
+                        {
+                            return filterValues.Any(v => val.ToString()!.ToLower().Contains(v));
+                        }
+
+                        return false;
+                    });
+                }
+
+                // Filtrelenmiş listeyi tekrar query nesnesine asQueryable olarak geri yükle
+                query = enumerableQuery.AsQueryable();
+            }
+
+            int totalItems = query.Count();
+            int totalPages = (int)Math.Ceiling(totalItems / (double)queryModel.PageSize);
+            int validPage = Math.Max(1, Math.Min(queryModel.Page, totalPages > 0 ? totalPages : 1));
+
+            var pagedDocs = query.Skip((validPage - 1) * queryModel.PageSize).Take(queryModel.PageSize).ToList();
+            var mappedProducts = await MapDocumentsAsync(pagedDocs);
+
+            return (mappedProducts, totalItems);
+        }
+
+        // -------------------------------------------------------------
+        // SENARYO 2: ELASTICSEARCH KAPALI (Yedek Plan: SQL Server / PostgreSQL)
+        // -------------------------------------------------------------
+        var dbQuery = _context.DefenseProducts.Include(p => p.Category).Include(p => p.Images).AsNoTracking();
+
+        if (!string.IsNullOrEmpty(queryModel.Search))
+        {
+            var term = queryModel.Search.ToLower();
+            dbQuery = dbQuery.Where(p => p.Name.ToLower().Contains(term) || (p.Manufacturer != null && p.Manufacturer.ToLower().Contains(term)));
+        }
+
+        if (!string.IsNullOrEmpty(queryModel.CategorySlug))
+        {
+            var category = await _context.Categories.Include(c => c.SubCategories).AsNoTracking().FirstOrDefaultAsync(c => c.Slug == queryModel.CategorySlug);
+            if (category != null)
+            {
+                var categoryIds = new List<int> { category.Id };
+                if (category.SubCategories != null)
+                    categoryIds.AddRange(category.SubCategories.Select(sc => sc.Id));
+
+                dbQuery = dbQuery.Where(p => categoryIds.Contains(p.CategoryId));
+            }
+        }
+
+        if (!string.IsNullOrEmpty(queryModel.Country))
+        {
+            dbQuery = dbQuery.Where(p => p.Country != null && p.Country.ToLower() == queryModel.Country.ToLower());
+        }
+
+        // Eğer dinamik ek yansıma filtresi varsa veritabanından belleğe çekip filtrele
+        if (queryModel.DynamicFilters != null && queryModel.DynamicFilters.Any())
+        {
+            var memoryList = await dbQuery.ToListAsync();
+            foreach (var filter in queryModel.DynamicFilters)
+            {
+                var key = filter.Key;
+                var filterValues = filter.Value.Select(v => v.ToLower()).ToList();
+
+                memoryList = memoryList.Where(p => {
+                    var propInfo = p.GetType().GetProperty(key);
+                    if (propInfo == null) return false;
+                    var propValue = propInfo.GetValue(p);
+                    if (propValue == null) return false;
+                    return filterValues.Any(v => propValue.ToString()!.ToLower().Contains(v));
+                }).ToList();
+            }
+
+            int tCount = memoryList.Count;
+            int tPages = (int)Math.Ceiling(tCount / (double)queryModel.PageSize);
+            int vPage = Math.Max(1, Math.Min(queryModel.Page, tPages > 0 ? tPages : 1));
+
+            return (memoryList.Skip((vPage - 1) * queryModel.PageSize).Take(queryModel.PageSize).ToList(), tCount);
+        }
+
+        // Ek dinamik filtre yoksa doğrudan saf DB veritabanı sayfalaması
+        int totalDbItems = await dbQuery.CountAsync();
+        int totalDbPages = (int)Math.Ceiling(totalDbItems / (double)queryModel.PageSize);
+        int validDbPage = Math.Max(1, Math.Min(queryModel.Page, totalDbPages > 0 ? totalDbPages : 1));
+
+        var dbResult = await dbQuery.OrderByDescending(p => p.CreatedAt).Skip((validDbPage - 1) * queryModel.PageSize).Take(queryModel.PageSize).ToListAsync();
+        return (dbResult, totalDbItems);
     }
 
     public static DefenseProduct MapToEntity(ProductDocument doc)
@@ -72,13 +218,13 @@ public class ProductQueryManager : IProductQueryService
             };
         }
 
-        foreach (var prop in type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+        foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
         {
             if (doc.SpecificProperties.TryGetValue(prop.Name, out var val) && val != null)
             {
                 try
                 {
-                    if (val is System.Text.Json.JsonElement jsonEl)
+                    if (val is JsonElement jsonEl)
                     {
                         object? typedVal = null;
                         if (prop.PropertyType == typeof(string))
@@ -94,9 +240,9 @@ public class ProductQueryManager : IProductQueryService
                         else if (prop.PropertyType.IsEnum || (Nullable.GetUnderlyingType(prop.PropertyType)?.IsEnum == true))
                         {
                             var enumType = prop.PropertyType.IsEnum ? prop.PropertyType : Nullable.GetUnderlyingType(prop.PropertyType)!;
-                            if (jsonEl.ValueKind == System.Text.Json.JsonValueKind.Number)
+                            if (jsonEl.ValueKind == JsonValueKind.Number)
                                 typedVal = Enum.ToObject(enumType, jsonEl.GetInt32());
-                            else if (jsonEl.ValueKind == System.Text.Json.JsonValueKind.String)
+                            else if (jsonEl.ValueKind == JsonValueKind.String)
                                 typedVal = Enum.Parse(enumType, jsonEl.GetString()!);
                         }
                         prop.SetValue(product, typedVal);
@@ -119,30 +265,8 @@ public class ProductQueryManager : IProductQueryService
 
     public async Task<List<DefenseProduct>> GetAllProductsAsync()
     {
-        if (_featureManager.UseElasticsearch)
-        {
-            var docs = await _searchService.GetAllProductsAsync();
-            return await MapDocumentsAsync(docs);
-        }
-        return await _context.DefenseProducts
-            .Include(p => p.Category)
-            .Include(p => p.Images)
-            .OrderByDescending(p => p.CreatedAt)
-            .ToListAsync();
-    }
-
-    public IQueryable<DefenseProduct> GetProductsQueryable()
-    {
-        if (_featureManager.UseElasticsearch)
-        {
-            var docs = _searchService.GetAllProductsAsync().GetAwaiter().GetResult();
-            return MapDocumentsAsync(docs).GetAwaiter().GetResult().AsQueryable();
-        }
-        return _context.DefenseProducts
-            .Include(p => p.Category)
-            .Include(p => p.Images)
-            .OrderByDescending(p => p.CreatedAt)
-            .AsQueryable();
+        var result = await GetFilteredProductsAsync(new ProductFilterQueryModel { Page = 1, PageSize = 1000 });
+        return result.Products;
     }
 
     public async Task<List<DefenseProduct>> GetProductsByCategoryAsync(int categoryId)
@@ -162,18 +286,8 @@ public class ProductQueryManager : IProductQueryService
 
     public async Task<List<DefenseProduct>> GetProductsByCategorySlugAsync(string categorySlug)
     {
-        if (_featureManager.UseElasticsearch)
-        {
-            var category = await _context.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.Slug == categorySlug);
-            if (category == null) return new List<DefenseProduct>();
-            return await GetProductsByCategoryAsync(category.Id);
-        }
-        return await _context.DefenseProducts
-            .Include(p => p.Category)
-            .Include(p => p.Images)
-            .Where(p => p.Category.Slug == categorySlug)
-            .OrderBy(p => p.Name)
-            .ToListAsync();
+        var result = await GetFilteredProductsAsync(new ProductFilterQueryModel { CategorySlug = categorySlug, Page = 1, PageSize = 1000 });
+        return result.Products;
     }
 
     public async Task<DefenseProduct?> GetProductByIdAsync(int id)
@@ -183,18 +297,10 @@ public class ProductQueryManager : IProductQueryService
             .AsSplitQuery()
             .Include(p => p.Category)
             .Include(p => p.Images)
-            .Include(p => p.SourceRelationships)
-                .ThenInclude(r => r.TargetProduct)
-                    .ThenInclude(tp => tp.Images)
-            .Include(p => p.SourceRelationships)
-                .ThenInclude(r => r.TargetProduct)
-                    .ThenInclude(tp => tp.Category)
-            .Include(p => p.TargetRelationships)
-                .ThenInclude(r => r.SourceProduct)
-                    .ThenInclude(sp => sp.Images)
-            .Include(p => p.TargetRelationships)
-                .ThenInclude(r => r.SourceProduct)
-                    .ThenInclude(sp => sp.Category)
+            .Include(p => p.SourceRelationships).ThenInclude(r => r.TargetProduct).ThenInclude(tp => tp.Images)
+            .Include(p => p.SourceRelationships).ThenInclude(r => r.TargetProduct).ThenInclude(tp => tp.Category)
+            .Include(p => p.TargetRelationships).ThenInclude(r => r.SourceProduct).ThenInclude(sp => sp.Images)
+            .Include(p => p.TargetRelationships).ThenInclude(r => r.SourceProduct).ThenInclude(sp => sp.Category)
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
@@ -205,18 +311,10 @@ public class ProductQueryManager : IProductQueryService
             .AsSplitQuery()
             .Include(p => p.Category)
             .Include(p => p.Images)
-            .Include(p => p.SourceRelationships)
-                .ThenInclude(r => r.TargetProduct)
-                    .ThenInclude(tp => tp.Images)
-            .Include(p => p.SourceRelationships)
-                .ThenInclude(r => r.TargetProduct)
-                    .ThenInclude(tp => tp.Category)
-            .Include(p => p.TargetRelationships)
-                .ThenInclude(r => r.SourceProduct)
-                    .ThenInclude(sp => sp.Images)
-            .Include(p => p.TargetRelationships)
-                .ThenInclude(r => r.SourceProduct)
-                    .ThenInclude(sp => sp.Category)
+            .Include(p => p.SourceRelationships).ThenInclude(r => r.TargetProduct).ThenInclude(tp => tp.Images)
+            .Include(p => p.SourceRelationships).ThenInclude(r => r.TargetProduct).ThenInclude(tp => tp.Category)
+            .Include(p => p.TargetRelationships).ThenInclude(r => r.SourceProduct).ThenInclude(sp => sp.Images)
+            .Include(p => p.TargetRelationships).ThenInclude(r => r.SourceProduct).ThenInclude(sp => sp.Category)
             .FirstOrDefaultAsync(p => p.Slug == slug);
     }
 
@@ -266,8 +364,8 @@ public class ProductQueryManager : IProductQueryService
         return await _context.DefenseProducts
             .Include(p => p.Category)
             .Include(p => p.Images)
-            .Where(p => 
-                p.Name.ToLower().Contains(query) || 
+            .Where(p =>
+                p.Name.ToLower().Contains(query) ||
                 (p.Description != null && p.Description.ToLower().Contains(query)) ||
                 (p.NatoReportingName != null && p.NatoReportingName.ToLower().Contains(query)) ||
                 (p.Manufacturer != null && p.Manufacturer.ToLower().Contains(query))

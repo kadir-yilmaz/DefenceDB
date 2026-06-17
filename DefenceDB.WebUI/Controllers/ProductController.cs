@@ -18,15 +18,15 @@ public class ProductController : Controller
 
     public async Task<IActionResult> Index(string? categorySlug, string? country, string? search, int page = 1)
     {
-        IQueryable<DefenseProduct> query = _productQueryService.GetProductsQueryable();
-
-        if (!string.IsNullOrEmpty(search))
+        // 1. Yeni Query Model nesnesini oluştur ve temel filtreleri bağla
+        var queryModel = new ProductFilterQueryModel
         {
-            var term = search.ToLower();
-            query = query.Where(p => p.Name.ToLower().Contains(term) || 
-                                     (p.Manufacturer != null && p.Manufacturer.ToLower().Contains(term)));
-            ViewBag.CurrentSearch = search;
-        }
+            CategorySlug = categorySlug,
+            Country = country,
+            Search = search,
+            Page = page,
+            PageSize = 30
+        };
 
         Category currentCategory = null;
         if (!string.IsNullOrEmpty(categorySlug))
@@ -34,122 +34,63 @@ public class ProductController : Controller
             currentCategory = await _categoryService.GetCategoryBySlugAsync(categorySlug);
             if (currentCategory != null)
             {
-                var categoryIds = new List<int> { currentCategory.Id };
-                if (currentCategory.SubCategories != null && currentCategory.SubCategories.Any())
-                {
-                    categoryIds.AddRange(currentCategory.SubCategories.Select(sc => sc.Id));
-                }
-                
-                query = query.Where(p => categoryIds.Contains(p.CategoryId));
                 ViewBag.CurrentCategory = currentCategory;
-            }
-        }
-        
-        if (!string.IsNullOrEmpty(country))
-        {
-            query = query.Where(p => p.Country != null && p.Country.ToLower() == country.ToLower());
-            ViewBag.CurrentCountry = country;
-        }
 
-        IEnumerable<DefenseProduct> memoryQuery = null;
-
-        // Dinamik Özellik Filtreleme (Sadece kategori seçiliyse)
-        if (currentCategory != null && Request.Query.Count > 0)
-        {
-            var keysToFilter = new List<string>();
-            foreach (var key in Request.Query.Keys)
-            {
-                // Bilinen parametreleri atla
-                if (key == "categorySlug" || key == "country" || key == "search" || key == "page") continue;
-                
-                var value = Request.Query[key].ToString();
-                if (!string.IsNullOrEmpty(value)) keysToFilter.Add(key);
-            }
-
-            if (keysToFilter.Any())
-            {
-                // Dinamik property filtrelemesi IQueryable (SQL) ile yapılamayacağı için burada memory'e alıyoruz
-                memoryQuery = await query.ToListAsync();
-
-                foreach (var key in keysToFilter)
+                // URL'den gelen dinamik TPT filtrelerini yakala (Mach, FoxCode vb.)
+                foreach (var key in Request.Query.Keys)
                 {
+                    if (key == "categorySlug" || key == "country" || key == "search" || key == "page") continue;
+
                     var values = Request.Query[key].ToArray().Select(v => v.ToLower()).ToList();
-                    
-                    // Eğer query'de virgülle gelmişse onu da parçala (bazı sistemler array yerine virgüllü string gönderebilir)
+
                     if (values.Count == 1 && values[0].Contains(","))
                     {
                         values = values[0].Split(',', StringSplitOptions.RemoveEmptyEntries).Select(v => v.Trim()).ToList();
                     }
 
-                    memoryQuery = memoryQuery.Where(p => {
-                        var propInfo = p.GetType().GetProperty(key);
-                        if (propInfo == null) return true; 
-                        
-                        var propValue = propInfo.GetValue(p);
-                        if (propValue == null) return false;
-
-                        var propValueStr = propValue.ToString().ToLower();
-                        
-                        // Herhangi biri eşleşiyorsa (OR logic)
-                        return values.Any(v => propValueStr.Contains(v));
-                    });
+                    if (values.Any())
+                    {
+                        queryModel.DynamicFilters[key] = values;
+                    }
                 }
             }
         }
 
-        // Kategori seçildiyse ona özel özellikleri View'a gönderelim
-        if (currentCategory != null)
-        {
-            DefenseProduct firstItem = null;
-            if (memoryQuery != null && memoryQuery.Any()) firstItem = memoryQuery.First();
-            else if (memoryQuery == null && await AnyAsyncSafe(query)) firstItem = await FirstAsyncSafe(query);
+        if (!string.IsNullOrEmpty(search)) ViewBag.CurrentSearch = search;
+        if (!string.IsNullOrEmpty(country)) ViewBag.CurrentCountry = country;
 
-            if (firstItem != null)
-            {
-                var modelType = firstItem.GetType();
-                var baseProperties = typeof(DefenseProduct).GetProperties().Select(p => p.Name).ToList();
-                var specificProperties = modelType.GetProperties().Where(p => !baseProperties.Contains(p.Name)).ToList();
-                ViewBag.FilterProperties = specificProperties;
-            }
+        // 2. Servis katmanından filtrelenmiş veriyi tek parça halinde çek
+        var (pagedProducts, totalItems) = await _productQueryService.GetFilteredProductsAsync(queryModel);
+
+        int totalPages = (int)Math.Ceiling(totalItems / (double)queryModel.PageSize);
+        page = Math.Max(1, Math.Min(page, totalPages > 0 ? totalPages : 1));
+
+        // 3. Sol menüdeki filtre paneli için property'leri oku
+        if (currentCategory != null && pagedProducts.Any())
+        {
+            var firstItem = pagedProducts.First();
+            var modelType = firstItem.GetType();
+            var baseProperties = typeof(DefenseProduct).GetProperties().Select(p => p.Name).ToList();
+            var specificProperties = modelType.GetProperties().Where(p => !baseProperties.Contains(p.Name)).ToList();
+            ViewBag.FilterProperties = specificProperties;
         }
 
+        // 4. Sabit görünümleri doldur
         ViewBag.Categories = await _categoryService.GetCategoriesWithChildrenAsync();
-        
-        // Ülke listesini countries.json'dan okuyalım ki sabit kalsın (Eski veritabanı çöplerini göstermesin)
+
         var jsonPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "data", "countries.json");
-        try 
+        try
         {
             var countriesJson = await System.IO.File.ReadAllTextAsync(jsonPath);
             var countriesList = System.Text.Json.JsonSerializer.Deserialize<List<DefenceDB.WebUI.Models.CountryHelper.CountryItem>>(
-                countriesJson, 
+                countriesJson,
                 new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }
             );
             ViewBag.CountriesList = countriesList ?? new List<DefenceDB.WebUI.Models.CountryHelper.CountryItem>();
         }
-        catch 
+        catch
         {
             ViewBag.CountriesList = new List<DefenceDB.WebUI.Models.CountryHelper.CountryItem>();
-        }
-
-        int pageSize = 30;
-        int totalItems = memoryQuery != null ? memoryQuery.Count() : await CountAsyncSafe(query);
-        int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-        
-        page = Math.Max(1, Math.Min(page, totalPages > 0 ? totalPages : 1));
-        
-        List<DefenseProduct> pagedProducts;
-        if (memoryQuery != null)
-        {
-            pagedProducts = memoryQuery
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-        }
-        else
-        {
-            pagedProducts = await ToListAsyncSafe(query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize));
         }
 
         ViewBag.CurrentPage = page;
