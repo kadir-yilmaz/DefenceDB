@@ -8,22 +8,22 @@ namespace DefenceDB.WebUI.Controllers;
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
-    private readonly ICategoryService _categoryService;
+    private readonly ICategoryQueryService _categoryQueryService;
     private readonly IProductQueryService _productQueryService;
 
     public HomeController(
         ILogger<HomeController> logger,
-        ICategoryService categoryService,
+        ICategoryQueryService categoryQueryService,
         IProductQueryService productQueryService)
     {
         _logger = logger;
-        _categoryService = categoryService;
+        _categoryQueryService = categoryQueryService;
         _productQueryService = productQueryService;
     }
 
     public async Task<IActionResult> Index()
     {
-        ViewBag.Categories = await _categoryService.GetRootCategoriesAsync();
+        ViewBag.Categories = await _categoryQueryService.GetRootCategoriesAsync();
         ViewBag.RecentProducts = await _productQueryService.GetRecentProductsAsync(5);
         ViewBag.ShowcaseProducts = await _productQueryService.GetShowcaseProductsAsync();
         ViewData["Title"] = "Ana Sayfa - Savunma Wiki";

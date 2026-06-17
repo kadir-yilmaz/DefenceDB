@@ -8,11 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DefenceDB.BLL.Concrete;
 
-public class ProductQueryManager : IProductQueryService
+public class ProductQueryService : IProductQueryService
 {
     private readonly AppDbContext _context;
-    private readonly ISearchService _searchService;
-    private readonly IFeatureManager _featureManager;
 
     private static readonly Lazy<List<Type>> _productTypes = new(() =>
         typeof(DefenseProduct).Assembly.GetTypes()
@@ -20,110 +18,25 @@ public class ProductQueryManager : IProductQueryService
             .ToList()
     );
 
-    public ProductQueryManager(AppDbContext context, ISearchService searchService, IFeatureManager featureManager)
+    public ProductQueryService(AppDbContext context)
     {
         _context = context;
-        _searchService = searchService;
-        _featureManager = featureManager;
     }
 
     public async Task<(List<DefenseProduct> Products, int TotalItems)> GetFilteredProductsAsync(ProductFilterQueryModel queryModel)
     {
-        // Elasticsearch aktif ise çalışan arama senaryosu
-        if (_featureManager.UseElasticsearch)
-        {
-            List<ProductDocument> docs;
+        var readQuery = _context.ProductReadModels.AsNoTracking().AsQueryable();
 
-            if (!string.IsNullOrEmpty(queryModel.Search))
-            {
-                docs = await _searchService.SearchAsync(queryModel.Search, 500);
-            }
-            else if (!string.IsNullOrEmpty(queryModel.CategorySlug))
-            {
-                var category = await _context.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.Slug == queryModel.CategorySlug);
-                docs = category != null ? await _searchService.GetProductsByCategoryAsync(category.Id) : new List<ProductDocument>();
-            }
-            else
-            {
-                docs = await _searchService.GetAllProductsAsync();
-            }
-
-            var query = docs.AsQueryable();
-
-            // Üst kategoriye ait tüm alt kategorilerin kimliklerini bulur ve filtreler
-            if (queryModel.DynamicFilters != null && queryModel.DynamicFilters.ContainsKey("ParentCategorySlugs"))
-            {
-                var allowedSlugs = queryModel.DynamicFilters["ParentCategorySlugs"];
-                var allowedCategoryIds = await _context.Categories
-                    .Where(c => allowedSlugs.Contains(c.Slug))
-                    .Select(c => c.Id)
-                    .ToListAsync();
-
-                query = query.Where(d => allowedCategoryIds.Contains(d.CategoryId));
-            }
-            else if (!string.IsNullOrEmpty(queryModel.CategorySlug) && string.IsNullOrEmpty(queryModel.Search))
-            {
-                var category = await _context.Categories.Include(c => c.SubCategories).AsNoTracking().FirstOrDefaultAsync(c => c.Slug == queryModel.CategorySlug);
-                if (category != null)
-                {
-                    var targetCategoryIds = new List<int> { category.Id };
-                    if (category.SubCategories != null)
-                        targetCategoryIds.AddRange(category.SubCategories.Select(sc => sc.Id));
-
-                    query = query.Where(d => targetCategoryIds.Contains(d.CategoryId));
-                }
-            }
-
-            if (!string.IsNullOrEmpty(queryModel.Country))
-            {
-                query = query.Where(d => d.Country != null && d.Country.Equals(queryModel.Country, StringComparison.OrdinalIgnoreCase));
-            }
-
-            // Dinamik nitelik filtrelerinin in-memory olarak sorgulanması
-            if (queryModel.DynamicFilters != null && queryModel.DynamicFilters.Any(f => f.Key != "ParentCategorySlugs"))
-            {
-                var enumerableQuery = query.AsEnumerable();
-
-                foreach (var filter in queryModel.DynamicFilters)
-                {
-                    var key = filter.Key;
-                    if (key == "ParentCategorySlugs") continue;
-
-                    enumerableQuery = enumerableQuery.Where(d => {
-                        if (d.SpecificProperties == null) return false;
-
-                        if (d.SpecificProperties.TryGetValue(key, out var val) && val != null)
-                        {
-                            return MatchesFilterValue(val, filter.Value);
-                        }
-
-                        return false;
-                    });
-                }
-
-                query = enumerableQuery.AsQueryable();
-            }
-
-            int totalItems = query.Count();
-            int totalPages = (int)Math.Ceiling(totalItems / (double)queryModel.PageSize);
-            int validPage = Math.Max(1, Math.Min(queryModel.Page, totalPages > 0 ? totalPages : 1));
-
-            var pagedDocs = query.Skip((validPage - 1) * queryModel.PageSize).Take(queryModel.PageSize).ToList();
-            var mappedProducts = await MapDocumentsAsync(pagedDocs);
-
-            return (mappedProducts, totalItems);
-        }
-
-        // Elasticsearch kapalı ise doğrudan veritabanı üzerinden çalışan yedek plan
-        var dbQuery = _context.DefenseProducts.Include(p => p.Category).Include(p => p.Images).AsNoTracking();
-
-        if (!string.IsNullOrEmpty(queryModel.Search))
+        if (!string.IsNullOrWhiteSpace(queryModel.Search))
         {
             var term = queryModel.Search.ToLower();
-            dbQuery = dbQuery.Where(p => p.Name.ToLower().Contains(term) || (p.Manufacturer != null && p.Manufacturer.ToLower().Contains(term)));
+            readQuery = readQuery.Where(p =>
+                p.Name.ToLower().Contains(term) ||
+                (p.Description != null && p.Description.ToLower().Contains(term)) ||
+                (p.NatoReportingName != null && p.NatoReportingName.ToLower().Contains(term)) ||
+                (p.Manufacturer != null && p.Manufacturer.ToLower().Contains(term)));
         }
 
-        // Üst kategori seçilmişse alt kategori kimliklerini bulur ve veritabanı sorgusuna ekler
         if (queryModel.DynamicFilters != null && queryModel.DynamicFilters.ContainsKey("ParentCategorySlugs"))
         {
             var allowedSlugs = queryModel.DynamicFilters["ParentCategorySlugs"];
@@ -132,7 +45,7 @@ public class ProductQueryManager : IProductQueryService
                 .Select(c => c.Id)
                 .ToListAsync();
 
-            dbQuery = dbQuery.Where(p => allowedCategoryIds.Contains(p.CategoryId));
+            readQuery = readQuery.Where(p => allowedCategoryIds.Contains(p.CategoryId));
         }
         else if (!string.IsNullOrEmpty(queryModel.CategorySlug))
         {
@@ -143,46 +56,49 @@ public class ProductQueryManager : IProductQueryService
                 if (category.SubCategories != null)
                     categoryIds.AddRange(category.SubCategories.Select(sc => sc.Id));
 
-                dbQuery = dbQuery.Where(p => categoryIds.Contains(p.CategoryId));
+                readQuery = readQuery.Where(p => categoryIds.Contains(p.CategoryId));
             }
         }
 
-        if (!string.IsNullOrEmpty(queryModel.Country))
+        if (!string.IsNullOrWhiteSpace(queryModel.Country))
         {
-            dbQuery = dbQuery.Where(p => p.Country != null && p.Country.ToLower() == queryModel.Country.ToLower());
+            var country = queryModel.Country.ToLower();
+            readQuery = readQuery.Where(p => p.Country != null && p.Country.ToLower() == country);
         }
 
-        // Kalıtım alan ek niteliklerin yansıma kullanılarak bellek üzerinde filtrelenmesi
+        var readModels = await readQuery
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync();
+
+        var products = readModels.Select(MapReadModelToEntity).ToList();
+
         if (queryModel.DynamicFilters != null && queryModel.DynamicFilters.Any(f => f.Key != "ParentCategorySlugs"))
         {
-            var memoryList = await dbQuery.ToListAsync();
             foreach (var filter in queryModel.DynamicFilters)
             {
                 var key = filter.Key;
                 if (key == "ParentCategorySlugs") continue;
 
-                memoryList = memoryList.Where(p => {
+                products = products.Where(p => {
                     var propInfo = p.GetType().GetProperty(key);
                     if (propInfo == null) return false;
                     var propValue = propInfo.GetValue(p);
-                    if (propValue == null) return false;
+                    if (propValue == null)
+                    {
+                        // Bos filter degeri varsa (form alani gonderildi ama deger yok), null propValue kabul et
+                        var hasRealFilter = filter.Value.Any(v => !string.IsNullOrWhiteSpace(v));
+                        return !hasRealFilter;
+                    }
                     return MatchesFilterValue(propValue, filter.Value);
                 }).ToList();
             }
-
-            int tCount = memoryList.Count;
-            int tPages = (int)Math.Ceiling(tCount / (double)queryModel.PageSize);
-            int vPage = Math.Max(1, Math.Min(queryModel.Page, tPages > 0 ? tPages : 1));
-
-            return (memoryList.Skip((vPage - 1) * queryModel.PageSize).Take(queryModel.PageSize).ToList(), tCount);
         }
 
-        int totalDbItems = await dbQuery.CountAsync();
-        int totalDbPages = (int)Math.Ceiling(totalDbItems / (double)queryModel.PageSize);
-        int validDbPage = Math.Max(1, Math.Min(queryModel.Page, totalDbPages > 0 ? totalDbPages : 1));
+        int totalItems = products.Count;
+        int totalPages = (int)Math.Ceiling(totalItems / (double)queryModel.PageSize);
+        int validPage = Math.Max(1, Math.Min(queryModel.Page, totalPages > 0 ? totalPages : 1));
 
-        var dbResult = await dbQuery.OrderByDescending(p => p.CreatedAt).Skip((validDbPage - 1) * queryModel.PageSize).Take(queryModel.PageSize).ToListAsync();
-        return (dbResult, totalDbItems);
+        return (products.Skip((validPage - 1) * queryModel.PageSize).Take(queryModel.PageSize).ToList(), totalItems);
     }
 
     public static DefenseProduct MapToEntity(ProductDocument doc)
@@ -280,6 +196,219 @@ public class ProductQueryManager : IProductQueryService
         return product;
     }
 
+    private static DefenseProduct MapReadModelToEntity(ProductReadModel model)
+    {
+        var type = _productTypes.Value.FirstOrDefault(t => t.Name == model.ProductType) ?? typeof(DefenseProduct);
+        if (type.IsAbstract)
+        {
+            type = _productTypes.Value.FirstOrDefault() ?? throw new InvalidOperationException("No concrete product types found.");
+        }
+
+        var product = (DefenseProduct)Activator.CreateInstance(type)!;
+        product.Id = model.Id;
+        product.Name = model.Name;
+        product.Slug = model.Slug;
+        product.NatoReportingName = model.NatoReportingName;
+        product.Description = model.Description;
+        product.Country = model.Country;
+        product.Manufacturer = model.Manufacturer;
+        product.YearIntroduced = model.YearIntroduced;
+        product.ThumbnailUrl = model.ThumbnailUrl;
+        product.Status = model.Status;
+        product.IsActive = model.IsActive;
+        product.IsShowcase = model.IsShowcase;
+        product.VideoUrl = model.VideoUrl;
+        product.CategoryId = model.CategoryId;
+        product.CreatedAt = model.CreatedAt;
+        product.UpdatedAt = model.UpdatedAt;
+
+        product.Category = new Category
+        {
+            Id = model.CategoryId,
+            Name = model.CategoryName,
+            Slug = model.CategorySlug
+        };
+
+        if (!string.IsNullOrWhiteSpace(model.MainImageUrl))
+        {
+            product.Images = new List<ProductImage>
+            {
+                new()
+                {
+                    ProductId = model.Id,
+                    ImagePath = model.MainImageUrl,
+                    IsMainImage = true,
+                    UploadedAt = model.CreatedAt
+                }
+            };
+        }
+
+        if (string.IsNullOrWhiteSpace(model.SpecificPropertiesJson))
+            return product;
+
+        Dictionary<string, JsonElement>? properties;
+        try
+        {
+            properties = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(model.SpecificPropertiesJson);
+        }
+        catch
+        {
+            return product;
+        }
+
+        if (properties is null)
+            return product;
+
+        foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        {
+            if (!properties.TryGetValue(prop.Name, out var jsonEl) || jsonEl.ValueKind == JsonValueKind.Null)
+                continue;
+
+            TrySetJsonProperty(product, prop, jsonEl);
+        }
+
+        return product;
+    }
+
+    private static void TrySetJsonProperty(DefenseProduct product, PropertyInfo prop, JsonElement jsonEl)
+    {
+        try
+        {
+            object? typedVal = null;
+            var propertyType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+
+            if (propertyType == typeof(string))
+                typedVal = jsonEl.GetString();
+            else if (propertyType == typeof(byte))
+            {
+                // Legacy destek: eski ReadModel'de FoxCode "Fox 2" gibi string olarak saklanmış olabilir
+                if (jsonEl.ValueKind == JsonValueKind.String)
+                    typedVal = ExtractNumberFromString<byte>(jsonEl.GetString()!);
+                else
+                    typedVal = jsonEl.GetByte();
+            }
+            else if (propertyType == typeof(int))
+            {
+                if (jsonEl.ValueKind == JsonValueKind.String)
+                    typedVal = ExtractNumberFromString<int>(jsonEl.GetString()!);
+                else
+                    typedVal = jsonEl.GetInt32();
+            }
+            else if (propertyType == typeof(double))
+            {
+                if (jsonEl.ValueKind == JsonValueKind.String)
+                    typedVal = ExtractNumberFromString<double>(jsonEl.GetString()!);
+                else
+                    typedVal = jsonEl.GetDouble();
+            }
+            else if (propertyType == typeof(decimal))
+            {
+                if (jsonEl.ValueKind == JsonValueKind.String)
+                    typedVal = ExtractNumberFromString<decimal>(jsonEl.GetString()!);
+                else
+                    typedVal = jsonEl.GetDecimal();
+            }
+            else if (propertyType == typeof(bool))
+                typedVal = jsonEl.GetBoolean();
+            else if (propertyType.IsEnum)
+            {
+                typedVal = jsonEl.ValueKind == JsonValueKind.Number
+                    ? Enum.ToObject(propertyType, jsonEl.GetInt32())
+                    : Enum.Parse(propertyType, jsonEl.GetString()!);
+            }
+
+            if (typedVal is not null)
+                prop.SetValue(product, typedVal);
+        }
+        catch
+        {
+            // Invalid historical read-model values are ignored so one bad field does not break listing.
+        }
+    }
+
+    /// <summary>
+    /// Legacy string degerlerden sayi cikarir. Orn: "Fox 2" -> 2, "Mach 3.5" -> 3.5
+    /// </summary>
+    private static T? ExtractNumberFromString<T>(string input) where T : struct
+    {
+        if (string.IsNullOrWhiteSpace(input)) return null;
+
+        // Once direkt parse dene
+        if (typeof(T) == typeof(byte) && byte.TryParse(input, out var b))
+            return (T)(object)b;
+        if (typeof(T) == typeof(int) && int.TryParse(input, out var i))
+            return (T)(object)i;
+        if (typeof(T) == typeof(double) && double.TryParse(input, System.Globalization.CultureInfo.InvariantCulture, out var d))
+            return (T)(object)d;
+        if (typeof(T) == typeof(decimal) && decimal.TryParse(input, System.Globalization.CultureInfo.InvariantCulture, out var m))
+            return (T)(object)m;
+
+        // String icinden ilk sayiyi cikar (regex ile)
+        var match = System.Text.RegularExpressions.Regex.Match(input, @"-?\d+(\.\d+)?");
+        if (!match.Success) return null;
+
+        var numStr = match.Value;
+        try
+        {
+            if (typeof(T) == typeof(byte) && byte.TryParse(numStr, out var rb)) return (T)(object)rb;
+            if (typeof(T) == typeof(int) && int.TryParse(numStr, out var ri)) return (T)(object)ri;
+            if (typeof(T) == typeof(double) && double.TryParse(numStr, System.Globalization.CultureInfo.InvariantCulture, out var rd)) return (T)(object)rd;
+            if (typeof(T) == typeof(decimal) && decimal.TryParse(numStr, System.Globalization.CultureInfo.InvariantCulture, out var rm)) return (T)(object)rm;
+        }
+        catch { }
+
+        return null;
+    }
+
+    private async Task AttachRelationshipsAsync(DefenseProduct product)
+    {
+        var relations = await _context.ProductRelationships
+            .AsNoTracking()
+            .Where(r => r.SourceProductId == product.Id || r.TargetProductId == product.Id)
+            .ToListAsync();
+
+        if (!relations.Any())
+            return;
+
+        var relatedIds = relations
+            .SelectMany(r => new[] { r.SourceProductId, r.TargetProductId })
+            .Where(id => id != product.Id)
+            .Distinct()
+            .ToList();
+
+        var relatedModels = await _context.ProductReadModels
+            .AsNoTracking()
+            .Where(p => relatedIds.Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id);
+
+        foreach (var relation in relations)
+        {
+            if (relatedModels.TryGetValue(relation.TargetProductId, out var targetModel))
+                relation.TargetProduct = MapReadModelToEntity(targetModel);
+
+            if (relatedModels.TryGetValue(relation.SourceProductId, out var sourceModel))
+                relation.SourceProduct = MapReadModelToEntity(sourceModel);
+        }
+
+        product.SourceRelationships = relations
+            .Where(r => r.SourceProductId == product.Id)
+            .ToList();
+
+        product.TargetRelationships = relations
+            .Where(r => r.TargetProductId == product.Id)
+            .ToList();
+    }
+
+    private async Task AttachImagesAsync(DefenseProduct product)
+    {
+        product.Images = await _context.ProductImages
+            .AsNoTracking()
+            .Where(i => i.ProductId == product.Id)
+            .OrderByDescending(i => i.IsMainImage)
+            .ThenBy(i => i.Id)
+            .ToListAsync();
+    }
+
     private static bool MatchesFilterValue(object value, IEnumerable<string> rawFilterValues)
     {
         var filterValues = rawFilterValues
@@ -344,17 +473,13 @@ public class ProductQueryManager : IProductQueryService
 
     public async Task<List<DefenseProduct>> GetProductsByCategoryAsync(int categoryId)
     {
-        if (_featureManager.UseElasticsearch)
-        {
-            var docs = await _searchService.GetProductsByCategoryAsync(categoryId);
-            return await MapDocumentsAsync(docs);
-        }
-        return await _context.DefenseProducts
-            .Include(p => p.Category)
-            .Include(p => p.Images)
+        var models = await _context.ProductReadModels
+            .AsNoTracking()
             .Where(p => p.CategoryId == categoryId)
             .OrderBy(p => p.Name)
             .ToListAsync();
+
+        return models.Select(MapReadModelToEntity).ToList();
     }
 
     public async Task<List<DefenseProduct>> GetProductsByCategorySlugAsync(string categorySlug)
@@ -365,78 +490,66 @@ public class ProductQueryManager : IProductQueryService
 
     public async Task<DefenseProduct?> GetProductByIdAsync(int id)
     {
-        return await _context.DefenseProducts
+        var model = await _context.ProductReadModels
             .AsNoTracking()
-            .AsSplitQuery()
-            .Include(p => p.Category)
-            .Include(p => p.Images)
-            .Include(p => p.SourceRelationships).ThenInclude(r => r.TargetProduct).ThenInclude(tp => tp.Images)
-            .Include(p => p.SourceRelationships).ThenInclude(r => r.TargetProduct).ThenInclude(tp => tp.Category)
-            .Include(p => p.TargetRelationships).ThenInclude(r => r.SourceProduct).ThenInclude(sp => sp.Images)
-            .Include(p => p.TargetRelationships).ThenInclude(r => r.SourceProduct).ThenInclude(sp => sp.Category)
             .FirstOrDefaultAsync(p => p.Id == id);
+
+        if (model is null)
+            return null;
+
+        var product = MapReadModelToEntity(model);
+        await AttachImagesAsync(product);
+        await AttachRelationshipsAsync(product);
+        return product;
     }
 
     public async Task<DefenseProduct?> GetProductBySlugAsync(string slug)
     {
-        return await _context.DefenseProducts
+        var model = await _context.ProductReadModels
             .AsNoTracking()
-            .AsSplitQuery()
-            .Include(p => p.Category)
-            .Include(p => p.Images)
-            .Include(p => p.SourceRelationships).ThenInclude(r => r.TargetProduct).ThenInclude(tp => tp.Images)
-            .Include(p => p.SourceRelationships).ThenInclude(r => r.TargetProduct).ThenInclude(tp => tp.Category)
-            .Include(p => p.TargetRelationships).ThenInclude(r => r.SourceProduct).ThenInclude(sp => sp.Images)
-            .Include(p => p.TargetRelationships).ThenInclude(r => r.SourceProduct).ThenInclude(sp => sp.Category)
             .FirstOrDefaultAsync(p => p.Slug == slug);
+
+        if (model is null)
+            return null;
+
+        var product = MapReadModelToEntity(model);
+        await AttachImagesAsync(product);
+        await AttachRelationshipsAsync(product);
+        return product;
     }
 
     public async Task<List<DefenseProduct>> GetRecentProductsAsync(int count = 6)
     {
-        if (_featureManager.UseElasticsearch)
-        {
-            var docs = await _searchService.GetAllProductsAsync();
-            return await MapDocumentsAsync(docs.Where(d => d.IsActive).Take(count));
-        }
-        return await _context.DefenseProducts
-            .Include(p => p.Category)
-            .Include(p => p.Images)
+        var models = await _context.ProductReadModels
+            .AsNoTracking()
             .Where(p => p.IsActive)
             .OrderByDescending(p => p.CreatedAt)
             .Take(count)
             .ToListAsync();
+
+        return models.Select(MapReadModelToEntity).ToList();
     }
 
     public async Task<List<DefenseProduct>> GetShowcaseProductsAsync()
     {
-        if (_featureManager.UseElasticsearch)
-        {
-            var docs = await _searchService.GetAllProductsAsync();
-            return await MapDocumentsAsync(docs.Where(d => d.IsActive && d.IsShowcase));
-        }
-        return await _context.DefenseProducts
-            .Include(p => p.Category)
-            .Include(p => p.Images)
+        var models = await _context.ProductReadModels
+            .AsNoTracking()
             .Where(p => p.IsActive && p.IsShowcase)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
+
+        return models.Select(MapReadModelToEntity).ToList();
     }
 
     public async Task<List<DefenseProduct>> SearchProductsAsync(string query)
     {
-        if (_featureManager.UseElasticsearch)
-        {
-            var docs = await _searchService.SearchAsync(query, 20);
-            return await MapDocumentsAsync(docs);
-        }
         if (string.IsNullOrWhiteSpace(query))
             return new List<DefenseProduct>();
 
         query = query.ToLower();
 
-        return await _context.DefenseProducts
-            .Include(p => p.Category)
-            .Include(p => p.Images)
+        var models = await _context.ProductReadModels
+            .AsNoTracking()
             .Where(p =>
                 p.Name.ToLower().Contains(query) ||
                 (p.Description != null && p.Description.ToLower().Contains(query)) ||
@@ -446,6 +559,8 @@ public class ProductQueryManager : IProductQueryService
             .OrderBy(p => p.Name)
             .Take(20)
             .ToListAsync();
+
+        return models.Select(MapReadModelToEntity).ToList();
     }
 
     public async Task<ProductImage?> GetProductImageByIdAsync(int imageId)

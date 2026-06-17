@@ -1,6 +1,5 @@
 @{
     ViewData["Title"] = "Performans Benchmark";
-    var useEs = ViewData["UseElasticsearch"] as bool? ?? false;
 }
 
 <style>
@@ -558,13 +557,9 @@
                     <i class="bi bi-speedometer2 me-2"></i>Performans Benchmark
                 </h1>
                 <p class="bench-subtitle mb-2">
-                    TPT (SQL Server) vs CQRS Read Model vs Elasticsearch vs In-Memory Cache — Eşzamanlı Adım Karşılaştırması
+                    TPT (SQL Server) vs CQRS Read Model vs In-Memory Cache — Eşzamanlı Adım Karşılaştırması
                 </p>
                 <div class="d-flex justify-content-center justify-content-lg-start gap-2 flex-wrap mt-2">
-                    <span class="status-badge @(useEs ? "status-active" : "status-inactive")">
-                        <span class="status-dot"></span>
-                        Elasticsearch
-                    </span>
                     <span class="status-badge status-active">
                         <span class="status-dot"></span>
                         SQL Server (TPT)
@@ -581,16 +576,6 @@
             </div>
             <div class="col-lg-5 text-center text-lg-end mt-3 mt-lg-0">
                 <div class="d-flex flex-column flex-sm-row justify-content-center justify-content-lg-end gap-2">
-                    @if(useEs) {
-                        <div class="d-inline-block text-start">
-                            <button id="btnEsReindex" class="bench-btn bench-btn-success w-100" onclick="reindex(this)">
-                                <i class="bi bi-arrow-repeat me-1"></i> ES Reindex
-                            </button>
-                            <div id="statusEs" class="text-muted small mt-1 text-center text-lg-end" style="font-size: 0.72rem; font-family: 'JetBrains Mono', monospace;">
-                                ES Durum: Yükleniyor...
-                            </div>
-                        </div>
-                    }
                     <div class="d-inline-block text-start">
                         <button id="btnSyncReadModels" class="bench-btn w-100" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);" onclick="syncReadModels(this)">
                             <i class="bi bi-database-fill-down me-1"></i> Read Table Reindex
@@ -676,7 +661,7 @@
             <div class="row g-3 mb-2">
                 
                 <!-- Card 1: SQL Server TPT -->
-                <div class="col-12 col-sm-6 col-lg-3">
+                <div class="col-12 col-sm-6 col-lg-4">
                     <div class="glass-card h-100 d-flex flex-column justify-content-between p-3" style="border-top: 3px solid #3b82f6;">
                         <div>
                             <div class="d-flex justify-content-between align-items-center mb-2">
@@ -712,7 +697,7 @@
                 </div>
 
                 <!-- Card 2: SQL Read Model -->
-                <div class="col-12 col-sm-6 col-lg-3">
+                <div class="col-12 col-sm-6 col-lg-4">
                     <div class="glass-card h-100 d-flex flex-column justify-content-between p-3" style="border-top: 3px solid #10b981;">
                         <div>
                             <div class="d-flex justify-content-between align-items-center mb-2">
@@ -747,44 +732,8 @@
                     </div>
                 </div>
 
-                <!-- Card 3: Elasticsearch -->
-                <div class="col-12 col-sm-6 col-lg-3">
-                    <div class="glass-card h-100 d-flex flex-column justify-content-between p-3" style="border-top: 3px solid #a855f7;">
-                        <div>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="fw-bold text-white" style="font-family: 'Outfit', sans-serif; font-size: 0.9rem;"><i class="bi bi-search me-1 text-purple"></i> Elasticsearch</span>
-                                <span id="badge-card-es" class="badge bg-dark border border-secondary text-secondary">Hazır</span>
-                            </div>
-                            <div class="text-center my-3">
-                                <div id="time-card-es" class="fs-2 fw-bold text-white mb-1">— ms</div>
-                                <div id="count-card-es" class="text-muted small">— kayıt</div>
-                            </div>
-                            <!-- Query Container -->
-                            <div class="mb-2 text-start">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <span class="text-muted" style="font-size: 0.72rem; font-weight: 600;">ES Arama İsteği (REST):</span>
-                                    <button id="btn-zoom-query-es" class="btn btn-sm btn-link p-0 text-purple" style="font-size: 0.72rem; text-decoration: none; display: none;" onclick="openZoomModal('es', 'query')">
-                                        <i class="bi bi-arrows-angle-expand me-1"></i>Büyüt
-                                    </button>
-                                </div>
-                                <pre id="query-card-es" class="query-code-block m-0" style="height: 100px; color: #a78bfa;"></pre>
-                            </div>
-                            <!-- Data Preview Container -->
-                            <div class="mb-2 text-start">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <span class="text-muted" style="font-size: 0.72rem; font-weight: 600;">Gelen Veri Ön İzleme:</span>
-                                    <button id="btn-zoom-data-es" class="btn btn-sm btn-link p-0 text-purple" style="font-size: 0.72rem; text-decoration: none; display: none;" onclick="openZoomModal('es', 'data')">
-                                        <i class="bi bi-arrows-angle-expand me-1"></i>Büyüt
-                                    </button>
-                                </div>
-                                <pre id="data-card-es" class="query-code-block m-0" style="height: 100px; color: #a78bfa;"></pre>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 4: In-Memory Cache -->
-                <div class="col-12 col-sm-6 col-lg-3">
+                <!-- Card 3: In-Memory Cache -->
+                <div class="col-12 col-sm-6 col-lg-4">
                     <div class="glass-card h-100 d-flex flex-column justify-content-between p-3" style="border-top: 3px solid #f59e0b;">
                         <div>
                             <div class="d-flex justify-content-between align-items-center mb-2">
@@ -833,7 +782,6 @@
                 <div class="d-flex gap-3 flex-wrap">
                     <span style="font-size:0.75rem; color: #60a5fa; font-family:'Inter',sans-serif;">● SQL Server TPT</span>
                     <span style="font-size:0.75rem; color: #34d399; font-family:'Inter',sans-serif;">● SQL Read Model</span>
-                    <span style="font-size:0.75rem; color: #a78bfa; font-family:'Inter',sans-serif;">● Elasticsearch</span>
                     <span style="font-size:0.75rem; color: #fbbf24; font-family:'Inter',sans-serif;">● Cache Hot</span>
                 </div>
             </div>
@@ -871,10 +819,6 @@
                             <stop offset="0%" stop-color="#f59e0b" />
                             <stop offset="100%" stop-color="#b45309" />
                         </linearGradient>
-                        <linearGradient id="grad-es" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#a855f7" />
-                            <stop offset="100%" stop-color="#6d28d9" />
-                        </linearGradient>
                     </defs>
 
                     <!-- Connections -->
@@ -883,18 +827,12 @@
                     <path id="flow-controller-flat" d="M 330 120 L 450 120" stroke="#334155" stroke-width="3" fill="none" />
                     <path id="flow-controller-cache" d="M 330 140 C 370 180, 390 200, 450 200" stroke="#334155" stroke-width="3" fill="none" />
                     <path id="flow-sql-sync" d="M 510 70 L 510 90" stroke="#475569" stroke-width="2" stroke-dasharray="4,4" fill="none" />
-                    @if(useEs) {
-                        <path id="flow-controller-es" d="M 330 120 C 400 120, 500 120, 670 120" stroke="#334155" stroke-width="3" fill="none" />
-                    }
 
                     <!-- Flowing Dots -->
                     <circle id="dot-client-controller" r="5" fill="#38bdf8" opacity="0"><animateMotion dur="1.2s" repeatCount="indefinite" path="M 130 120 L 210 120" /></circle>
                     <circle id="dot-controller-sql" r="5" fill="#60a5fa" opacity="0"><animateMotion dur="1.2s" repeatCount="indefinite" path="M 330 100 C 370 60, 390 40, 450 40" /></circle>
                     <circle id="dot-controller-flat" r="5" fill="#34d399" opacity="0"><animateMotion dur="1.2s" repeatCount="indefinite" path="M 330 120 L 450 120" /></circle>
                     <circle id="dot-controller-cache" r="5" fill="#fbbf24" opacity="0"><animateMotion dur="1.2s" repeatCount="indefinite" path="M 330 140 C 370 180, 390 200, 450 200" /></circle>
-                    @if(useEs) {
-                        <circle id="dot-controller-es" r="5" fill="#a78bfa" opacity="0"><animateMotion dur="1.2s" repeatCount="indefinite" path="M 330 120 C 400 120, 500 120, 670 120" /></circle>
-                    }
 
                     <!-- Nodes -->
                     <!-- 1. Client -->
@@ -931,15 +869,6 @@
                         <text x="60" y="28" fill="#e2e8f0" font-family="Outfit" font-size="12" font-weight="bold" text-anchor="middle">⚡ Memory Cache</text>
                         <text x="60" y="44" fill="#fde047" font-family="Inter" font-size="9" text-anchor="middle">Ultra Hızlı RAM</text>
                     </g>
-
-                    <!-- 6. Elasticsearch -->
-                    @if(useEs) {
-                        <g id="node-es" transform="translate(650, 90)">
-                            <rect width="120" height="60" rx="8" fill="url(#grad-es)" stroke="#7c3aed" stroke-width="1.5" />
-                            <text x="60" y="28" fill="#e2e8f0" font-family="Outfit" font-size="12" font-weight="bold" text-anchor="middle">🔍 Elasticsearch</text>
-                            <text x="60" y="44" fill="#ddd6fe" font-family="Inter" font-size="9" text-anchor="middle">Full-Text Search</text>
-                        </g>
-                    }
                 </svg>
             </div>
         </div>
@@ -966,7 +895,6 @@
                             <th>Senaryo</th>
                             <th>SQL TPT</th>
                             <th>Read Model</th>
-                            <th>Elasticsearch</th>
                             <th>Memory Cache</th>
                             <th>Kayıt</th>
                             <th>Kazanan</th>
@@ -975,7 +903,7 @@
                     </thead>
                     <tbody id="historyBody">
                         <tr>
-                            <td colspan="9" class="history-empty">
+                            <td colspan="8" class="history-empty">
                                 <i class="bi bi-inbox me-1"></i> Henüz test çalıştırılmadı. Yukarıdaki butondan başlatın.
                             </td>
                         </tr>
@@ -1121,15 +1049,6 @@
                         barPercentage: 0.7,
                     },
                     {
-                        label: 'Elasticsearch (ms)',
-                        data: [],
-                        backgroundColor: 'rgba(167, 139, 250, 0.7)',
-                        borderColor: '#a78bfa',
-                        borderWidth: 1,
-                        borderRadius: 6,
-                        barPercentage: 0.7,
-                    },
-                    {
                         label: 'In-Memory Cache (ms)',
                         data: [],
                         backgroundColor: 'rgba(251, 191, 36, 0.7)',
@@ -1184,12 +1103,11 @@
             }
         });
 
-        function addToChart(label, sqlMs, sqlFlatMs, esMs, cacheMs) {
+        function addToChart(label, sqlMs, sqlFlatMs, cacheMs) {
             benchChart.data.labels.push(label);
             benchChart.data.datasets[0].data.push(sqlMs || 0);
             benchChart.data.datasets[1].data.push(sqlFlatMs || 0);
-            benchChart.data.datasets[2].data.push(esMs || 0);
-            benchChart.data.datasets[3].data.push(cacheMs || 0);
+            benchChart.data.datasets[2].data.push(cacheMs || 0);
             benchChart.update();
         }
 
@@ -1254,7 +1172,6 @@
             history.forEach(h => {
                 if (h.sqlTimeMs > 0 && h.sqlTimeMs < fastest.ms) fastest = { name: 'SQL TPT', ms: h.sqlTimeMs };
                 if (h.sqlReadModelTimeMs > 0 && h.sqlReadModelTimeMs < fastest.ms) fastest = { name: 'Read Model', ms: h.sqlReadModelTimeMs };
-                if (h.esTimeMs > 0 && h.esTimeMs < fastest.ms) fastest = { name: 'Elasticsearch', ms: h.esTimeMs };
                 if (h.cacheHotMs > 0 && h.cacheHotMs < fastest.ms) fastest = { name: 'Cache', ms: h.cacheHotMs };
             });
             document.getElementById('stat-fastestTech').textContent = fastest.name;
@@ -1279,16 +1196,14 @@
                 scenario: data.scenario,
                 sqlTimeMs: data.sqlTimeMs,
                 sqlReadModelTimeMs: data.sqlReadModelTimeMs,
-                esTimeMs: data.esTimeMs,
                 cacheHotMs: data.cacheHotMs,
-                count: data.sqlCount || data.esCount || data.cacheCount || 0,
+                count: data.sqlCount || data.cacheCount || 0,
                 time: new Date().toLocaleTimeString('tr-TR')
             };
 
             const times = [];
             if (entry.sqlTimeMs > 0) times.push({ name: 'SQL TPT', ms: entry.sqlTimeMs });
             if (entry.sqlReadModelTimeMs > 0) times.push({ name: 'Read Model', ms: entry.sqlReadModelTimeMs });
-            if (entry.esTimeMs > 0) times.push({ name: 'ES', ms: entry.esTimeMs });
             if (entry.cacheHotMs > 0) times.push({ name: 'Cache', ms: entry.cacheHotMs });
             times.sort((a, b) => a.ms - b.ms);
             entry.winner = times[0]?.name || '—';
@@ -1303,7 +1218,7 @@
         function renderHistory() {
             const body = document.getElementById('historyBody');
             if (history.length === 0) {
-                body.innerHTML = `<tr><td colspan="9" class="history-empty"><i class="bi bi-inbox me-1"></i> Henüz test çalıştırılmadı.</td></tr>`;
+                body.innerHTML = `<tr><td colspan="8" class="history-empty"><i class="bi bi-inbox me-1"></i> Henüz test çalıştırılmadı.</td></tr>`;
                 return;
             }
 
@@ -1322,7 +1237,6 @@
                     <td>${h.scenario}</td>
                     <td class="${cellClass('SQL TPT', h.sqlTimeMs)}">${fmt(h.sqlTimeMs)}</td>
                     <td class="${cellClass('Read Model', h.sqlReadModelTimeMs)}">${fmt(h.sqlReadModelTimeMs)}</td>
-                    <td class="${cellClass('ES', h.esTimeMs)}">${fmt(h.esTimeMs)}</td>
                     <td class="${cellClass('Cache', h.cacheHotMs)}">${fmt(h.cacheHotMs)}</td>
                     <td style="color: #94a3b8;">${h.count}</td>
                     <td><span class="winner-badge"><i class="bi bi-trophy-fill text-warning"></i> ${h.winner}</span></td>
@@ -1342,32 +1256,6 @@
             updateStats();
             logToConsole("Test geçmişi temizlendi.", "info");
             onScenarioChange();
-        }
-
-        async function reindex(btn) {
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<span class="bench-spinner"></span> Reindex...';
-            btn.disabled = true;
-            logToConsole("Elasticsearch veri dizini yeniden indeksleme komutu gönderildi...", "cmd");
-
-            try {
-                const resp = await fetch('/Benchmark/Reindex', { method: 'POST' });
-                const data = await resp.json();
-                if (data.success) {
-                    logToConsole(`ES Reindex tamamlandı. Süre: ${data.timeMs.toFixed(0)} ms`, "success");
-                    alert(`Reindex tamamlandı! Süre: ${data.timeMs.toFixed(0)} ms`);
-                    fetchCounts();
-                } else {
-                    logToConsole("ES Reindex başarısız: " + data.message, "warning");
-                    alert(data.message || 'Reindex başarısız');
-                }
-            } catch (err) {
-                logToConsole(`Reindex işleminde hata: ${err.message}`, "warning");
-                alert('Reindex hatası: ' + err.message);
-            }
-
-            btn.innerHTML = originalHtml;
-            btn.disabled = false;
         }
 
         async function syncReadModels(btn) {
@@ -1410,18 +1298,7 @@
         }
 
         function updateStatusUI(data) {
-            const { esCount, sqlReadModelCount, totalProductsCount } = data;
-            
-            const statusEsEl = document.getElementById('statusEs');
-            if (statusEsEl) {
-                if (esCount === 0) {
-                    statusEsEl.innerHTML = `<span class="text-danger">⚠️ İndeks Boş (0 / ${totalProductsCount})</span>`;
-                } else if (esCount !== totalProductsCount) {
-                    statusEsEl.innerHTML = `<span class="text-warning">⚠️ Eksik İndeks (${esCount} / ${totalProductsCount})</span>`;
-                } else {
-                    statusEsEl.innerHTML = `<span class="text-success">✅ İndekslendi (${esCount} / ${totalProductsCount})</span>`;
-                }
-            }
+            const { sqlReadModelCount, totalProductsCount } = data;
             
             const statusReadModelEl = document.getElementById('statusReadModel');
             if (statusReadModelEl) {
@@ -1491,7 +1368,6 @@
             const techNames = {
                 sql: 'SQL Server TPT',
                 flat: 'SQL Read Model',
-                es: 'Elasticsearch',
                 cache: 'In-Memory Cache'
             };
 
@@ -1606,7 +1482,7 @@
             }
 
             // Reset card UI
-            const techs = ['sql', 'flat', 'es', 'cache'];
+            const techs = ['sql', 'flat', 'cache'];
             techs.forEach(t => {
                 document.getElementById(`time-card-${t}`).textContent = '— ms';
                 document.getElementById(`time-card-${t}`).className = 'fs-2 fw-bold text-white mb-1';
@@ -1643,7 +1519,7 @@
             btn.innerHTML = '<span class="bench-spinner"></span> Test Ediliyor...';
             announce.classList.add('d-none');
 
-            const techs = ['sql', 'flat', 'es', 'cache'];
+            const techs = ['sql', 'flat', 'cache'];
             
             // Clear and set cards to running
             techs.forEach(t => {
@@ -1747,14 +1623,12 @@
             // Add to chart and history
             const sqlRes = lastStepData['sql'];
             const flatRes = lastStepData['flat'];
-            const esRes = lastStepData['es'];
             const cacheRes = lastStepData['cache'];
 
             addToChart(
                 scenario + (parameter ? ` (${parameter})` : ''),
                 sqlRes?.success ? sqlRes.timeMs : 0,
                 flatRes?.success ? flatRes.timeMs : 0,
-                esRes?.success ? esRes.timeMs : 0,
                 cacheRes?.success ? cacheRes.timeMs : 0
             );
 
@@ -1762,10 +1636,8 @@
                 scenario: scenario + (parameter ? ` (${parameter})` : ''),
                 sqlTimeMs: sqlRes?.success ? sqlRes.timeMs : 0,
                 sqlReadModelTimeMs: flatRes?.success ? flatRes.timeMs : 0,
-                esTimeMs: esRes?.success ? esRes.timeMs : 0,
                 cacheHotMs: cacheRes?.success ? cacheRes.timeMs : 0,
                 sqlCount: sqlRes?.success ? sqlRes.count : 0,
-                esCount: esRes?.success ? esRes.count : 0,
                 cacheCount: cacheRes?.success ? cacheRes.count : 0
             });
 
@@ -1783,7 +1655,6 @@
             const techNames = {
                 sql: 'SQL Server TPT',
                 flat: 'SQL Read Model',
-                es: 'Elasticsearch',
                 cache: 'In-Memory Cache'
             };
 

@@ -366,7 +366,7 @@
                                     <a href="/Product/Detail/@(prod.Id)-@(prod.Slug)" class="btn-icon" title="Detay" target="_blank">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <a asp-action="Edit" asp-route-id="@prod.Id" class="btn-icon info" title="Düzenle">
+                                    <a asp-action="Edit" asp-route-id="@prod.Id" asp-route-returnUrl="@Context.Request.QueryString" class="btn-icon info" title="Düzenle">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
                                     <form asp-action="Delete" asp-route-id="@prod.Id" method="post"

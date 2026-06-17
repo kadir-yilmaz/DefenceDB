@@ -4,50 +4,39 @@ using System.Text.Json.Serialization;
 using DefenceDB.BLL.Abstract;
 using DefenceDB.DAL;
 using DefenceDB.EL.Models;
-using Elastic.Clients.Elasticsearch;
-using Elastic.Clients.Elasticsearch.QueryDsl;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
-using DefenceDB.BLL.Concrete;
 
 namespace DefenceDB.WebUI.Controllers;
 
 /// <summary>
-/// TPT (SQL Server) vs CQRS Read Model vs Elasticsearch vs In-Memory Cache performans karşılaştırma dashboard'u.
-/// Adım adım, paralel olarak her bir veri erişim teknolojisini test eder.
+/// TPT (SQL Server) vs CQRS Read Model vs In-Memory Cache performans karsilastirma dashboard'u.
 /// </summary>
 public class BenchmarkController : Controller
 {
     private readonly AppDbContext _context;
-    private readonly ISearchService _searchService;
     private readonly ICacheService _cacheService;
-    private readonly IFeatureManager _featureManager;
     private readonly ILogger<BenchmarkController> _logger;
 
     public BenchmarkController(
         AppDbContext context,
-        ISearchService searchService,
         ICacheService cacheService,
-        IFeatureManager featureManager,
         ILogger<BenchmarkController> logger)
     {
         _context = context;
-        _searchService = searchService;
         _cacheService = cacheService;
-        _featureManager = featureManager;
         _logger = logger;
     }
 
     public IActionResult Index()
     {
         ViewData["Title"] = "Performans Benchmark";
-        ViewData["UseElasticsearch"] = _featureManager.UseElasticsearch;
         return View();
     }
 
     /// <summary>
-    /// Belirli bir senaryo ve teknoloji için performansı test eder.
+    /// Belirli bir senaryo ve teknoloji icin performansi test eder.
     /// </summary>
     [HttpPost]
     public async Task<IActionResult> RunBenchmarkStep(string scenario, string tech, string parameter = "")
@@ -59,11 +48,6 @@ public class BenchmarkController : Controller
 
         try
         {
-            if (tech == "es" && !_featureManager.UseElasticsearch)
-            {
-                return Json(new { success = false, errorMessage = "Elasticsearch devre dışı." });
-            }
-
             switch (scenario)
             {
                 #region 1. GetAllProducts
@@ -98,29 +82,14 @@ public class BenchmarkController : Controller
                         count = res.Count;
                         data = res;
                     }
-                    else if (tech == "es")
-                    {
-                        sqlQuery = "POST /defencedb-products/_search\n{\n  \"size\": 1000,\n  \"sort\": [ { \"createdAt\": \"desc\" } ]\n}";
-                        var sw = Stopwatch.StartNew();
-                        var res = await _searchService.GetAllProductsAsync();
-                        sw.Stop();
-                        elapsedMs = sw.Elapsed.TotalMilliseconds;
-                        count = res.Count;
-                        data = res;
-                    }
                     else if (tech == "cache")
                     {
                         var cacheKey = "benchmark:cache:GetAllProducts";
-                        // Prime cache
                         var cachedData = await _cacheService.GetAsync<List<ProductDocument>>(cacheKey);
                         if (cachedData == null)
                         {
-                            cachedData = await _searchService.GetAllProductsAsync();
-                            if (cachedData == null || cachedData.Count == 0)
-                            {
-                                var rms = await _context.ProductReadModels.AsNoTracking().OrderByDescending(p => p.CreatedAt).ToListAsync();
-                                cachedData = rms.Select(p => new ProductDocument { Id = p.Id, Name = p.Name, Slug = p.Slug, CategoryId = p.CategoryId, CategoryName = p.CategoryName, ProductType = p.ProductType, MainImageUrl = p.MainImageUrl, CreatedAt = p.CreatedAt }).ToList();
-                            }
+                            var rms = await _context.ProductReadModels.AsNoTracking().OrderByDescending(p => p.CreatedAt).ToListAsync();
+                            cachedData = rms.Select(p => new ProductDocument { Id = p.Id, Name = p.Name, Slug = p.Slug, CategoryId = p.CategoryId, CategoryName = p.CategoryName, ProductType = p.ProductType, MainImageUrl = p.MainImageUrl, CreatedAt = p.CreatedAt }).ToList();
                             await _cacheService.SetAsync(cacheKey, cachedData, TimeSpan.FromMinutes(10));
                         }
 
@@ -169,25 +138,14 @@ public class BenchmarkController : Controller
                         count = res.Count;
                         data = res;
                     }
-                    else if (tech == "es")
-                    {
-                        sqlQuery = "POST /defencedb-products/_search\n{\n  \"size\": 1000,\n  \"sort\": [ { \"createdAt\": \"desc\" } ]\n}\n// (Queryable Materialization via MapToEntity wrapper)";
-                        var sw = Stopwatch.StartNew();
-                        var docs = await _searchService.GetAllProductsAsync();
-                        var queryable = docs.Select(ProductQueryManager.MapToEntity).ToList().AsQueryable();
-                        var res = queryable.ToList();
-                        sw.Stop();
-                        elapsedMs = sw.Elapsed.TotalMilliseconds;
-                        count = res.Count;
-                        data = res;
-                    }
                     else if (tech == "cache")
                     {
                         var cacheKey = "benchmark:cache:GetProductsQueryable";
                         var cachedData = await _cacheService.GetAsync<List<ProductDocument>>(cacheKey);
                         if (cachedData == null)
                         {
-                            cachedData = await _searchService.GetAllProductsAsync();
+                            var rms = await _context.ProductReadModels.AsNoTracking().OrderByDescending(p => p.CreatedAt).ToListAsync();
+                            cachedData = rms.Select(p => new ProductDocument { Id = p.Id, Name = p.Name, Slug = p.Slug, CategoryId = p.CategoryId, CategoryName = p.CategoryName, ProductType = p.ProductType, MainImageUrl = p.MainImageUrl, CreatedAt = p.CreatedAt }).ToList();
                             await _cacheService.SetAsync(cacheKey, cachedData, TimeSpan.FromMinutes(10));
                         }
 
@@ -239,23 +197,14 @@ public class BenchmarkController : Controller
                             count = res.Count;
                             data = res;
                         }
-                        else if (tech == "es")
-                        {
-                            sqlQuery = $"POST /defencedb-products/_search\n{{\n  \"query\": {{\n    \"term\": {{\n      \"categoryId\": {catId}\n    }}\n  }}\n}}";
-                            var sw = Stopwatch.StartNew();
-                            var res = await _searchService.GetProductsByCategoryAsync(catId);
-                            sw.Stop();
-                            elapsedMs = sw.Elapsed.TotalMilliseconds;
-                            count = res.Count;
-                            data = res;
-                        }
                         else if (tech == "cache")
                         {
                             var cacheKey = $"benchmark:cache:category:{catId}";
                             var cachedData = await _cacheService.GetAsync<List<ProductDocument>>(cacheKey);
                             if (cachedData == null)
                             {
-                                cachedData = await _searchService.GetProductsByCategoryAsync(catId);
+                                var rms = await _context.ProductReadModels.AsNoTracking().Where(p => p.CategoryId == catId).OrderBy(p => p.Name).ToListAsync();
+                                cachedData = rms.Select(p => new ProductDocument { Id = p.Id, Name = p.Name, Slug = p.Slug, CategoryId = p.CategoryId, CategoryName = p.CategoryName, ProductType = p.ProductType, MainImageUrl = p.MainImageUrl, CreatedAt = p.CreatedAt }).ToList();
                                 await _cacheService.SetAsync(cacheKey, cachedData, TimeSpan.FromMinutes(10));
                             }
 
@@ -307,21 +256,6 @@ public class BenchmarkController : Controller
                             count = res.Count;
                             data = res;
                         }
-                        else if (tech == "es")
-                        {
-                            sqlQuery = $"// Phase 1: Slug Lookup\nSELECT Id FROM Categories WHERE Slug = '{slug}'\n\n// Phase 2: ES Search\nPOST /defencedb-products/_search\n{{\n  \"query\": {{\n    \"term\": {{\n      \"categoryId\": <resolvedCategoryId>\n    }}\n  }}\n}}";
-                            var sw = Stopwatch.StartNew();
-                            var category = await _context.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.Slug == slug);
-                            List<ProductDocument> res = new();
-                            if (category != null)
-                            {
-                                res = await _searchService.GetProductsByCategoryAsync(category.Id);
-                            }
-                            sw.Stop();
-                            elapsedMs = sw.Elapsed.TotalMilliseconds;
-                            count = res.Count;
-                            data = res;
-                        }
                         else if (tech == "cache")
                         {
                             var cacheKey = $"benchmark:cache:category-slug:{slug}";
@@ -331,7 +265,8 @@ public class BenchmarkController : Controller
                                 var category = await _context.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.Slug == slug);
                                 if (category != null)
                                 {
-                                    cachedData = await _searchService.GetProductsByCategoryAsync(category.Id);
+                                    var rms = await _context.ProductReadModels.AsNoTracking().Where(p => p.CategoryId == category.Id).ToListAsync();
+                                    cachedData = rms.Select(p => new ProductDocument { Id = p.Id, Name = p.Name, Slug = p.Slug, CategoryId = p.CategoryId, CategoryName = p.CategoryName, ProductType = p.ProductType, MainImageUrl = p.MainImageUrl, CreatedAt = p.CreatedAt }).ToList();
                                 }
                                 else
                                 {
@@ -391,39 +326,15 @@ public class BenchmarkController : Controller
                             count = res != null ? 1 : 0;
                             data = res;
                         }
-                        else if (tech == "es")
-                        {
-                            sqlQuery = $"GET /defencedb-products/_doc/{prodId}";
-                            var client = HttpContext.RequestServices.GetService<ElasticsearchClient>();
-                            var sw = Stopwatch.StartNew();
-                            var response = client != null 
-                                ? await client.GetAsync<ProductDocument>(prodId.ToString(), g => g.Index("defencedb-products"))
-                                : null;
-                            var res = (response != null && response.IsValidResponse) ? response.Source : null;
-                            sw.Stop();
-                            elapsedMs = sw.Elapsed.TotalMilliseconds;
-                            count = res != null ? 1 : 0;
-                            data = res;
-                        }
                         else if (tech == "cache")
                         {
                             var cacheKey = $"benchmark:cache:product-id:{prodId}";
                             var cachedData = await _cacheService.GetAsync<ProductDocument>(cacheKey);
                             if (cachedData == null)
                             {
-                                var client = HttpContext.RequestServices.GetService<ElasticsearchClient>();
-                                if (client != null)
-                                {
-                                    var response = await client.GetAsync<ProductDocument>(prodId.ToString(), g => g.Index("defencedb-products"));
-                                    if (response.IsValidResponse && response.Source != null)
-                                        cachedData = response.Source;
-                                }
-                                if (cachedData == null)
-                                {
-                                    var flatModel = await _context.ProductReadModels.AsNoTracking().FirstOrDefaultAsync(p => p.Id == prodId);
-                                    if (flatModel != null)
-                                        cachedData = new ProductDocument { Id = flatModel.Id, Name = flatModel.Name, Slug = flatModel.Slug, CategoryId = flatModel.CategoryId, CategoryName = flatModel.CategoryName, ProductType = flatModel.ProductType, MainImageUrl = flatModel.MainImageUrl, CreatedAt = flatModel.CreatedAt };
-                                }
+                                var flatModel = await _context.ProductReadModels.AsNoTracking().FirstOrDefaultAsync(p => p.Id == prodId);
+                                if (flatModel != null)
+                                    cachedData = new ProductDocument { Id = flatModel.Id, Name = flatModel.Name, Slug = flatModel.Slug, CategoryId = flatModel.CategoryId, CategoryName = flatModel.CategoryName, ProductType = flatModel.ProductType, MainImageUrl = flatModel.MainImageUrl, CreatedAt = flatModel.CreatedAt };
                                 if (cachedData != null)
                                     await _cacheService.SetAsync(cacheKey, cachedData, TimeSpan.FromMinutes(10));
                             }
@@ -479,47 +390,15 @@ public class BenchmarkController : Controller
                             count = res != null ? 1 : 0;
                             data = res;
                         }
-                        else if (tech == "es")
-                        {
-                            sqlQuery = $"POST /defencedb-products/_search\n{{\n  \"query\": {{\n    \"term\": {{\n      \"slug.keyword\": \"{prodSlug}\"\n    }}\n  }}\n}}";
-                            var client = HttpContext.RequestServices.GetService<ElasticsearchClient>();
-                            var sw = Stopwatch.StartNew();
-                            List<ProductDocument> docs = new();
-                            if (client != null)
-                            {
-                                var response = await client.SearchAsync<ProductDocument>(s => s
-                                    .Index("defencedb-products")
-                                    .Query(q => q.Term(t => t.Field("slug.keyword").Value(prodSlug)))
-                                );
-                                docs = response.Documents.ToList();
-                            }
-                            var res = docs.FirstOrDefault();
-                            sw.Stop();
-                            elapsedMs = sw.Elapsed.TotalMilliseconds;
-                            count = res != null ? 1 : 0;
-                            data = res;
-                        }
                         else if (tech == "cache")
                         {
                             var cacheKey = $"benchmark:cache:product-slug:{prodSlug}";
                             var cachedData = await _cacheService.GetAsync<ProductDocument>(cacheKey);
                             if (cachedData == null)
                             {
-                                var client = HttpContext.RequestServices.GetService<ElasticsearchClient>();
-                                if (client != null)
-                                {
-                                    var response = await client.SearchAsync<ProductDocument>(s => s
-                                        .Index("defencedb-products")
-                                        .Query(q => q.Term(t => t.Field("slug.keyword").Value(prodSlug)))
-                                    );
-                                    cachedData = response.Documents.FirstOrDefault();
-                                }
-                                if (cachedData == null)
-                                {
-                                    var flatModel = await _context.ProductReadModels.AsNoTracking().FirstOrDefaultAsync(p => p.Slug == prodSlug);
-                                    if (flatModel != null)
-                                        cachedData = new ProductDocument { Id = flatModel.Id, Name = flatModel.Name, Slug = flatModel.Slug, CategoryId = flatModel.CategoryId, CategoryName = flatModel.CategoryName, ProductType = flatModel.ProductType, MainImageUrl = flatModel.MainImageUrl, CreatedAt = flatModel.CreatedAt };
-                                }
+                                var flatModel = await _context.ProductReadModels.AsNoTracking().FirstOrDefaultAsync(p => p.Slug == prodSlug);
+                                if (flatModel != null)
+                                    cachedData = new ProductDocument { Id = flatModel.Id, Name = flatModel.Name, Slug = flatModel.Slug, CategoryId = flatModel.CategoryId, CategoryName = flatModel.CategoryName, ProductType = flatModel.ProductType, MainImageUrl = flatModel.MainImageUrl, CreatedAt = flatModel.CreatedAt };
                                 if (cachedData != null)
                                     await _cacheService.SetAsync(cacheKey, cachedData, TimeSpan.FromMinutes(10));
                             }
@@ -574,45 +453,15 @@ public class BenchmarkController : Controller
                             count = res.Count;
                             data = res;
                         }
-                        else if (tech == "es")
-                        {
-                            sqlQuery = $"POST /defencedb-products/_search\n{{\n  \"size\": {countParam},\n  \"query\": {{\n    \"term\": {{\n      \"isActive\": true\n    }}\n  }},\n  \"sort\": [ {{ \"createdAt\": {{ \"order\": \"desc\" }} }} ]\n}}";
-                            var client = HttpContext.RequestServices.GetService<ElasticsearchClient>();
-                            var sw = Stopwatch.StartNew();
-                            List<ProductDocument> res = new();
-                            if (client != null)
-                            {
-                                var response = await client.SearchAsync<ProductDocument>(s => s
-                                    .Index("defencedb-products")
-                                    .Size(countParam)
-                                    .Query(q => q.Term(t => t.Field(f => f.IsActive).Value(true)))
-                                    .Sort(so => so.Field(f => f.CreatedAt, new FieldSort { Order = SortOrder.Desc }))
-                                );
-                                res = response.Documents.ToList();
-                            }
-                            sw.Stop();
-                            elapsedMs = sw.Elapsed.TotalMilliseconds;
-                            count = res.Count;
-                            data = res;
-                        }
                         else if (tech == "cache")
                         {
                             var cacheKey = $"benchmark:cache:recent:{countParam}";
                             var cachedData = await _cacheService.GetAsync<List<ProductDocument>>(cacheKey);
                             if (cachedData == null)
                             {
-                                var client = HttpContext.RequestServices.GetService<ElasticsearchClient>();
-                                if (client != null)
-                                {
-                                    var response = await client.SearchAsync<ProductDocument>(s => s
-                                        .Index("defencedb-products")
-                                        .Size(countParam)
-                                        .Query(q => q.Term(t => t.Field(f => f.IsActive).Value(true)))
-                                        .Sort(so => so.Field(f => f.CreatedAt, new FieldSort { Order = SortOrder.Desc }))
-                                    );
-                                    cachedData = response.Documents.ToList();
-                                    await _cacheService.SetAsync(cacheKey, cachedData, TimeSpan.FromMinutes(10));
-                                }
+                                var rms = await _context.ProductReadModels.AsNoTracking().Where(p => p.IsActive).OrderByDescending(p => p.CreatedAt).Take(countParam).ToListAsync();
+                                cachedData = rms.Select(p => new ProductDocument { Id = p.Id, Name = p.Name, Slug = p.Slug, CategoryId = p.CategoryId, CategoryName = p.CategoryName, ProductType = p.ProductType, MainImageUrl = p.MainImageUrl, CreatedAt = p.CreatedAt }).ToList();
+                                await _cacheService.SetAsync(cacheKey, cachedData, TimeSpan.FromMinutes(10));
                             }
 
                             sqlQuery = $"_cache.GetAsync<List<ProductDocument>>(\"{cacheKey}\") // RAM Lookup";
@@ -661,47 +510,15 @@ public class BenchmarkController : Controller
                         count = res.Count;
                         data = res;
                     }
-                    else if (tech == "es")
-                    {
-                        sqlQuery = "POST /defencedb-products/_search\n{\n  \"query\": {\n    \"bool\": {\n      \"filter\": [\n        { \"term\": { \"isActive\": true } },\n        { \"term\": { \"isShowcase\": true } }\n      ]\n    }\n  }\n}";
-                        var client = HttpContext.RequestServices.GetService<ElasticsearchClient>();
-                        var sw = Stopwatch.StartNew();
-                        List<ProductDocument> res = new();
-                        if (client != null)
-                        {
-                            var response = await client.SearchAsync<ProductDocument>(s => s
-                                .Index("defencedb-products")
-                                .Query(q => q.Bool(b => b.Filter(
-                                    f => f.Term(t => t.Field(p => p.IsActive).Value(true)),
-                                    f => f.Term(t => t.Field(p => p.IsShowcase).Value(true))
-                                )))
-                            );
-                            res = response.Documents.ToList();
-                        }
-                        sw.Stop();
-                        elapsedMs = sw.Elapsed.TotalMilliseconds;
-                        count = res.Count;
-                        data = res;
-                    }
                     else if (tech == "cache")
                     {
                         var cacheKey = "benchmark:cache:showcase";
                         var cachedData = await _cacheService.GetAsync<List<ProductDocument>>(cacheKey);
                         if (cachedData == null)
                         {
-                            var client = HttpContext.RequestServices.GetService<ElasticsearchClient>();
-                            if (client != null)
-                            {
-                                var response = await client.SearchAsync<ProductDocument>(s => s
-                                    .Index("defencedb-products")
-                                    .Query(q => q.Bool(b => b.Filter(
-                                        f => f.Term(t => t.Field(p => p.IsActive).Value(true)),
-                                        f => f.Term(t => t.Field(p => p.IsShowcase).Value(true))
-                                    )))
-                                );
-                                cachedData = response.Documents.ToList();
-                                await _cacheService.SetAsync(cacheKey, cachedData, TimeSpan.FromMinutes(10));
-                            }
+                            var rms = await _context.ProductReadModels.AsNoTracking().Where(p => p.IsActive && p.IsShowcase).OrderByDescending(p => p.CreatedAt).ToListAsync();
+                            cachedData = rms.Select(p => new ProductDocument { Id = p.Id, Name = p.Name, Slug = p.Slug, CategoryId = p.CategoryId, CategoryName = p.CategoryName, ProductType = p.ProductType, MainImageUrl = p.MainImageUrl, CreatedAt = p.CreatedAt }).ToList();
+                            await _cacheService.SetAsync(cacheKey, cachedData, TimeSpan.FromMinutes(10));
                         }
 
                         sqlQuery = $"_cache.GetAsync<List<ProductDocument>>(\"{cacheKey}\") // RAM Lookup";
@@ -760,23 +577,21 @@ public class BenchmarkController : Controller
                             count = res.Count;
                             data = res;
                         }
-                        else if (tech == "es")
-                        {
-                            sqlQuery = $"POST /defencedb-products/_search\n{{\n  \"size\": 20,\n  \"query\": {{\n    \"multi_match\": {{\n      \"query\": \"{searchQuery}\",\n      \"fields\": [ \"name^3\", \"description\", \"natoReportingName^2\", \"manufacturer^2\", \"categoryName\" ],\n      \"fuzziness\": \"AUTO\"\n    }}\n  }}\n}}";
-                            var sw = Stopwatch.StartNew();
-                            var res = await _searchService.SearchAsync(searchQuery, 20);
-                            sw.Stop();
-                            elapsedMs = sw.Elapsed.TotalMilliseconds;
-                            count = res.Count;
-                            data = res;
-                        }
                         else if (tech == "cache")
                         {
                             var cacheKey = $"benchmark:cache:search:{searchQuery}";
                             var cachedData = await _cacheService.GetAsync<List<ProductDocument>>(cacheKey);
                             if (cachedData == null)
                             {
-                                cachedData = await _searchService.SearchAsync(searchQuery, 20);
+                                var rms = await _context.ProductReadModels.AsNoTracking()
+                                    .Where(p => p.Name.ToLower().Contains(lower) || 
+                                                (p.Description != null && p.Description.ToLower().Contains(lower)) ||
+                                                (p.NatoReportingName != null && p.NatoReportingName.ToLower().Contains(lower)) ||
+                                                (p.Manufacturer != null && p.Manufacturer.ToLower().Contains(lower)))
+                                    .OrderBy(p => p.Name)
+                                    .Take(20)
+                                    .ToListAsync();
+                                cachedData = rms.Select(p => new ProductDocument { Id = p.Id, Name = p.Name, Slug = p.Slug, CategoryId = p.CategoryId, CategoryName = p.CategoryName, ProductType = p.ProductType, MainImageUrl = p.MainImageUrl, CreatedAt = p.CreatedAt }).ToList();
                                 await _cacheService.SetAsync(cacheKey, cachedData, TimeSpan.FromMinutes(10));
                             }
 
@@ -807,15 +622,6 @@ public class BenchmarkController : Controller
                             elapsedMs = sw.Elapsed.TotalMilliseconds;
                             count = res != null ? 1 : 0;
                             data = res;
-                        }
-                        else if (tech == "es")
-                        {
-                            sqlQuery = "N/A (Elasticsearch stores denormalized products, no separate images index)";
-                            var sw = Stopwatch.StartNew();
-                            sw.Stop();
-                            elapsedMs = sw.Elapsed.TotalMilliseconds;
-                            count = 0;
-                            data = null;
                         }
                         else if (tech == "cache")
                         {
@@ -864,7 +670,7 @@ public class BenchmarkController : Controller
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "RunBenchmarkStep hatası — Scenario: {Scenario}, Tech: {Tech}", scenario, tech);
+            _logger.LogError(ex, "RunBenchmarkStep hatasi — Scenario: {Scenario}, Tech: {Tech}", scenario, tech);
             return Json(new
             {
                 success = false,
@@ -876,26 +682,7 @@ public class BenchmarkController : Controller
     }
 
     /// <summary>
-    /// Elasticsearch'e tüm verileri yeniden indeksle
-    /// </summary>
-    [HttpPost]
-    public async Task<IActionResult> Reindex()
-    {
-        if (!_featureManager.UseElasticsearch)
-            return Json(new { success = false, message = "Elasticsearch devre dışı" });
-
-        var sw = Stopwatch.StartNew();
-        await _searchService.ReindexAllAsync();
-        sw.Stop();
-
-        var esCount = await _searchService.GetDocumentCountAsync();
-        var totalCount = await _context.DefenseProducts.CountAsync();
-
-        return Json(new { success = true, timeMs = sw.Elapsed.TotalMilliseconds, count = esCount, total = totalCount });
-    }
-
-    /// <summary>
-    /// Tüm TPT verilerini ProductReadModels (CQRS Read Model) tablosuna senkronize eder
+    /// Tum TPT verilerini ProductReadModels (CQRS Read Model) tablosuna senkronize eder
     /// </summary>
     [HttpPost]
     public async Task<IActionResult> SyncReadModels()
@@ -965,25 +752,17 @@ public class BenchmarkController : Controller
     }
 
     /// <summary>
-    /// Arama indeksleri ve SQL CQRS tablolarındaki mevcut kayıt durumlarını döner.
+    /// Read Model ve TPT tablolarindaki mevcut kayit durumlarini doner.
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> GetIndexStatus()
     {
-        int esCount = 0;
-        if (_featureManager.UseElasticsearch)
-        {
-            esCount = await _searchService.GetDocumentCountAsync();
-        }
-        
         int sqlReadModelCount = await _context.ProductReadModels.CountAsync();
         int totalProductsCount = await _context.DefenseProducts.CountAsync();
         
         return Json(new {
-            esCount = esCount,
             sqlReadModelCount = sqlReadModelCount,
-            totalProductsCount = totalProductsCount,
-            useElasticsearch = _featureManager.UseElasticsearch
+            totalProductsCount = totalProductsCount
         });
     }
 }

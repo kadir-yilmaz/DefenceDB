@@ -7,12 +7,12 @@ using DefenceDB.BLL.Concrete;
 using DefenceDB.DAL.Seed;
 using NToastNotify;
 using DefenceDB.WebUI.Services;
-using Elastic.Clients.Elasticsearch;
-using Elastic.Transport;
 
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.DataProtection;
 using DefenceDB.WebUI.Middleware;
+using System.Reflection;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,50 +32,20 @@ builder.Services.Configure<FormOptions>(options =>
     options.MultipartBodyLengthLimit = 104_857_600;
 });
 
-// ── Feature Toggle Manager ──────────────────────────────────────
-builder.Services.AddSingleton<IFeatureManager, FeatureManager>();
-var featureManager = new FeatureManager(builder.Configuration);
-
 // ── Caching (In-Memory) ──────────────────────────────────────────
 builder.Services.AddSingleton<ICacheService, MemoryCacheService>();
 
 builder.Services.AddScoped<IImageProcessingService, ImageProcessingService>();
 builder.Services.AddScoped<IProductFormMapper, ProductFormMapper>();
 
-// ── Search (Elasticsearch veya SQL Fallback) ────────────────────
-if (featureManager.UseElasticsearch)
-{
-    var esUrl = builder.Configuration.GetConnectionString("Elasticsearch") ?? "http://localhost:9200";
-    var settings = new ElasticsearchClientSettings(new Uri(esUrl))
-        .DefaultIndex("defencedb-products")
-        .DisableDirectStreaming()
-        .RequestTimeout(TimeSpan.FromSeconds(30));
-    
-    builder.Services.AddSingleton(new ElasticsearchClient(settings));
-    builder.Services.AddScoped<ISearchService, ElasticsearchService>();
-}
-else
-{
-    builder.Services.AddScoped<ISearchService, SqlFallbackSearchService>();
-}
-
-// ── EF Core Sync Interceptor ────────────────────────────────────
-builder.Services.AddSingleton<ElasticSyncInterceptor>();
-
 // Add DbContext
 var connectionString = builder.Configuration.GetConnectionString("sqlConnection") 
     ?? throw new InvalidOperationException("Connection string 'sqlConnection' not found.");
+builder.Services.AddSingleton<ReadModelCacheInterceptor>();
 builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
 {
     options.UseSqlServer(connectionString);
-    
-    // Interceptor'ı sadece feature aktifse ekle
-    var fm = serviceProvider.GetService<IFeatureManager>();
-    if (fm is not null)
-    {
-        var interceptor = serviceProvider.GetRequiredService<ElasticSyncInterceptor>();
-        options.AddInterceptors(interceptor);
-    }
+    options.AddInterceptors(serviceProvider.GetRequiredService<ReadModelCacheInterceptor>());
 });
 
 // Add Identity
@@ -128,9 +98,10 @@ builder.Services.AddAuthorization(options =>
 });
 
 // Register Services
-builder.Services.AddScoped<ICategoryService, CategoryService>();
-builder.Services.AddScoped<IProductQueryService, ProductQueryManager>();
-builder.Services.AddScoped<IProductCommandService, ProductCommandManager>();
+builder.Services.AddScoped<ICategoryQueryService, CategoryQueryService>();
+builder.Services.AddScoped<ICategoryCommandService, CategoryCommandService>();
+builder.Services.AddScoped<IProductQueryService, ProductQueryService>();
+builder.Services.AddScoped<IProductCommandService, ProductCommandService>();
 builder.Services.AddScoped<INotificationService, ToastNotificationService>();
 builder.Services.AddScoped<IVisitorService, VisitorService>();
 
@@ -159,14 +130,7 @@ using (var scope = app.Services.CreateScope())
         await context.Database.MigrateAsync();
 
         await SeedData.InitializeAsync(services, builder.Configuration);
-
-        // Elasticsearch ilk indeksleme (feature aktifse)
-        var fm = services.GetService<IFeatureManager>();
-        if (fm is not null && fm.UseElasticsearch)
-        {
-            var searchService = services.GetRequiredService<ISearchService>();
-            await searchService.ReindexAllAsync();
-        }
+        await EnsureReadModelsSyncedAsync(context);
     }
     catch (Exception ex)
     {
@@ -243,3 +207,56 @@ app.MapGet("/debug/files", (IWebHostEnvironment env) =>
 });
 
 app.Run();
+
+static async Task EnsureReadModelsSyncedAsync(AppDbContext context)
+{
+    await context.Database.ExecuteSqlRawAsync("DELETE FROM ProductReadModels");
+
+    var products = await context.DefenseProducts
+        .AsNoTracking()
+        .Include(p => p.Category)
+        .Include(p => p.Images)
+        .ToListAsync();
+
+    var baseProperties = typeof(DefenseProduct)
+        .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+        .Select(p => p.Name)
+        .ToHashSet();
+
+    var readModels = products.Select(product =>
+    {
+        var specificProperties = product.GetType()
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(p => !baseProperties.Contains(p.Name))
+            .ToDictionary(p => p.Name, p => p.GetValue(product));
+
+        return new ProductReadModel
+        {
+            Id = product.Id,
+            Name = product.Name,
+            Slug = product.Slug,
+            NatoReportingName = product.NatoReportingName,
+            Description = product.Description,
+            Country = product.Country,
+            Manufacturer = product.Manufacturer,
+            YearIntroduced = product.YearIntroduced,
+            ThumbnailUrl = product.ThumbnailUrl,
+            Status = product.Status,
+            IsActive = product.IsActive,
+            IsShowcase = product.IsShowcase,
+            VideoUrl = product.VideoUrl,
+            CategoryId = product.CategoryId,
+            CategoryName = product.Category?.Name ?? "",
+            CategorySlug = product.Category?.Slug ?? "",
+            ProductType = product.GetType().Name,
+            MainImageUrl = product.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath
+                           ?? product.Images?.FirstOrDefault()?.ImagePath,
+            SpecificPropertiesJson = JsonSerializer.Serialize(specificProperties),
+            CreatedAt = product.CreatedAt,
+            UpdatedAt = product.UpdatedAt
+        };
+    }).ToList();
+
+    await context.ProductReadModels.AddRangeAsync(readModels);
+    await context.SaveChangesAsync();
+}

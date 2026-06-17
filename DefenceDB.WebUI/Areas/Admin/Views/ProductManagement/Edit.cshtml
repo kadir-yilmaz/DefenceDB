@@ -16,6 +16,7 @@
         <input type="hidden" name="ModelTypeFullName" value="@Model.GetType().FullName" />
         <input type="hidden" asp-for="Id" />
         <input type="hidden" asp-for="CategoryId" />
+        <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
 
         <div class="row">
             <!-- Temel Özellikler -->

@@ -1,4 +1,4 @@
-@inject DefenceDB.BLL.Abstract.ICategoryService CategoryService
+@inject DefenceDB.BLL.Abstract.ICategoryQueryService CategoryService
 @{
     var rootCategories = await CategoryService.GetCategoriesWithChildrenAsync();
 }

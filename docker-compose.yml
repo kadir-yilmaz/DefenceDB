@@ -1,5 +1,32 @@
 # DefenceDB — Docker Compose Configuration
 # Usage: docker-compose up -d
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: defencedb-app
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__sqlConnection=${SQL_CONNECTION_STRING}
+    restart: unless-stopped
+    networks:
+      - defencedb-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  defencedb-network:
+    driver: bridge
+# DefenceDB — Docker Compose Configuration
+# Usage: docker-compose up -d
 # Includes the .NET app, Elasticsearch, and Kibana
 
 services:

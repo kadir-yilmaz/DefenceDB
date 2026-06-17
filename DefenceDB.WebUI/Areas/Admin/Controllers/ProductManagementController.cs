@@ -1,12 +1,12 @@
 
+using System.Reflection;
+using DefenceDB.EL.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using DefenceDB.BLL.Abstract;
 using DefenceDB.EL.Models;
 using DefenceDB.EL.Extensions;
-using DefenceDB.EL.Extensions;
 using DefenceDB.WebUI.Services;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace DefenceDB.WebUI.Areas.Admin.Controllers;
@@ -17,7 +17,7 @@ public class ProductManagementController : Controller
 {
     private readonly IProductQueryService _productQueryService;
     private readonly IProductCommandService _productCommandService;
-    private readonly ICategoryService _categoryService;
+    private readonly ICategoryQueryService _categoryQueryService;
     private readonly INotificationService _notificationService;
     private readonly IProductFormMapper _formMapper;
     private readonly IImageProcessingService _imageService;
@@ -25,14 +25,14 @@ public class ProductManagementController : Controller
     public ProductManagementController(
         IProductQueryService productQueryService, 
         IProductCommandService productCommandService,
-        ICategoryService categoryService, 
+        ICategoryQueryService categoryQueryService, 
         INotificationService notificationService,
         IProductFormMapper formMapper,
         IImageProcessingService imageService)
     {
         _productQueryService = productQueryService;
         _productCommandService = productCommandService;
-        _categoryService = categoryService;
+        _categoryQueryService = categoryQueryService;
         _notificationService = notificationService;
         _formMapper = formMapper;
         _imageService = imageService;
@@ -46,7 +46,7 @@ public class ProductManagementController : Controller
 
         if (categoryId.HasValue)
         {
-            currentCategory = await _categoryService.GetCategoryWithSubCategoriesAsync(categoryId.Value);
+            currentCategory = await _categoryQueryService.GetCategoryWithSubCategoriesAsync(categoryId.Value);
 
             if (currentCategory != null)
             {
@@ -93,7 +93,7 @@ public class ProductManagementController : Controller
         ViewBag.CurrentPage = page;
         ViewBag.TotalPages = totalPages;
 
-        ViewBag.Categories = await _categoryService.GetCategoriesWithChildrenAsync();
+        ViewBag.Categories = await _categoryQueryService.GetCategoriesWithChildrenAsync();
 
         // Ülke listesinin JSON dosyasından okunması
         var jsonPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "data", "countries.json");
@@ -117,27 +117,68 @@ public class ProductManagementController : Controller
     [HttpGet]
     public async Task<IActionResult> Create(int? categoryId)
     {
-        if (categoryId == null)
-        {
-            var categories = await _categoryService.GetCategoriesWithChildrenAsync();
-            return View("SelectCategory", categories);
-        }
+        // Kategorileri dropdown icin hazirla
+        ViewBag.Categories = await _categoryQueryService.GetCategoriesWithChildrenAsync();
+        ViewBag.AllProducts = await _productQueryService.GetAllProductsAsync();
+        ViewBag.PreselectedCategoryId = categoryId;
+        return View("Create");
+    }
 
-        var category = await _categoryService.GetCategoryByIdAsync(categoryId.Value);
+    [HttpGet]
+    public async Task<IActionResult> GetCategoryAttributes(int categoryId)
+    {
+        var category = await _categoryQueryService.GetCategoryByIdAsync(categoryId);
         if (category == null) return NotFound();
 
         Type modelType = GetTypeFromCategory(category);
-        if (modelType == null)
-        {
-            _notificationService.Error("Bu kategoriye eşleşen C# model tipi bulunamadı.", "Hata");
-            return RedirectToAction(nameof(Index));
-        }
+        if (modelType == null) return Json(new { error = "Model tipi bulunamadi" });
 
-        var instance = Activator.CreateInstance(modelType) as DefenseProduct;
-        instance.CategoryId = categoryId.Value;
-        
-        ViewBag.AllProducts = await _productQueryService.GetAllProductsAsync();
-        return View("Create", instance);
+        var baseProperties = typeof(DefenseProduct)
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Select(p => p.Name)
+            .ToHashSet();
+
+        var attributes = modelType
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(p => !baseProperties.Contains(p.Name))
+            .Select(p => {
+                var underlyingType = Nullable.GetUnderlyingType(p.PropertyType) ?? p.PropertyType;
+                string kind = ResolveAttributeKind(p.Name, underlyingType, p.PropertyType);
+                List<string> enumValues = null;
+                if (kind == "enum" && underlyingType.IsEnum)
+                {
+                    enumValues = Enum.GetNames(underlyingType).ToList();
+                }
+                return new {
+                    name = p.Name,
+                    displayName = LocalizationHelper.GetDisplayName(p.Name, "tr"),
+                    type = p.PropertyType.Name,
+                    kind,
+                    enumValues
+                };
+            })
+            .ToList();
+
+        return Json(new { modelTypeName = modelType.FullName, attributes });
+    }
+
+    private static string ResolveAttributeKind(string propName, Type underlyingType, Type fullType)
+    {
+        // Ozel isimli alanlar
+        return propName switch
+        {
+            "GuidanceType" => "GuidanceType",
+            "FoxCode" => "FoxCode",
+            "FrequencyBand" => "FrequencyBand",
+            "CoolingSystem" => "CoolingSystem",
+            "BallisticType" => "BallisticType",
+            "FighterGeneration" => "FighterGeneration",
+            _ when underlyingType.IsEnum => "enum",
+            _ when underlyingType == typeof(bool) => "bool",
+            _ when underlyingType == typeof(int) || underlyingType == typeof(byte) => "int",
+            _ when underlyingType == typeof(double) || underlyingType == typeof(decimal) => "number",
+            _ => "text"
+        };
     }
 
     [HttpPost]
@@ -197,7 +238,7 @@ public class ProductManagementController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Edit(int id)
+    public async Task<IActionResult> Edit(int id, string? returnUrl = null)
     {
         // Debug için log
         Console.WriteLine($"Edit GET called with id: {id}");
@@ -218,6 +259,7 @@ public class ProductManagementController : Controller
 
         Console.WriteLine($"Product found: {product.Name}");
         ViewBag.AllProducts = await _productQueryService.GetAllProductsAsync();
+        ViewBag.ReturnUrl = returnUrl;
         return View("Edit", product);
     }
 
@@ -274,6 +316,16 @@ public class ProductManagementController : Controller
         }
 
         _notificationService.Success("Ürün başarıyla güncellendi.", "Başarılı");
+
+        // Filtre parametrelerini koruyarak geri dön
+        if (form.TryGetValue("returnUrl", out var returnUrlValues) && !string.IsNullOrEmpty(returnUrlValues.FirstOrDefault()))
+        {
+            var returnUrl = returnUrlValues.First();
+            // returnUrl query string formatinda olmali (?categoryId=5&country=Turkey gibi)
+            if (returnUrl.StartsWith("?"))
+                return LocalRedirect("~/Admin/ProductManagement" + returnUrl);
+        }
+
         return RedirectToAction(nameof(Index), new { categoryId = instance.CategoryId });
     }
 

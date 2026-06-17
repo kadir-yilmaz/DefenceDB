@@ -8,12 +8,12 @@ namespace DefenceDB.WebUI.Controllers;
 public class ProductController : Controller
 {
     private readonly IProductQueryService _productQueryService;
-    private readonly ICategoryService _categoryService;
+    private readonly ICategoryQueryService _categoryQueryService;
 
-    public ProductController(IProductQueryService productQueryService, ICategoryService categoryService)
+    public ProductController(IProductQueryService productQueryService, ICategoryQueryService categoryQueryService)
     {
         _productQueryService = productQueryService;
-        _categoryService = categoryService;
+        _categoryQueryService = categoryQueryService;
     }
 
     public async Task<IActionResult> Index(string? categorySlug, string? country, string? search, int page = 1)
@@ -31,7 +31,7 @@ public class ProductController : Controller
         Category currentCategory = null;
         if (!string.IsNullOrEmpty(categorySlug))
         {
-            currentCategory = await _categoryService.GetCategoryBySlugAsync(categorySlug);
+            currentCategory = await _categoryQueryService.GetCategoryBySlugAsync(categorySlug);
             if (currentCategory != null)
             {
                 ViewBag.CurrentCategory = currentCategory;
@@ -76,7 +76,7 @@ public class ProductController : Controller
         }
 
         // 4. Sabit görünümleri doldur
-        ViewBag.Categories = await _categoryService.GetCategoriesWithChildrenAsync();
+        ViewBag.Categories = await _categoryQueryService.GetCategoriesWithChildrenAsync();
 
         var jsonPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "data", "countries.json");
         try
