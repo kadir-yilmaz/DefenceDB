@@ -92,6 +92,10 @@ public class ProductFormMapper : IProductFormMapper
                     {
                         convertedValue = int.Parse(valueStr!);
                     }
+                    else if (prop.PropertyType == typeof(byte) || prop.PropertyType == typeof(byte?))
+                    {
+                        convertedValue = byte.Parse(valueStr!);
+                    }
                     else if (prop.PropertyType == typeof(double) || prop.PropertyType == typeof(double?))
                     {
                         convertedValue = double.Parse(valueStr!, System.Globalization.CultureInfo.InvariantCulture);

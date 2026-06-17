@@ -65,18 +65,20 @@
                 else if (prop.Name == "FoxCode")
                 {
                     string[] availableFoxes = new[] { "1", "2", "3" };
-                    var currentVals = Context.Request.Query[prop.Name].ToArray();
-                    
-                    <div class="d-flex flex-column gap-2 mt-2">
+                    <select name="@prop.Name" class="form-select form-select-sm bg-theme text-primary-theme border-theme" onchange="sessionStorage.setItem('filterScroll', window.scrollY); this.form.submit()">
+                        <option value="">Tümü</option>
                         @foreach(var fox in availableFoxes)
                         {
-                            bool isChecked = currentVals.Contains(fox);
-                            <div class="form-check custom-checkbox">
-                                <input class="form-check-input border-theme" type="checkbox" name="@prop.Name" value="@fox" id="filter_fox_@fox" @(isChecked ? "checked" : "") onchange="sessionStorage.setItem('filterScroll', window.scrollY); this.form.submit()">
-                                <label class="form-check-label text-primary-theme fw-bold small text-danger" for="filter_fox_@fox">Fox @fox</label>
-                            </div>
+                            if (currentVal == fox)
+                            {
+                                <option value="@fox" selected>Fox @fox</option>
+                            }
+                            else
+                            {
+                                <option value="@fox">Fox @fox</option>
+                            }
                         }
-                    </div>
+                    </select>
                 }
                 else if (prop.Name == "BallisticType")
                 {

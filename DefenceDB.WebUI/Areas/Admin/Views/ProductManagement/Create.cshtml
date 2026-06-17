@@ -139,18 +139,13 @@
                                 }
                                 else if (prop.Name == "FoxCode")
                                 {
-                                    string[] availableFoxes = new[] { "1", "2", "3" };
-                                    
-                                    <div class="d-flex flex-wrap gap-3 mb-2">
-                                        @foreach(var fox in availableFoxes)
+                                    <select name="FoxCode" class="form-select">
+                                        <option value="">-- Seçin --</option>
+                                        @for (byte fox = 1; fox <= 3; fox++)
                                         {
-                                            <div class="form-check custom-checkbox">
-                                                <input class="form-check-input fox-checkbox" type="checkbox" value="@fox" id="fox_@fox">
-                                                <label class="form-check-label fw-bold text-danger" for="fox_@fox">Fox @fox</label>
-                                            </div>
+                                            <option value="@fox">Fox @fox</option>
                                         }
-                                    </div>
-                                    <input type="hidden" name="FoxCode" id="FoxCodeHidden" />
+                                    </select>
                                 }
                                 else if (prop.Name == "BallisticType")
                                 {
@@ -739,14 +734,6 @@
                     $('#GuidanceTypeHidden').val(selected.join(' / '));
                 }
 
-                if ($('.fox-checkbox').length > 0) {
-                    var selectedFoxes = [];
-                    $('.fox-checkbox:checked').each(function() {
-                        selectedFoxes.push($(this).val());
-                    });
-                    $('#FoxCodeHidden').val(selectedFoxes.join(' / '));
-                }
-                
                 if ($('.freq-checkbox').length > 0) {
                     var selectedFreqs = [];
                     $('.freq-checkbox:checked').each(function() {

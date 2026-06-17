@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Globalization;
 using System.Text.Json;
 using DefenceDB.BLL.Abstract;
 using DefenceDB.DAL;
@@ -88,14 +89,12 @@ public class ProductQueryManager : IProductQueryService
                     var key = filter.Key;
                     if (key == "ParentCategorySlugs") continue;
 
-                    var filterValues = filter.Value.Select(v => v.ToLower()).ToList();
-
                     enumerableQuery = enumerableQuery.Where(d => {
                         if (d.SpecificProperties == null) return false;
 
                         if (d.SpecificProperties.TryGetValue(key, out var val) && val != null)
                         {
-                            return filterValues.Any(v => val.ToString()!.ToLower().Contains(v));
+                            return MatchesFilterValue(val, filter.Value);
                         }
 
                         return false;
@@ -162,14 +161,12 @@ public class ProductQueryManager : IProductQueryService
                 var key = filter.Key;
                 if (key == "ParentCategorySlugs") continue;
 
-                var filterValues = filter.Value.Select(v => v.ToLower()).ToList();
-
                 memoryList = memoryList.Where(p => {
                     var propInfo = p.GetType().GetProperty(key);
                     if (propInfo == null) return false;
                     var propValue = propInfo.GetValue(p);
                     if (propValue == null) return false;
-                    return filterValues.Any(v => propValue.ToString()!.ToLower().Contains(v));
+                    return MatchesFilterValue(propValue, filter.Value);
                 }).ToList();
             }
 
@@ -247,6 +244,8 @@ public class ProductQueryManager : IProductQueryService
                         object? typedVal = null;
                         if (prop.PropertyType == typeof(string))
                             typedVal = jsonEl.GetString();
+                        else if (prop.PropertyType == typeof(byte) || prop.PropertyType == typeof(byte?))
+                            typedVal = jsonEl.GetByte();
                         else if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(int?))
                             typedVal = jsonEl.GetInt32();
                         else if (prop.PropertyType == typeof(double) || prop.PropertyType == typeof(double?))
@@ -279,6 +278,62 @@ public class ProductQueryManager : IProductQueryService
         }
 
         return product;
+    }
+
+    private static bool MatchesFilterValue(object value, IEnumerable<string> rawFilterValues)
+    {
+        var filterValues = rawFilterValues
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .Select(v => v.Trim())
+            .ToList();
+
+        if (!filterValues.Any())
+            return true;
+
+        if (value is JsonElement jsonElement)
+            return MatchesJsonElement(jsonElement, filterValues);
+
+        if (IsNumericValue(value))
+        {
+            var numericValue = Convert.ToDecimal(value, CultureInfo.InvariantCulture);
+            return filterValues.Any(filter =>
+                decimal.TryParse(filter, NumberStyles.Number, CultureInfo.InvariantCulture, out var numericFilter) &&
+                numericValue == numericFilter);
+        }
+
+        if (value is bool boolValue)
+        {
+            return filterValues.Any(filter =>
+                bool.TryParse(filter, out var boolFilter) &&
+                boolValue == boolFilter);
+        }
+
+        var stringValue = value.ToString();
+        return !string.IsNullOrWhiteSpace(stringValue) &&
+               filterValues.Any(filter => stringValue.Contains(filter, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool MatchesJsonElement(JsonElement jsonElement, IReadOnlyCollection<string> filterValues)
+    {
+        return jsonElement.ValueKind switch
+        {
+            JsonValueKind.Number => jsonElement.TryGetDecimal(out var numericValue) &&
+                                    filterValues.Any(filter =>
+                                        decimal.TryParse(filter, NumberStyles.Number, CultureInfo.InvariantCulture, out var numericFilter) &&
+                                        numericValue == numericFilter),
+            JsonValueKind.True => filterValues.Any(filter =>
+                bool.TryParse(filter, out var boolFilter) && boolFilter),
+            JsonValueKind.False => filterValues.Any(filter =>
+                bool.TryParse(filter, out var boolFilter) && !boolFilter),
+            JsonValueKind.String => filterValues.Any(filter =>
+                (jsonElement.GetString() ?? string.Empty).Contains(filter, StringComparison.OrdinalIgnoreCase)),
+            _ => filterValues.Any(filter => jsonElement.ToString().Contains(filter, StringComparison.OrdinalIgnoreCase))
+        };
+    }
+
+    private static bool IsNumericValue(object value)
+    {
+        return value is byte or sbyte or short or ushort or int or uint or long or ulong or float or double or decimal;
     }
 
     public async Task<List<DefenseProduct>> GetAllProductsAsync()

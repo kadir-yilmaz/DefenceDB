@@ -701,6 +701,10 @@
                                         <div class="spec-value">-</div>
                                     }
                                 }
+                                else if (prop.Name == "FoxCode" && value is byte foxCode)
+                                {
+                                    <div class="spec-value fw-bold text-danger">Fox @foxCode</div>
+                                }
                                 else if (prop.PropertyType.IsEnum || (Nullable.GetUnderlyingType(prop.PropertyType)?.IsEnum == true))
                                 {
                                     <div class="spec-value">@(value != null ? DefenceDB.EL.Helpers.LocalizationHelper.GetDisplayName(value.ToString(), "tr") : "-")</div>

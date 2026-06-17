@@ -186,20 +186,21 @@
                                 }
                                 else if (prop.Name == "FoxCode")
                                 {
-                                    string[] availableFoxes = new[] { "1", "2", "3" };
-                                    var currentValStr = (propValue?.ToString() ?? "");
-                                    
-                                    <div class="d-flex flex-wrap gap-3 mb-2">
-                                        @foreach(var fox in availableFoxes)
+                                    var currentFox = propValue?.ToString() ?? "";
+                                    <select name="FoxCode" class="form-select">
+                                        <option value="">-- Seçin --</option>
+                                        @for (byte fox = 1; fox <= 3; fox++)
                                         {
-                                            bool isChecked = currentValStr.Contains(fox);
-                                            <div class="form-check custom-checkbox">
-                                                <input class="form-check-input fox-checkbox" type="checkbox" value="@fox" id="fox_@fox" @(isChecked ? "checked" : "")>
-                                                <label class="form-check-label fw-bold text-danger" for="fox_@fox">Fox @fox</label>
-                                            </div>
+                                            if (currentFox == fox.ToString())
+                                            {
+                                                <option value="@fox" selected>Fox @fox</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@fox">Fox @fox</option>
+                                            }
                                         }
-                                    </div>
-                                    <input type="hidden" name="FoxCode" id="FoxCodeHidden" value="@currentValStr" />
+                                    </select>
                                 }
                                 else if (prop.Name == "BallisticType")
                                 {
@@ -1039,14 +1040,6 @@
                         selected.push($(this).next('label').text().trim());
                     });
                     $('#GuidanceTypeHidden').val(selected.join(' / '));
-                }
-
-                if ($('.fox-checkbox').length > 0) {
-                    var selectedFoxes = [];
-                    $('.fox-checkbox:checked').each(function() {
-                        selectedFoxes.push($(this).val());
-                    });
-                    $('#FoxCodeHidden').val(selectedFoxes.join(' / '));
                 }
 
                 if ($('.freq-checkbox').length > 0) {
