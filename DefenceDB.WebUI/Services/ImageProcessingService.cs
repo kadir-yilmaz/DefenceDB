@@ -177,25 +177,50 @@ public class ImageProcessingService : IImageProcessingService
 
         int limit = Math.Min(files.Count, maxImages);
 
+        // Process images in parallel for better throughput
+        var tasks = new List<Task<string?>>();
         for (int i = 0; i < limit; i++)
         {
             var file = files[i];
             if (file.Length > 0 && file.ContentType.StartsWith("image/"))
             {
-                string uniqueFileName = await ProcessAndSaveImageAsync(file, slug);
-                // URL formatını ekle
-                if (_useLocalStorage)
-                {
-                    uploadedPaths.Add($"/images/products/{uniqueFileName}");
-                }
-                else
-                {
-                    uploadedPaths.Add($"{_publicUrl}/products/{uniqueFileName}");
-                }
+                tasks.Add(ProcessSingleImageWithUrlAsync(file, slug));
             }
         }
 
+        var results = await Task.WhenAll(tasks);
+        foreach (var path in results)
+        {
+            if (path != null)
+                uploadedPaths.Add(path);
+        }
+
         return uploadedPaths;
+    }
+
+    /// <summary>
+    /// Processes a single image and returns its full URL path.
+    /// Wrapper for parallel execution.
+    /// </summary>
+    private async Task<string?> ProcessSingleImageWithUrlAsync(IFormFile file, string slug)
+    {
+        try
+        {
+            string uniqueFileName = await ProcessAndSaveImageAsync(file, slug);
+            if (_useLocalStorage)
+            {
+                return $"/images/products/{uniqueFileName}";
+            }
+            else
+            {
+                return $"{_publicUrl}/products/{uniqueFileName}";
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to process image for slug: {Slug}", slug);
+            return null;
+        }
     }
 
     public async Task DeleteImageAsync(string imagePath)

@@ -33,6 +33,7 @@ builder.Services.Configure<FormOptions>(options =>
 });
 
 // ── Caching (In-Memory) ──────────────────────────────────────────
+builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<ICacheService, MemoryCacheService>();
 
 builder.Services.AddScoped<IImageProcessingService, ImageProcessingService>();
@@ -210,12 +211,44 @@ app.Run();
 
 static async Task EnsureReadModelsSyncedAsync(AppDbContext context)
 {
-    await context.Database.ExecuteSqlRawAsync("DELETE FROM ProductReadModels");
+    // Only sync products that are missing or stale in the ReadModel (incremental sync).
+    // This avoids the costly DELETE + full re-INSERT on every startup.
+    var existingIds = (await context.ProductReadModels
+        .AsNoTracking()
+        .Select(r => r.Id)
+        .ToListAsync()).ToHashSet();
 
+    var allProductIds = await context.DefenseProducts
+        .AsNoTracking()
+        .Select(p => p.Id)
+        .ToListAsync();
+
+    var missingIds = allProductIds.Where(id => !existingIds.Contains(id)).ToList();
+
+    if (missingIds.Count == 0 && existingIds.Count == allProductIds.Count)
+    {
+        // ReadModel is already in sync — skip entirely
+        return;
+    }
+
+    // If there are stale entries (products deleted but ReadModel still has them), clean up
+    var staleIds = existingIds.Where(id => !allProductIds.Contains(id)).ToList();
+    if (staleIds.Count > 0)
+    {
+        var staleReadModels = context.ProductReadModels.Where(r => staleIds.Contains(r.Id));
+        context.ProductReadModels.RemoveRange(staleReadModels);
+        await context.SaveChangesAsync();
+    }
+
+    if (missingIds.Count == 0)
+        return;
+
+    // Only load and sync the missing products
     var products = await context.DefenseProducts
         .AsNoTracking()
         .Include(p => p.Category)
         .Include(p => p.Images)
+        .Where(p => missingIds.Contains(p.Id))
         .ToListAsync();
 
     var baseProperties = typeof(DefenseProduct)

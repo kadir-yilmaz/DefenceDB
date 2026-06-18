@@ -1,4 +1,7 @@
 @model List<DefenseProduct>
+@{
+    var productCounts = ViewBag.CategoryCounts as Dictionary<int, int> ?? new Dictionary<int, int>();
+}
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -13,120 +16,7 @@
         <i class="bi bi-plus-circle-fill"></i> Yeni Ürün Ekle
     </a>
 </div>
-
-<style>
-    .admin-filter-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 16px;
-        background-color: var(--admin-surface);
-        border: 1px solid var(--admin-border);
-        color: var(--admin-text-secondary);
-        text-decoration: none;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 500;
-        transition: all 0.2s ease;
-        white-space: nowrap;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-
-        .admin-filter-pill:hover {
-            background-color: var(--admin-accent-glow);
-            border-color: var(--admin-accent);
-            color: var(--admin-accent);
-        }
-
-        .admin-filter-pill.active {
-            background-color: var(--admin-accent) !important;
-            border-color: var(--admin-accent) !important;
-            color: #ffffff !important;
-            font-weight: 600;
-        }
-
-    .admin-filter-select {
-        min-width: 210px;
-        height: 42px;
-        padding: 0 38px 0 14px;
-        border: 1px solid var(--admin-border);
-        border-radius: 20px;
-    }
-
-    .admin-pagination-wrapper {
-        display: flex;
-        justify-content: center;
-        margin-top: 1.5rem;
-        padding: 0.75rem;
-        background: var(--admin-surface);
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-    }
-
-    .admin-pagination {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        margin: 0;
-        padding: 0;
-        list-style: none;
-    }
-
-        .admin-pagination .page-link-custom {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 32px;
-            height: 36px;
-            padding: 0 10px;
-            border-radius: 8px;
-            background: rgba(99, 102, 241, 0.1);
-            color: #6366f1;
-            font-weight: 600;
-            font-size: 0.9rem;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            border: none;
-        }
-
-            .admin-pagination .page-link-custom:hover {
-                background: rgba(99, 102, 241, 0.2);
-                color: #4f46e5;
-            }
-
-        .admin-pagination .active .page-link-custom {
-            background: #4f46e5;
-            color: white;
-            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
-        }
-
-        .admin-pagination .disabled .page-link-custom {
-            background: transparent;
-            color: #a1a1aa;
-            cursor: not-allowed;
-        }
-
-        .admin-pagination .page-link-text {
-            background: transparent;
-            color: #4f46e5;
-            padding: 0 12px;
-        }
-
-            .admin-pagination .page-link-text:hover {
-                background: rgba(99, 102, 241, 0.05);
-            }
-
-        .admin-pagination .ellipsis {
-            color: #8b5cf6;
-            padding: 0 4px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            display: flex;
-            align-items: center;
-            height: 100%;
-        }
-</style>
-
+<link rel="stylesheet" href="~/css/admin-product-list.css" asp-append-version="true" />
 @{
     var selectedId = ViewBag.SelectedCategoryId as int?;
     var selectedCountry = ViewBag.CurrentCountry as string;
@@ -202,7 +92,7 @@
                 <li><hr class="dropdown-divider opacity-10" style="margin: 4px 0 8px 0;"></li>
                 @foreach (var cat in ViewBag.Categories as List<Category> ?? new List<Category>())
                 {
-                    var rootCount = (cat.Products?.Count ?? 0) + (cat.SubCategories?.Sum(sc => sc.Products?.Count ?? 0) ?? 0);
+                    var rootCount = productCounts.GetValueOrDefault(cat.Id, 0) + (cat.SubCategories?.Sum(sc => productCounts.GetValueOrDefault(sc.Id, 0)) ?? 0);
                     var isRootActive = parentId == cat.Id;
 
                     <li>

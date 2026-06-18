@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using DefenceDB.BLL.Abstract;
 using Microsoft.Extensions.Logging;
 
@@ -16,6 +17,13 @@ public class MemoryCacheService : ICacheService
 
     private static readonly TimeSpan DefaultExpiry = TimeSpan.FromMinutes(30);
 
+    // IgnoreCycles breaks circular references (e.g., Category.SubCategories -> ParentCategory -> SubCategories)
+    private static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        ReferenceHandler = ReferenceHandler.IgnoreCycles,
+        PropertyNameCaseInsensitive = true
+    };
+
     private record CacheEntry(string Json, DateTime ExpiresAt);
 
     public MemoryCacheService(ILogger<MemoryCacheService> logger)
@@ -29,7 +37,7 @@ public class MemoryCacheService : ICacheService
         {
             if (entry.ExpiresAt > DateTime.UtcNow)
             {
-                var value = JsonSerializer.Deserialize<T>(entry.Json);
+                var value = JsonSerializer.Deserialize<T>(entry.Json, SerializerOptions);
                 return Task.FromResult(value);
             }
             // Expired — remove
@@ -40,7 +48,7 @@ public class MemoryCacheService : ICacheService
 
     public Task SetAsync<T>(string key, T value, TimeSpan? expiry = null) where T : class
     {
-        var json = JsonSerializer.Serialize(value);
+        var json = JsonSerializer.Serialize(value, SerializerOptions);
         var expiresAt = DateTime.UtcNow.Add(expiry ?? DefaultExpiry);
         _cache[key] = new CacheEntry(json, expiresAt);
         return Task.CompletedTask;

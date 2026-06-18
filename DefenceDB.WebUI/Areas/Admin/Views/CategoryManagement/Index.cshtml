@@ -1,7 +1,7 @@
 @model IEnumerable<DefenceDB.EL.Models.Category>
 
 @{
-    ViewData["Title"] = "Kategori Yönetimi (Navbar)";
+    ViewData["Title"] = "Kategori Yönetimi";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -10,7 +10,7 @@
             <i class="bi bi-list-nested text-warning me-2"></i> Kategori Yönetimi
         </h4>
         <p style="color: var(--admin-text-muted); font-size: 0.85rem; margin: 4px 0 0;">
-            Navbar menüsünde gösterilecek ana kategorileri buradan düzenleyebilirsiniz.
+            "Navbar'da Göster" ile üst barda öne çıkan kategorileri belirleyin. Tüm kategorilere "Kategoriler" menüsünden ulaşılabilir.
         </p>
     </div>
     <span class="admin-badge info">@Model.Count() Ana Kategori</span>
@@ -22,16 +22,17 @@
             <table class="admin-table">
                 <thead>
                     <tr>
-                        <th style="width: 10%;">#</th>
+                        <th style="width: 5%;">#</th>
                         <th style="width: 30%;">Kategori Adı</th>
-                        <th style="width: 15%;">İkon</th>
-                        <th style="width: 15%;">Alt Kategori Sayısı</th>
-                        <th style="width: 15%;">Ana Menüde Göster (Navbar)</th>
-                        <th style="width: 15%;" class="text-end">İşlemler</th>
+                        <th style="width: 10%;">İkon</th>
+                        <th style="width: 15%;">Alt Kategori</th>
+                        <th style="width: 15%;">Navbar'da Göster</th>
+                        <th style="width: 15%;">Slug</th>
+                        <th style="width: 10%;">İşlemler</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var cat in Model.OrderBy(c => c.SortOrder))
+                    @foreach (var cat in Model.OrderBy(c => c.Name))
                     {
                         <tr>
                             <td>@cat.Id</td>
@@ -54,26 +55,29 @@
                             <td>
                                 @if (cat.IsShowcase)
                                 {
-                                    <span class="admin-badge success"><i class="bi bi-check-circle-fill me-1"></i> Gösteriliyor</span>
+                                    <span class="badge bg-success">Gösteriliyor</span>
                                 }
                                 else
                                 {
-                                    <span class="admin-badge secondary"><i class="bi bi-x-circle-fill me-1"></i> Gizli</span>
+                                    <span class="badge bg-secondary">Gizli</span>
                                 }
                             </td>
-                            <td class="text-end">
-                                <form asp-action="ToggleShowcase" method="post" class="d-inline">
-                                    <input type="hidden" name="id" value="@cat.Id" />
+                            <td>
+                                <code style="font-size: 0.8rem; color: var(--admin-text-muted);">@cat.Slug</code>
+                            </td>
+                            <td>
+                                <form asp-action="ToggleShowcase" asp-route-id="@cat.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
                                     @if (cat.IsShowcase)
                                     {
-                                        <button type="submit" class="btn btn-sm btn-outline-warning" title="Menüden Kaldır" style="border-radius: 8px;">
-                                            <i class="bi bi-eye-slash-fill"></i> Gizle
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary" title="Navbar'dan kaldır">
+                                            <i class="bi bi-eye-slash"></i>
                                         </button>
                                     }
                                     else
                                     {
-                                        <button type="submit" class="btn btn-sm btn-outline-success" title="Menüye Ekle" style="border-radius: 8px;">
-                                            <i class="bi bi-eye-fill"></i> Göster
+                                        <button type="submit" class="btn btn-sm btn-outline-success" title="Navbar'da göster">
+                                            <i class="bi bi-eye"></i>
                                         </button>
                                     }
                                 </form>
@@ -83,7 +87,7 @@
                     @if (!Model.Any())
                     {
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-4">
+                            <td colspan="7" class="text-center text-muted py-4">
                                 Kayıtlı kategori bulunamadı.
                             </td>
                         </tr>

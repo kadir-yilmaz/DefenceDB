@@ -1,0 +1,357 @@
+﻿/* ==========================================================================
+   DEFENCEDB - NAVBAR & MEGA MENU STYLES
+   ========================================================================== */
+
+/* Top Navbar Branding & Links */
+.navbar-brand {
+    font-family: var(--font-heading);
+    font-size: 1.45rem;
+    letter-spacing: 0.05em;
+}
+
+    .navbar-brand strong {
+        font-weight: 800;
+    }
+
+.nav-link {
+    font-weight: 500;
+}
+
+    .nav-link:hover {
+        color: var(--accent) !important;
+    }
+
+/* Custom Tactical Dark Style Search Input */
+#searchInput {
+    background-color: #0b0f19 !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+    #searchInput::placeholder {
+        color: rgba(255, 255, 255, 0.8) !important;
+        opacity: 1 !important;
+    }
+
+    #searchInput:focus {
+        background-color: #0f172a !important;
+        border-color: var(--accent, #f59e0b) !important;
+        box-shadow: 0 0 12px rgba(245, 158, 11, 0.25), 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+        color: #ffffff !important;
+    }
+
+#searchContainer .bi-search {
+    color: rgba(255, 255, 255, 0.65) !important;
+    transition: color 0.3s ease;
+}
+
+#searchContainer:focus-within .bi-search {
+    color: var(--accent, #f59e0b) !important;
+}
+
+/* ===================================
+   MEGA MENU (Trigger & Panel)
+   =================================== */
+.udemy-navbar-container {
+    position: relative;
+    z-index: 1040;
+}
+
+.categories-trigger-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    margin: 0;
+    background: transparent;
+    color: var(--theme-color, #f59e0b);
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+    .categories-trigger-btn:hover, .categories-trigger-btn.active {
+        background: var(--theme-color, #f59e0b);
+        color: #1c1d1f;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+    }
+
+    .categories-trigger-btn i {
+        font-size: 1.1rem;
+    }
+
+.mega-menu {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    width: 100%;
+    background-color: #1c1d1f;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.25);
+    z-index: 1060;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+    max-height: 70vh;
+    overflow: hidden;
+}
+
+    .mega-menu.open {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+.mega-menu-inner {
+    display: flex;
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
+    min-height: 450px;
+}
+
+/* Sidebar */
+.mega-menu-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    border-right: 1px solid rgba(255,255,255,0.08);
+    background-color: rgba(0,0,0,0.15);
+    overflow-y: auto;
+    max-height: 70vh;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.15) transparent;
+}
+
+    .mega-menu-sidebar::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .mega-menu-sidebar::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.15);
+        border-radius: 4px;
+    }
+
+.mega-menu-sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    color: #d1d7dc;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+}
+
+    .mega-menu-sidebar-item:hover, .mega-menu-sidebar-item.active {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #fff;
+        border-left-color: var(--theme-color, #f59e0b);
+    }
+
+    .mega-menu-sidebar-item i {
+        font-size: 1.1rem;
+        width: 24px;
+        text-align: center;
+        opacity: 0.85;
+    }
+
+    .mega-menu-sidebar-item.active i, .mega-menu-sidebar-item:hover i {
+        color: var(--theme-color, #f59e0b);
+        opacity: 1;
+    }
+
+    .mega-menu-sidebar-item .bi-chevron-right {
+        font-size: 0.75rem;
+        opacity: 0;
+        transition: opacity 0.2s, transform 0.2s;
+        color: var(--theme-color, #f59e0b);
+    }
+
+    .mega-menu-sidebar-item.active .bi-chevron-right, .mega-menu-sidebar-item:hover .bi-chevron-right {
+        opacity: 1;
+        transform: translateX(3px);
+    }
+
+/* Content Area */
+.mega-menu-content {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 70vh;
+    padding: 24px 36px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.15) transparent;
+}
+
+    .mega-menu-content::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .mega-menu-content::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.15);
+        border-radius: 4px;
+    }
+
+.mega-menu-content-panel {
+    display: none;
+}
+
+    .mega-menu-content-panel.active {
+        display: block;
+        animation: fadeIn 0.2s ease;
+    }
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* MEGA MENU GRID */
+.mega-menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px 24px;
+}
+
+.mega-menu-grid-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    color: #d1d7dc;
+    text-decoration: none;
+    font-size: 0.95rem;
+    border-radius: 8px;
+    transition: all 0.2s;
+    background-color: rgba(255,255,255,0.02);
+}
+
+    .mega-menu-grid-item:hover {
+        background-color: rgba(255,255,255,0.06);
+        color: #fff;
+        transform: translateX(4px);
+    }
+
+    .mega-menu-grid-item i {
+        font-size: 1rem;
+        opacity: 0.7;
+        color: var(--theme-color, #f59e0b);
+    }
+
+    .mega-menu-grid-item span:not(.mega-menu-count) {
+        flex: 1;
+    }
+
+.mega-menu-count {
+    font-size: 1.05rem;
+    color: var(--theme-color, #f59e0b);
+    font-weight: 700;
+    margin-left: auto;
+    background-color: rgba(245, 158, 11, 0.1);
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+
+.mega-menu-empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: rgba(255,255,255,0.5);
+}
+
+    .mega-menu-empty p {
+        margin-top: 12px;
+        font-size: 0.95rem;
+    }
+
+/* Mobile Responsive */
+@media (max-width: 991.98px) {
+    .mega-menu-inner {
+        flex-direction: column;
+        min-height: auto;
+    }
+
+    .mega-menu-sidebar {
+        width: 100%;
+        max-height: none;
+        border-right: none;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        padding: 12px;
+    }
+
+    .mega-menu-sidebar-item {
+        flex: 0 0 auto;
+        padding: 8px 14px;
+        border-left: none;
+        border-radius: 20px;
+        background-color: rgba(255,255,255,0.05);
+        font-size: 0.85rem;
+    }
+
+        .mega-menu-sidebar-item .bi-chevron-right {
+            display: none;
+        }
+
+        .mega-menu-sidebar-item.active, .mega-menu-sidebar-item:hover {
+            background-color: var(--theme-color, #f59e0b);
+            color: #1c1d1f !important;
+        }
+
+            .mega-menu-sidebar-item.active i, .mega-menu-sidebar-item:hover i {
+                color: #1c1d1f !important;
+            }
+
+    .mega-menu-content {
+        max-height: 50vh;
+        padding: 16px;
+    }
+
+    .mega-menu-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 4px 12px;
+    }
+
+    .categories-trigger-btn {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+}
+
+/* ==========================================================================
+   HOMEPAGE TRANSPARENT NAVBAR OVERRIDES
+   ========================================================================== */
+.navbar-transparent-home nav.navbar {
+    background-color: transparent !important;
+    border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+.navbar-transparent-home .brand-text {
+    color: white !important;
+}
+
+.navbar-transparent-home .search-input {
+    background-color: rgba(255,255,255,0.1) !important;
+    color: white !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+}
+
+    .navbar-transparent-home .search-input::placeholder {
+        color: rgba(255,255,255,0.6) !important;
+    }

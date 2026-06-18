@@ -94,8 +94,7 @@ public class ProductManagementController : Controller
         ViewBag.TotalPages = totalPages;
 
         ViewBag.Categories = await _categoryQueryService.GetCategoriesWithChildrenAsync();
-
-        // Ülke listesinin JSON dosyasından okunması
+        ViewBag.CategoryCounts = await _categoryQueryService.GetCategoryProductCountsAsync();
         var jsonPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "data", "countries.json");
         try
         {

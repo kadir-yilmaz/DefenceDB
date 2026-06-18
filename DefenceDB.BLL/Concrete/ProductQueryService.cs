@@ -5,12 +5,15 @@ using DefenceDB.BLL.Abstract;
 using DefenceDB.DAL;
 using DefenceDB.EL.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace DefenceDB.BLL.Concrete;
 
 public class ProductQueryService : IProductQueryService
 {
     private readonly AppDbContext _context;
+    private readonly ICacheService _cacheService;
+    private readonly ILogger<ProductQueryService> _logger;
 
     private static readonly Lazy<List<Type>> _productTypes = new(() =>
         typeof(DefenseProduct).Assembly.GetTypes()
@@ -18,9 +21,13 @@ public class ProductQueryService : IProductQueryService
             .ToList()
     );
 
-    public ProductQueryService(AppDbContext context)
+    private static readonly TimeSpan DefaultCacheDuration = TimeSpan.FromMinutes(15);
+
+    public ProductQueryService(AppDbContext context, ICacheService cacheService, ILogger<ProductQueryService> logger)
     {
         _context = context;
+        _cacheService = cacheService;
+        _logger = logger;
     }
 
     public async Task<(List<DefenseProduct> Products, int TotalItems)> GetFilteredProductsAsync(ProductFilterQueryModel queryModel)
@@ -41,6 +48,7 @@ public class ProductQueryService : IProductQueryService
         {
             var allowedSlugs = queryModel.DynamicFilters["ParentCategorySlugs"];
             var allowedCategoryIds = await _context.Categories
+                .AsNoTracking()
                 .Where(c => allowedSlugs.Contains(c.Slug))
                 .Select(c => c.Id)
                 .ToListAsync();
@@ -49,12 +57,16 @@ public class ProductQueryService : IProductQueryService
         }
         else if (!string.IsNullOrEmpty(queryModel.CategorySlug))
         {
-            var category = await _context.Categories.Include(c => c.SubCategories).AsNoTracking().FirstOrDefaultAsync(c => c.Slug == queryModel.CategorySlug);
+            // Only fetch category + subcategory IDs (no TPT product Include)
+            var category = await _context.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.Slug == queryModel.CategorySlug);
             if (category != null)
             {
-                var categoryIds = new List<int> { category.Id };
-                if (category.SubCategories != null)
-                    categoryIds.AddRange(category.SubCategories.Select(sc => sc.Id));
+                var categoryIds = await _context.Categories
+                    .AsNoTracking()
+                    .Where(c => c.ParentCategoryId == category.Id)
+                    .Select(c => c.Id)
+                    .ToListAsync();
+                categoryIds.Insert(0, category.Id);
 
                 readQuery = readQuery.Where(p => categoryIds.Contains(p.CategoryId));
             }
@@ -66,39 +78,58 @@ public class ProductQueryService : IProductQueryService
             readQuery = readQuery.Where(p => p.Country != null && p.Country.ToLower() == country);
         }
 
+        // Check if dynamic (JSON property) filters are present — these require in-memory filtering
+        var hasDynamicFilters = queryModel.DynamicFilters != null &&
+            queryModel.DynamicFilters.Any(f => f.Key != "ParentCategorySlugs");
+
+        if (!hasDynamicFilters)
+        {
+            // ── SQL-level pagination (fast path) ──
+            var totalItems = await readQuery.CountAsync();
+            int totalPages = (int)Math.Ceiling(totalItems / (double)queryModel.PageSize);
+            int validPage = Math.Max(1, Math.Min(queryModel.Page, totalPages > 0 ? totalPages : 1));
+
+            var pagedModels = await readQuery
+                .OrderByDescending(p => p.CreatedAt)
+                .Skip((validPage - 1) * queryModel.PageSize)
+                .Take(queryModel.PageSize)
+                .ToListAsync();
+
+            var products = pagedModels.Select(MapReadModelToEntity).ToList();
+            return (products, totalItems);
+        }
+
+        // ── In-memory dynamic filtering (slower path, already category-filtered) ──
         var readModels = await readQuery
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
 
-        var products = readModels.Select(MapReadModelToEntity).ToList();
+        var allProducts = readModels.Select(MapReadModelToEntity).ToList();
 
-        if (queryModel.DynamicFilters != null && queryModel.DynamicFilters.Any(f => f.Key != "ParentCategorySlugs"))
+        foreach (var filter in queryModel.DynamicFilters!)
         {
-            foreach (var filter in queryModel.DynamicFilters)
-            {
-                var key = filter.Key;
-                if (key == "ParentCategorySlugs") continue;
+            var key = filter.Key;
+            if (key == "ParentCategorySlugs") continue;
 
-                products = products.Where(p => {
-                    var propInfo = p.GetType().GetProperty(key);
-                    if (propInfo == null) return false;
-                    var propValue = propInfo.GetValue(p);
-                    if (propValue == null)
-                    {
-                        // Bos filter degeri varsa (form alani gonderildi ama deger yok), null propValue kabul et
-                        var hasRealFilter = filter.Value.Any(v => !string.IsNullOrWhiteSpace(v));
-                        return !hasRealFilter;
-                    }
-                    return MatchesFilterValue(propValue, filter.Value);
-                }).ToList();
-            }
+            allProducts = allProducts.Where(p => {
+                var propInfo = p.GetType().GetProperty(key);
+                if (propInfo == null) return false;
+                var propValue = propInfo.GetValue(p);
+                if (propValue == null)
+                {
+                    // Bos filter degeri varsa (form alani gonderildi ama deger yok), null propValue kabul et
+                    var hasRealFilter = filter.Value.Any(v => !string.IsNullOrWhiteSpace(v));
+                    return !hasRealFilter;
+                }
+                return MatchesFilterValue(propValue, filter.Value);
+            }).ToList();
         }
 
-        int totalItems = products.Count;
-        int totalPages = (int)Math.Ceiling(totalItems / (double)queryModel.PageSize);
-        int validPage = Math.Max(1, Math.Min(queryModel.Page, totalPages > 0 ? totalPages : 1));
+        int totalFiltered = allProducts.Count;
+        int totalPagesFiltered = (int)Math.Ceiling(totalFiltered / (double)queryModel.PageSize);
+        int validPageFiltered = Math.Max(1, Math.Min(queryModel.Page, totalPagesFiltered > 0 ? totalPagesFiltered : 1));
 
-        return (products.Skip((validPage - 1) * queryModel.PageSize).Take(queryModel.PageSize).ToList(), totalItems);
+        return (allProducts.Skip((validPageFiltered - 1) * queryModel.PageSize).Take(queryModel.PageSize).ToList(), totalFiltered);
     }
 
     public static DefenseProduct MapToEntity(ProductDocument doc)
@@ -473,12 +504,18 @@ public class ProductQueryService : IProductQueryService
 
     public async Task<List<DefenseProduct>> GetProductsByCategoryAsync(int categoryId)
     {
+        var cacheKey = $"products:category:{categoryId}";
+        var cached = await _cacheService.GetAsync<List<ProductReadModel>>(cacheKey);
+        if (cached != null)
+            return cached.Select(MapReadModelToEntity).ToList();
+
         var models = await _context.ProductReadModels
             .AsNoTracking()
             .Where(p => p.CategoryId == categoryId)
             .OrderBy(p => p.Name)
             .ToListAsync();
 
+        await _cacheService.SetAsync(cacheKey, models, DefaultCacheDuration);
         return models.Select(MapReadModelToEntity).ToList();
     }
 
@@ -490,12 +527,23 @@ public class ProductQueryService : IProductQueryService
 
     public async Task<DefenseProduct?> GetProductByIdAsync(int id)
     {
-        var model = await _context.ProductReadModels
-            .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == id);
+        var cacheKey = $"products:detail:{id}";
+        var cachedModel = await _cacheService.GetAsync<ProductReadModel>(cacheKey);
 
-        if (model is null)
-            return null;
+        ProductReadModel? model;
+        if (cachedModel != null)
+        {
+            model = cachedModel;
+        }
+        else
+        {
+            model = await _context.ProductReadModels
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == id);
+            if (model is null)
+                return null;
+            await _cacheService.SetAsync(cacheKey, model, DefaultCacheDuration);
+        }
 
         var product = MapReadModelToEntity(model);
         await AttachImagesAsync(product);
@@ -518,8 +566,37 @@ public class ProductQueryService : IProductQueryService
         return product;
     }
 
+    /// <summary>
+    /// Lightweight SQL-level search for autocomplete suggestions.
+    /// Avoids loading all products into memory.
+    /// </summary>
+    public async Task<List<ProductReadModel>> SearchSuggestionsAsync(string term, int maxResults = 8)
+    {
+        if (string.IsNullOrWhiteSpace(term))
+            return new List<ProductReadModel>();
+
+        term = term.ToLower();
+        var models = await _context.ProductReadModels
+            .AsNoTracking()
+            .Where(p =>
+                p.Name.ToLower().Contains(term) ||
+                (p.Manufacturer != null && p.Manufacturer.ToLower().Contains(term)) ||
+                (p.NatoReportingName != null && p.NatoReportingName.ToLower().Contains(term))
+            )
+            .OrderBy(p => p.Name)
+            .Take(maxResults)
+            .ToListAsync();
+
+        return models;
+    }
+
     public async Task<List<DefenseProduct>> GetRecentProductsAsync(int count = 6)
     {
+        var cacheKey = $"products:recent:{count}";
+        var cached = await _cacheService.GetAsync<List<ProductReadModel>>(cacheKey);
+        if (cached != null)
+            return cached.Select(MapReadModelToEntity).ToList();
+
         var models = await _context.ProductReadModels
             .AsNoTracking()
             .Where(p => p.IsActive)
@@ -527,17 +604,24 @@ public class ProductQueryService : IProductQueryService
             .Take(count)
             .ToListAsync();
 
+        await _cacheService.SetAsync(cacheKey, models, DefaultCacheDuration);
         return models.Select(MapReadModelToEntity).ToList();
     }
 
     public async Task<List<DefenseProduct>> GetShowcaseProductsAsync()
     {
+        var cacheKey = "products:showcase";
+        var cached = await _cacheService.GetAsync<List<ProductReadModel>>(cacheKey);
+        if (cached != null)
+            return cached.Select(MapReadModelToEntity).ToList();
+
         var models = await _context.ProductReadModels
             .AsNoTracking()
             .Where(p => p.IsActive && p.IsShowcase)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
 
+        await _cacheService.SetAsync(cacheKey, models, DefaultCacheDuration);
         return models.Select(MapReadModelToEntity).ToList();
     }
 

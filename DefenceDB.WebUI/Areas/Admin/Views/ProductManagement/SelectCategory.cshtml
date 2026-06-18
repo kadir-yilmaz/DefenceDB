@@ -1,7 +1,7 @@
 @model IEnumerable<DefenceDB.EL.Models.Category>
 @{
     ViewData["Title"] = "Ürün Kategorisi Seçin";
-    var rootCategories = Model.Where(c => c.ParentCategoryId == null).OrderBy(c => c.SortOrder).ToList();
+    var rootCategories = Model.Where(c => c.ParentCategoryId == null).OrderBy(c => c.Name).ToList();
 }
 
 <div class="container mt-5">

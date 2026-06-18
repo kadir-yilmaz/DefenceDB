@@ -10,4 +10,5 @@ public interface ICategoryQueryService
     Task<List<Category>> GetRootCategoriesAsync();
     Task<List<Category>> GetCategoriesWithChildrenAsync();
     Task<Category?> GetCategoryWithSubCategoriesAsync(int id);
+    Task<Dictionary<int, int>> GetCategoryProductCountsAsync();
 }
