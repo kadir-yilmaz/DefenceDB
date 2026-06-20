@@ -140,6 +140,9 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
         {
             entity.HasKey(v => v.Id);
             entity.Property(v => v.VisitorHash).IsRequired().HasMaxLength(64);
+            entity.Property(v => v.IpAddress).HasMaxLength(50);
+            entity.Property(v => v.Browser).HasMaxLength(50);
+            entity.Property(v => v.OperatingSystem).HasMaxLength(50);
             entity.HasIndex(v => v.VisitorHash).IsUnique();
             entity.HasIndex(v => v.FirstVisitDate);
         });

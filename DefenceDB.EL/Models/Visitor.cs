@@ -18,14 +18,8 @@ public class Visitor
     /// İlk ziyaret tarihi (UTC)
     /// </summary>
     public DateTime FirstVisitDate { get; set; } = DateTime.UtcNow;
-    
-    /// <summary>
-    /// Son ziyaret tarihi (UTC)
-    /// </summary>
-    public DateTime LastVisitDate { get; set; } = DateTime.UtcNow;
-    
-    /// <summary>
-    /// Bu hash ile kaç kez ziyaret edildi
-    /// </summary>
-    public int VisitCount { get; set; } = 1;
+
+    public string? IpAddress { get; set; }
+    public string? Browser { get; set; }
+    public string? OperatingSystem { get; set; }
 }

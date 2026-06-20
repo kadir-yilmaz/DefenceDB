@@ -44,18 +44,22 @@ public class VisitorService : IVisitorService
             var visitorHash = GenerateVisitorHash(visitorId);
 
             // Bu hash ile ziyaretçi var mı?
-            var existingVisitor = await _context.Visitors
-                .FirstOrDefaultAsync(v => v.VisitorHash == visitorHash);
+            var exists = await _context.Visitors
+                .AnyAsync(v => v.VisitorHash == visitorHash);
 
-            if (existingVisitor == null)
+            if (!exists)
             {
+                var (os, browser) = ParseUserAgent(userAgent);
+                var maskedIp = MaskIpAddress(ipAddress);
+
                 // Yeni ziyaretçi
                 var visitor = new Visitor
                 {
                     VisitorHash = visitorHash,
                     FirstVisitDate = DateTime.UtcNow,
-                    LastVisitDate = DateTime.UtcNow,
-                    VisitCount = 1
+                    IpAddress = maskedIp,
+                    Browser = browser,
+                    OperatingSystem = os
                 };
 
                 _context.Visitors.Add(visitor);
@@ -64,18 +68,9 @@ public class VisitorService : IVisitorService
                 // Cache'i temizle
                 await _cacheService.RemoveAsync(CACHE_KEY);
                 
-                _logger.LogInformation("New unique visitor tracked: {Hash}", visitorHash.Substring(0, 8));
+                _logger.LogInformation("New unique visitor tracked: {Hash} ({OS} - {Browser})", 
+                    visitorHash.Substring(0, 8), os, browser);
             }
-            else if ((DateTime.UtcNow - existingVisitor.LastVisitDate).TotalMinutes >= 30)
-            {
-                // 30 dakikadan fazla geçmiş (yeni oturum), güncelle
-                existingVisitor.LastVisitDate = DateTime.UtcNow;
-                existingVisitor.VisitCount++;
-                await _context.SaveChangesAsync();
-                
-                _logger.LogDebug("Visitor session updated: {Hash}", visitorHash.Substring(0, 8));
-            }
-            // 30 dakika içinde ziyaret varsa hiçbir şey yapma (veritabanı yükünü azaltmak için)
         }
         catch (Exception ex)
         {
@@ -161,6 +156,71 @@ public class VisitorService : IVisitorService
 
         var lowerUserAgent = userAgent.ToLower();
         return botKeywords.Any(keyword => lowerUserAgent.Contains(keyword));
+    }
+
+    /// <summary>
+    /// User-Agent bilgisinden işletim sistemi ve tarayıcıyı parse eder
+    /// </summary>
+    private (string Os, string Browser) ParseUserAgent(string userAgent)
+    {
+        if (string.IsNullOrWhiteSpace(userAgent))
+            return ("Bilinmeyen OS", "Bilinmeyen Tarayıcı");
+
+        var ua = userAgent.ToLowerInvariant();
+
+        // İşletim sistemi tespiti
+        string os = "Bilinmeyen OS";
+        if (ua.Contains("windows")) os = "Windows";
+        else if (ua.Contains("android")) os = "Android";
+        else if (ua.Contains("iphone")) os = "iPhone";
+        else if (ua.Contains("ipad")) os = "iPad";
+        else if (ua.Contains("macintosh") || ua.Contains("mac os x")) os = "macOS";
+        else if (ua.Contains("linux")) os = "Linux";
+
+        // Tarayıcı tespiti
+        string browser = "Bilinmeyen Tarayıcı";
+        if (ua.Contains("edg/")) browser = "Edge";
+        else if (ua.Contains("opr/") || ua.Contains("opera")) browser = "Opera";
+        else if (ua.Contains("chrome") && !ua.Contains("chromium")) browser = "Chrome";
+        else if (ua.Contains("firefox")) browser = "Firefox";
+        else if (ua.Contains("safari") && !ua.Contains("chrome") && !ua.Contains("chromium")) browser = "Safari";
+
+        return (os, browser);
+    }
+
+    /// <summary>
+    /// IP adresini KVKK/GDPR uyumlu olacak şekilde maskeler (son blokları gizler)
+    /// </summary>
+    private string MaskIpAddress(string ipAddress)
+    {
+        if (string.IsNullOrWhiteSpace(ipAddress) || ipAddress == "unknown")
+            return "Bilinmeyen";
+
+        if (ipAddress == "::1" || ipAddress == "127.0.0.1")
+            return "Localhost";
+
+        // IPv4 maskeleme: 192.168.1.15 -> 192.168.1.xxx
+        if (ipAddress.Contains('.'))
+        {
+            var parts = ipAddress.Split('.');
+            if (parts.Length == 4)
+            {
+                return $"{parts[0]}.{parts[1]}.{parts[2]}.xxx";
+            }
+        }
+        // IPv6 maskeleme: 2001:db8:85a3:8d3:1319:8a2e:370:7334 -> 2001:db8:85a3:8d3:xxx:xxx:xxx:xxx
+        else if (ipAddress.Contains(':'))
+        {
+            var parts = ipAddress.Split(':');
+            if (parts.Length >= 4)
+            {
+                var maskedParts = parts.Take(4).ToList();
+                while (maskedParts.Count < 8) maskedParts.Add("xxx");
+                return string.Join(":", maskedParts);
+            }
+        }
+
+        return ipAddress;
     }
 }
 

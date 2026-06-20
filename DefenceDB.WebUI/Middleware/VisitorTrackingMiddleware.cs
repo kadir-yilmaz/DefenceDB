@@ -36,17 +36,16 @@ public class VisitorTrackingMiddleware
             !IsStaticFile(path) &&
             !IsBot(userAgent))
         {
-            // df_visitor_id cookie kontrolü
+            // df_visitor_id cookie kontrolü (1 yıllık kalıcı çerez)
             if (context.Request.Cookies.TryGetValue("df_visitor_id", out var existingId) && !string.IsNullOrWhiteSpace(existingId))
             {
                 visitorId = existingId;
             }
             else
             {
-                // Yeni bir visitorId oluştur
+                // Yeni bir visitorId oluştur (yeni tekil kullanıcı)
                 visitorId = Guid.NewGuid().ToString("N");
                 
-                // Çerezi ekle
                 context.Response.Cookies.Append("df_visitor_id", visitorId, new CookieOptions
                 {
                     Expires = DateTimeOffset.UtcNow.AddYears(1),

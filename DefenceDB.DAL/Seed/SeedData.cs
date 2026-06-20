@@ -84,7 +84,7 @@ public static class SeedData
 
         // Eski IP tabanlı hatalı ziyaretçi kayıtlarını temizle (tek seferlik)
         var context = serviceProvider.GetRequiredService<AppDbContext>();
-        var cutoff = new DateTime(2026, 6, 20, 20, 0, 0, DateTimeKind.Utc);
+        var cutoff = new DateTime(2026, 6, 20, 17, 5, 0, DateTimeKind.Utc);
         var oldVisitors = await context.Visitors.Where(v => v.FirstVisitDate < cutoff).ToListAsync();
         if (oldVisitors.Any())
         {
