@@ -1057,10 +1057,6 @@ namespace DefenceDB.DAL.Migrations
                     b.Property<DateTime>("FirstVisitDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("IpAddress")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
                     b.Property<string>("OperatingSystem")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");

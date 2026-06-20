@@ -30,7 +30,7 @@ public class VisitorService : IVisitorService
         _logger = logger;
     }
 
-    public async Task TrackVisitorAsync(string visitorId, string ipAddress, string userAgent)
+    public async Task TrackVisitorAsync(string visitorId, string userAgent)
     {
         try
         {
@@ -50,14 +50,12 @@ public class VisitorService : IVisitorService
             if (!exists)
             {
                 var (os, browser) = ParseUserAgent(userAgent);
-                var maskedIp = MaskIpAddress(ipAddress);
 
                 // Yeni ziyaretçi
                 var visitor = new Visitor
                 {
                     VisitorHash = visitorHash,
                     FirstVisitDate = DateTime.UtcNow,
-                    IpAddress = maskedIp,
                     Browser = browser,
                     OperatingSystem = os
                 };
@@ -125,19 +123,13 @@ public class VisitorService : IVisitorService
     }
 
     /// <summary>
-    /// KVKK uyumlu: visitorId (GUID) hash'i. IP adresi veya kişisel veri içermez.
-    /// Sabit salt ile tek yönlü SHA256 kullanılarak anonimleştirilir.
+    /// Ziyaretçi çerez değerini (GUID) doğrudan kaydeder.
+    /// Çerez değeri tamamen rastgele ve kişisel veri dışı (anonim) olduğu için raw saklanması KVKK açısından uygundur.
+    /// Bu sayede tarayıcıdaki çerez ile db'deki satır birebir eşleştirilebilir.
     /// </summary>
     private string GenerateVisitorHash(string visitorId)
     {
-        var salt = "DefenceDB-Visitor-Static-Salt-2026";
-        var combined = $"{visitorId}|{salt}";
-        
-        using var sha256 = SHA256.Create();
-        var bytes = Encoding.UTF8.GetBytes(combined);
-        var hash = sha256.ComputeHash(bytes);
-        
-        return Convert.ToHexString(hash).ToLower();
+        return visitorId;
     }
 
     /// <summary>
@@ -256,41 +248,6 @@ public class VisitorService : IVisitorService
         }
 
         return (os, browser);
-    }
-
-    /// <summary>
-    /// IP adresini KVKK/GDPR uyumlu olacak şekilde maskeler (son blokları gizler)
-    /// </summary>
-    private string MaskIpAddress(string ipAddress)
-    {
-        if (string.IsNullOrWhiteSpace(ipAddress) || ipAddress == "unknown")
-            return "Bilinmeyen";
-
-        if (ipAddress == "::1" || ipAddress == "127.0.0.1")
-            return "Localhost";
-
-        // IPv4 maskeleme: 192.168.1.15 -> 192.168.1.xxx
-        if (ipAddress.Contains('.'))
-        {
-            var parts = ipAddress.Split('.');
-            if (parts.Length == 4)
-            {
-                return $"{parts[0]}.{parts[1]}.{parts[2]}.xxx";
-            }
-        }
-        // IPv6 maskeleme: 2001:db8:85a3:8d3:1319:8a2e:370:7334 -> 2001:db8:85a3:8d3:xxx:xxx:xxx:xxx
-        else if (ipAddress.Contains(':'))
-        {
-            var parts = ipAddress.Split(':');
-            if (parts.Length >= 4)
-            {
-                var maskedParts = parts.Take(4).ToList();
-                while (maskedParts.Count < 8) maskedParts.Add("xxx");
-                return string.Join(":", maskedParts);
-            }
-        }
-
-        return ipAddress;
     }
 }
 

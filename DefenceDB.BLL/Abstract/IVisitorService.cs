@@ -8,7 +8,7 @@ public interface IVisitorService
     /// <summary>
     /// Ziyaretçiyi kaydet veya güncelle (async)
     /// </summary>
-    Task TrackVisitorAsync(string visitorId, string ipAddress, string userAgent);
+    Task TrackVisitorAsync(string visitorId, string userAgent);
     
     /// <summary>
     /// Toplam benzersiz ziyaretçi sayısını döndür

@@ -27,13 +27,6 @@ namespace DefenceDB.DAL.Migrations
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
-                name: "IpAddress",
-                table: "Visitors",
-                type: "nvarchar(50)",
-                maxLength: 50,
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
                 name: "OperatingSystem",
                 table: "Visitors",
                 type: "nvarchar(50)",
@@ -46,10 +39,6 @@ namespace DefenceDB.DAL.Migrations
         {
             migrationBuilder.DropColumn(
                 name: "Browser",
-                table: "Visitors");
-
-            migrationBuilder.DropColumn(
-                name: "IpAddress",
                 table: "Visitors");
 
             migrationBuilder.DropColumn(

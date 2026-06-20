@@ -19,7 +19,6 @@ public class Visitor
     /// </summary>
     public DateTime FirstVisitDate { get; set; } = DateTime.UtcNow;
 
-    public string? IpAddress { get; set; }
     public string? Browser { get; set; }
     public string? OperatingSystem { get; set; }
 }

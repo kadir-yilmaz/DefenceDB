@@ -207,6 +207,19 @@ app.MapGet("/debug/files", (IWebHostEnvironment env) =>
     return Results.Text(result.ToString());
 });
 
+app.MapGet("/debug/headers", (HttpContext context) =>
+{
+    var result = new System.Text.StringBuilder();
+    result.AppendLine($"RemoteIpAddress: {context.Connection.RemoteIpAddress}");
+    result.AppendLine($"LocalIpAddress: {context.Connection.LocalIpAddress}");
+    result.AppendLine("\nHeaders:");
+    foreach (var header in context.Request.Headers)
+    {
+        result.AppendLine($"{header.Key}: {header.Value}");
+    }
+    return Results.Text(result.ToString());
+});
+
 app.Run();
 
 static async Task EnsureReadModelsSyncedAsync(AppDbContext context)

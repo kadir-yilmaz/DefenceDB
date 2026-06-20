@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DefenceDB.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260620171113_AddVisitorDetails")]
+    [Migration("20260620173808_AddVisitorDetails")]
     partial class AddVisitorDetails
     {
         /// <inheritdoc />
@@ -1059,10 +1059,6 @@ namespace DefenceDB.DAL.Migrations
 
                     b.Property<DateTime>("FirstVisitDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("IpAddress")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("OperatingSystem")
                         .HasMaxLength(50)

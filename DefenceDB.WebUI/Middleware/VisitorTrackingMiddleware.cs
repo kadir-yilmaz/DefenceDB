@@ -56,8 +56,6 @@ public class VisitorTrackingMiddleware
             }
         }
 
-        var ipAddress = GetClientIpAddress(context);
-
         // Önce response'u gönder
         await _next(context);
 
@@ -71,7 +69,7 @@ public class VisitorTrackingMiddleware
                     using var scope = _scopeFactory.CreateScope();
                     var visitorService = scope.ServiceProvider.GetRequiredService<IVisitorService>();
                     
-                    await visitorService.TrackVisitorAsync(visitorId, ipAddress, userAgent);
+                    await visitorService.TrackVisitorAsync(visitorId, userAgent);
                 }
                 catch (Exception ex)
                 {
@@ -79,30 +77,6 @@ public class VisitorTrackingMiddleware
                 }
             });
         }
-    }
-
-    /// <summary>
-    /// Gerçek client IP adresini al (proxy/CDN desteği ile)
-    /// </summary>
-    private string GetClientIpAddress(HttpContext context)
-    {
-        // X-Forwarded-For header'ı kontrol et (proxy/CDN arkasındaysak)
-        var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(forwardedFor))
-        {
-            // İlk IP'yi al (gerçek client IP'si)
-            return forwardedFor.Split(',')[0].Trim();
-        }
-
-        // X-Real-IP header'ı kontrol et (nginx vb.)
-        var realIp = context.Request.Headers["X-Real-IP"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(realIp))
-        {
-            return realIp;
-        }
-
-        // Fallback: RemoteIpAddress
-        return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
     }
 
     /// <summary>
