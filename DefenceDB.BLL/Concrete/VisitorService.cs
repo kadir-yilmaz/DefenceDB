@@ -159,7 +159,7 @@ public class VisitorService : IVisitorService
     }
 
     /// <summary>
-    /// User-Agent bilgisinden işletim sistemi ve tarayıcıyı parse eder
+    /// User-Agent bilgisinden işletim sistemi (ve varsa mobil cihaz modeli) ile tarayıcıyı parse eder
     /// </summary>
     private (string Os, string Browser) ParseUserAgent(string userAgent)
     {
@@ -168,15 +168,6 @@ public class VisitorService : IVisitorService
 
         var ua = userAgent.ToLowerInvariant();
 
-        // İşletim sistemi tespiti
-        string os = "Bilinmeyen OS";
-        if (ua.Contains("windows")) os = "Windows";
-        else if (ua.Contains("android")) os = "Android";
-        else if (ua.Contains("iphone")) os = "iPhone";
-        else if (ua.Contains("ipad")) os = "iPad";
-        else if (ua.Contains("macintosh") || ua.Contains("mac os x")) os = "macOS";
-        else if (ua.Contains("linux")) os = "Linux";
-
         // Tarayıcı tespiti
         string browser = "Bilinmeyen Tarayıcı";
         if (ua.Contains("edg/")) browser = "Edge";
@@ -184,6 +175,85 @@ public class VisitorService : IVisitorService
         else if (ua.Contains("chrome") && !ua.Contains("chromium")) browser = "Chrome";
         else if (ua.Contains("firefox")) browser = "Firefox";
         else if (ua.Contains("safari") && !ua.Contains("chrome") && !ua.Contains("chromium")) browser = "Safari";
+
+        // İşletim sistemi ve Cihaz tespiti
+        string os = "Bilinmeyen OS";
+
+        if (ua.Contains("windows"))
+        {
+            os = "Windows";
+        }
+        else if (ua.Contains("macintosh") || (ua.Contains("mac os x") && !ua.Contains("iphone") && !ua.Contains("ipad")))
+        {
+            os = "macOS";
+        }
+        else if (ua.Contains("iphone"))
+        {
+            os = "iPhone";
+        }
+        else if (ua.Contains("ipad"))
+        {
+            os = "iPad";
+        }
+        else if (ua.Contains("android"))
+        {
+            // Android cihaz modelini yakalamaya çalış
+            os = "Android";
+            try
+            {
+                int openParen = userAgent.IndexOf('(');
+                int closeParen = userAgent.IndexOf(')');
+                if (openParen != -1 && closeParen > openParen)
+                {
+                    var details = userAgent.Substring(openParen + 1, closeParen - openParen - 1);
+                    var parts = details.Split(';');
+                    
+                    int androidIndex = -1;
+                    for (int i = 0; i < parts.Length; i++)
+                    {
+                        if (parts[i].Contains("Android", StringComparison.OrdinalIgnoreCase))
+                        {
+                            androidIndex = i;
+                            break;
+                        }
+                    }
+
+                    if (androidIndex != -1 && androidIndex + 1 < parts.Length)
+                    {
+                        var modelPart = parts[androidIndex + 1].Trim();
+                        
+                        // Dil kodlarını atla (örn: tr-tr, en-us)
+                        if (modelPart.Contains('-') && modelPart.Length <= 5)
+                        {
+                            if (androidIndex + 2 < parts.Length)
+                            {
+                                modelPart = parts[androidIndex + 2].Trim();
+                            }
+                        }
+
+                        // Build bilgisini temizle
+                        if (modelPart.Contains(" Build", StringComparison.OrdinalIgnoreCase))
+                        {
+                            int buildIdx = modelPart.IndexOf(" Build", StringComparison.OrdinalIgnoreCase);
+                            modelPart = modelPart.Substring(0, buildIdx).Trim();
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(modelPart))
+                        {
+                            os = $"Android ({modelPart})";
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Parse hatası durumunda fallback olarak "Android" kalır
+            }
+        }
+        else if (ua.Contains("linux"))
+        {
+            os = "Linux";
+        }
 
         return (os, browser);
     }
