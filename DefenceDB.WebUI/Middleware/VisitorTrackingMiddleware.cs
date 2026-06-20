@@ -30,8 +30,11 @@ public class VisitorTrackingMiddleware
 
         string? visitorId = null;
 
-        // Sadece GET isteklerini, HTML sayfalarını ve bot olmayan gerçek kullanıcıları takip et
-        if (isGet && 
+        // Sadece çerez izni verilmişse (df_cookie_consent == "1"), 
+        // GET isteklerini, HTML sayfalarını ve bot olmayan kullanıcıları takip et
+        var consent = context.Request.Cookies["df_cookie_consent"];
+        if (consent == "1" &&
+            isGet && 
             !path.StartsWithSegments("/api") &&
             !IsStaticFile(path) &&
             !IsBot(userAgent))

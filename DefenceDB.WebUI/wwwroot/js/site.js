@@ -158,6 +158,58 @@ $(document).ready(function () {
             $('#searchSuggestions').removeClass('d-none');
         }
     });
+
+    // ----------------------------------------------------
+    // 4. Cookie Consent Management
+    // ----------------------------------------------------
+    var consentCookieName = "df_cookie_consent";
+    
+    function getCookie(name) {
+        var value = "; " + document.cookie;
+        var parts = value.split("; " + name + "=");
+        if (parts.length == 2) return parts.pop().split(";").shift();
+        return null;
+    }
+
+    function setCookie(name, value, days) {
+        var expires = "";
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + (value || "") + expires + "; path=/; SameSite=Strict; Secure";
+    }
+
+    var consentValue = getCookie(consentCookieName);
+    
+    if (consentValue === null) {
+        var $banner = $("#cookieConsentBanner");
+        $banner.show();
+        setTimeout(function() {
+            $banner.addClass("show");
+        }, 100);
+    }
+
+    $("#btnAcceptCookies").click(function () {
+        setCookie(consentCookieName, "1", 365);
+        hideBanner();
+        // Trigger a background post to silently track this user immediately
+        $.post("/api/visitor/consent-accept");
+    });
+
+    $("#btnRejectCookies").click(function () {
+        setCookie(consentCookieName, "0", 365);
+        hideBanner();
+    });
+
+    function hideBanner() {
+        var $banner = $("#cookieConsentBanner");
+        $banner.removeClass("show");
+        setTimeout(function() {
+            $banner.hide();
+        }, 400);
+    }
 });
 
 // Global Product click handler

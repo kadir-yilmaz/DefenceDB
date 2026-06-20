@@ -625,3 +625,100 @@ h1, h2, h3, h4, h5, h6, .brand-text {
     font-size: 0.8rem;
     color: #64748b;
 }
+
+/* Cookie Consent Banner Styling */
+.cookie-consent-banner {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    z-index: 2000;
+    width: 90%;
+    max-width: 600px;
+    background: rgba(17, 24, 39, 0.95);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(245, 158, 11, 0.05);
+    padding: 18px 22px;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+    opacity: 0;
+}
+
+.cookie-consent-banner.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.cookie-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.cookie-icon-wrapper {
+    width: 44px;
+    height: 44px;
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent, #f59e0b);
+    font-size: 1.6rem;
+    flex-shrink: 0;
+}
+
+.cookie-text-container {
+    flex-grow: 1;
+    flex-basis: 250px;
+}
+
+.cookie-title {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #ffffff;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.cookie-description {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.cookie-buttons {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.cookie-btn {
+    border-radius: 8px !important;
+    padding: 8px 16px !important;
+    font-size: 0.8rem !important;
+    transition: all 0.2s ease !important;
+}
+
+@media (max-width: 576px) {
+    .cookie-consent-banner {
+        padding: 16px;
+        bottom: 16px;
+    }
+    .cookie-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    .cookie-buttons {
+        width: 100%;
+        justify-content: flex-end;
+        margin-top: 6px;
+    }
+}
