@@ -48,6 +48,9 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 # Publish edilen tertemiz dosyaları runtime aşamasına kopyala
 COPY --from=publish /app/publish .
 
+ARG COMMIT_SHA
+ENV COMMIT_SHA=${COMMIT_SHA}
+
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
