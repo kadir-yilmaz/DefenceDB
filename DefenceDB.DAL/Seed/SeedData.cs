@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 using DefenceDB.EL.Models;
 
 namespace DefenceDB.DAL.Seed;
@@ -79,6 +80,16 @@ public static class SeedData
             {
                 await userManager.AddToRoleAsync(adminUser, "Admin");
             }
+        }
+
+        // Eski IP tabanlı hatalı ziyaretçi kayıtlarını temizle (tek seferlik)
+        var context = serviceProvider.GetRequiredService<AppDbContext>();
+        var cutoff = new DateTime(2026, 6, 20, 20, 0, 0, DateTimeKind.Utc);
+        var oldVisitors = await context.Visitors.Where(v => v.FirstVisitDate < cutoff).ToListAsync();
+        if (oldVisitors.Any())
+        {
+            context.Visitors.RemoveRange(oldVisitors);
+            await context.SaveChangesAsync();
         }
         
         // Note: Categories and Products are now seeded via Config files using HasData

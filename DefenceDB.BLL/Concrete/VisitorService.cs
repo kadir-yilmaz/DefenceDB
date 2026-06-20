@@ -30,7 +30,7 @@ public class VisitorService : IVisitorService
         _logger = logger;
     }
 
-    public async Task TrackVisitorAsync(string ipAddress, string userAgent)
+    public async Task TrackVisitorAsync(string visitorId, string ipAddress, string userAgent)
     {
         try
         {
@@ -41,10 +41,9 @@ public class VisitorService : IVisitorService
                 return;
             }
 
-            var visitorHash = GenerateVisitorHash(ipAddress, userAgent);
-            var today = DateTime.UtcNow.Date;
+            var visitorHash = GenerateVisitorHash(visitorId);
 
-            // Bugün bu hash ile ziyaret var mı?
+            // Bu hash ile ziyaretçi var mı?
             var existingVisitor = await _context.Visitors
                 .FirstOrDefaultAsync(v => v.VisitorHash == visitorHash);
 
@@ -65,18 +64,18 @@ public class VisitorService : IVisitorService
                 // Cache'i temizle
                 await _cacheService.RemoveAsync(CACHE_KEY);
                 
-                _logger.LogInformation("New unique visitor tracked");
+                _logger.LogInformation("New unique visitor tracked: {Hash}", visitorHash.Substring(0, 8));
             }
-            else if ((DateTime.UtcNow - existingVisitor.LastVisitDate).TotalHours >= 24)
+            else if ((DateTime.UtcNow - existingVisitor.LastVisitDate).TotalMinutes >= 30)
             {
-                // 24 saatten fazla geçmiş, güncelle
+                // 30 dakikadan fazla geçmiş (yeni oturum), güncelle
                 existingVisitor.LastVisitDate = DateTime.UtcNow;
                 existingVisitor.VisitCount++;
                 await _context.SaveChangesAsync();
                 
-                _logger.LogDebug("Visitor updated: {Hash}", visitorHash.Substring(0, 8));
+                _logger.LogDebug("Visitor session updated: {Hash}", visitorHash.Substring(0, 8));
             }
-            // 24 saat içinde ziyaret varsa hiçbir şey yapma
+            // 30 dakika içinde ziyaret varsa hiçbir şey yapma (veritabanı yükünü azaltmak için)
         }
         catch (Exception ex)
         {
@@ -131,31 +130,19 @@ public class VisitorService : IVisitorService
     }
 
     /// <summary>
-    /// KVKK uyumlu: Günlük salt ile IP+UserAgent hash'i
-    /// Her gün farklı hash üretilir, geriye dönük takip imkansızdır.
+    /// KVKK uyumlu: visitorId (GUID) hash'i. IP adresi veya kişisel veri içermez.
+    /// Sabit salt ile tek yönlü SHA256 kullanılarak anonimleştirilir.
     /// </summary>
-    private string GenerateVisitorHash(string ipAddress, string userAgent)
+    private string GenerateVisitorHash(string visitorId)
     {
-        var date = DateTime.UtcNow.Date.ToString("yyyyMMdd");
-        var dailySalt = GetDailySalt(date);
-        
-        var combined = $"{ipAddress}|{userAgent}|{date}|{dailySalt}";
+        var salt = "DefenceDB-Visitor-Static-Salt-2026";
+        var combined = $"{visitorId}|{salt}";
         
         using var sha256 = SHA256.Create();
         var bytes = Encoding.UTF8.GetBytes(combined);
         var hash = sha256.ComputeHash(bytes);
         
         return Convert.ToHexString(hash).ToLower();
-    }
-
-    /// <summary>
-    /// Her gün farklı salt üret (tarih tabanlı)
-    /// </summary>
-    private string GetDailySalt(string date)
-    {
-        // Basit ama etkili: tarih + sabit secret
-        var secret = "DefenceDB-Visitor-Salt-2026";
-        return $"{date}-{secret}";
     }
 
     /// <summary>

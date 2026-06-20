@@ -24,38 +24,62 @@ public class VisitorTrackingMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        // Request verilerini asenkron thread'e geçmeden önce kopyalıyoruz (ObjectDisposedException engellemek için)
         var isGet = context.Request.Method == "GET";
         var path = context.Request.Path;
-        var ipAddress = GetClientIpAddress(context);
         var userAgent = context.Request.Headers["User-Agent"].ToString();
+
+        string? visitorId = null;
+
+        // Sadece GET isteklerini, HTML sayfalarını ve bot olmayan gerçek kullanıcıları takip et
+        if (isGet && 
+            !path.StartsWithSegments("/api") &&
+            !IsStaticFile(path) &&
+            !IsBot(userAgent))
+        {
+            // df_visitor_id cookie kontrolü
+            if (context.Request.Cookies.TryGetValue("df_visitor_id", out var existingId) && !string.IsNullOrWhiteSpace(existingId))
+            {
+                visitorId = existingId;
+            }
+            else
+            {
+                // Yeni bir visitorId oluştur
+                visitorId = Guid.NewGuid().ToString("N");
+                
+                // Çerezi ekle
+                context.Response.Cookies.Append("df_visitor_id", visitorId, new CookieOptions
+                {
+                    Expires = DateTimeOffset.UtcNow.AddYears(1),
+                    HttpOnly = true,
+                    Secure = context.Request.IsHttps,
+                    SameSite = SameSiteMode.Strict
+                });
+            }
+        }
+
+        var ipAddress = GetClientIpAddress(context);
 
         // Önce response'u gönder
         await _next(context);
 
         // Response gönderildikten sonra visitor tracking yap (fire-and-forget)
-        _ = Task.Run(async () =>
+        if (visitorId != null)
         {
-            try
+            _ = Task.Run(async () =>
             {
-                // Sadece GET isteklerini ve HTML sayfalarını say
-                if (isGet && 
-                    !path.StartsWithSegments("/api") &&
-                    !IsStaticFile(path))
+                try
                 {
-                    // Yeni scope oluştur (DbContext thread-safe olması için)
                     using var scope = _scopeFactory.CreateScope();
                     var visitorService = scope.ServiceProvider.GetRequiredService<IVisitorService>();
                     
-                    await visitorService.TrackVisitorAsync(ipAddress, userAgent);
+                    await visitorService.TrackVisitorAsync(visitorId, ipAddress, userAgent);
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in background visitor tracking");
-                // Hata durumunda da uygulama devam etsin
-            }
-        });
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error in background visitor tracking");
+                }
+            });
+        }
     }
 
     /// <summary>
@@ -91,5 +115,23 @@ public class VisitorTrackingMiddleware
             ".svg", ".ico", ".woff", ".woff2", ".ttf", ".eot", ".map", ".json" };
         
         return staticExtensions.Any(ext => path.Value?.EndsWith(ext, StringComparison.OrdinalIgnoreCase) ?? false);
+    }
+
+    /// <summary>
+    /// Basit bot algılama
+    /// </summary>
+    private bool IsBot(string userAgent)
+    {
+        if (string.IsNullOrWhiteSpace(userAgent))
+            return true;
+
+        var botKeywords = new[]
+        {
+            "bot", "crawler", "spider", "scraper", "http", "curl", "wget",
+            "python", "java", "go-http", "axios", "fetch", "postman"
+        };
+
+        var lowerUserAgent = userAgent.ToLower();
+        return botKeywords.Any(keyword => lowerUserAgent.Contains(keyword));
     }
 }
