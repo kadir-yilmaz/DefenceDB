@@ -222,6 +222,14 @@ app.MapGet("/debug/headers", (HttpContext context) =>
 
 app.MapPost("/api/visitor/consent-accept", async (HttpContext context, IVisitorService visitorService) =>
 {
+    context.Response.Cookies.Append("df_cookie_consent", "1", new CookieOptions
+    {
+        Expires = DateTimeOffset.UtcNow.AddYears(1),
+        HttpOnly = false,
+        Secure = context.Request.IsHttps,
+        SameSite = SameSiteMode.Strict
+    });
+
     var visitorId = Guid.NewGuid().ToString("N");
     context.Response.Cookies.Append("df_visitor_id", visitorId, new CookieOptions
     {

@@ -163,6 +163,7 @@ $(document).ready(function () {
     // 4. Cookie Consent Management
     // ----------------------------------------------------
     var consentCookieName = "df_cookie_consent";
+    var consentStorageKey = "df_cookie_consent";
     
     function getCookie(name) {
         var value = "; " + document.cookie;
@@ -178,10 +179,34 @@ $(document).ready(function () {
             date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
             expires = "; expires=" + date.toUTCString();
         }
-        document.cookie = name + "=" + (value || "") + expires + "; path=/; SameSite=Strict; Secure";
+        var secure = window.location.protocol === "https:" ? "; Secure" : "";
+        document.cookie = name + "=" + encodeURIComponent(value || "") + expires + "; path=/; SameSite=Strict" + secure;
     }
 
-    var consentValue = getCookie(consentCookieName);
+    function getConsentValue() {
+        var cookieValue = getCookie(consentCookieName);
+        if (cookieValue !== null) {
+            return cookieValue;
+        }
+
+        try {
+            return localStorage.getItem(consentStorageKey);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function setConsentValue(value) {
+        setCookie(consentCookieName, value, 365);
+
+        try {
+            localStorage.setItem(consentStorageKey, value);
+        } catch (e) {
+            // localStorage may be unavailable in some privacy modes; the cookie is the primary source.
+        }
+    }
+
+    var consentValue = getConsentValue();
     
     if (consentValue === null) {
         var $banner = $("#cookieConsentBanner");
@@ -192,14 +217,14 @@ $(document).ready(function () {
     }
 
     $("#btnAcceptCookies").click(function () {
-        setCookie(consentCookieName, "1", 365);
+        setConsentValue("1");
         hideBanner();
         // Trigger a background post to silently track this user immediately
         $.post("/api/visitor/consent-accept");
     });
 
     $("#btnRejectCookies").click(function () {
-        setCookie(consentCookieName, "0", 365);
+        setConsentValue("0");
         hideBanner();
     });
 
