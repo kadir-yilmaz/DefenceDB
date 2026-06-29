@@ -225,9 +225,9 @@ app.MapPost("/api/visitor/consent-accept", async (HttpContext context, IVisitorS
     context.Response.Cookies.Append("df_cookie_consent", "1", new CookieOptions
     {
         Expires = DateTimeOffset.UtcNow.AddYears(1),
-        HttpOnly = false,
+        HttpOnly = true,
         Secure = context.Request.IsHttps,
-        SameSite = SameSiteMode.Strict
+        SameSite = SameSiteMode.Lax
     });
 
     var visitorId = Guid.NewGuid().ToString("N");
@@ -236,11 +236,23 @@ app.MapPost("/api/visitor/consent-accept", async (HttpContext context, IVisitorS
         Expires = DateTimeOffset.UtcNow.AddYears(1),
         HttpOnly = true,
         Secure = context.Request.IsHttps,
-        SameSite = SameSiteMode.Strict
+        SameSite = SameSiteMode.Lax
     });
 
     var userAgent = context.Request.Headers["User-Agent"].ToString();
     await visitorService.TrackVisitorAsync(visitorId, userAgent);
+    return Results.Ok();
+});
+
+app.MapPost("/api/visitor/consent-reject", (HttpContext context) =>
+{
+    context.Response.Cookies.Append("df_cookie_consent", "0", new CookieOptions
+    {
+        Expires = DateTimeOffset.UtcNow.AddYears(1),
+        HttpOnly = true,
+        Secure = context.Request.IsHttps,
+        SameSite = SameSiteMode.Lax
+    });
     return Results.Ok();
 });
 

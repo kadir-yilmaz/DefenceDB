@@ -160,79 +160,34 @@ $(document).ready(function () {
     });
 
     // ----------------------------------------------------
-    // 4. Cookie Consent Management
+    // 4. Cookie Consent Banner
+    // The banner HTML is server-rendered only when no consent cookie exists.
+    // JS only handles the entrance animation and button clicks.
     // ----------------------------------------------------
-    var consentCookieName = "df_cookie_consent";
-    var consentStorageKey = "df_cookie_consent";
-    
-    function getCookie(name) {
-        var value = "; " + document.cookie;
-        var parts = value.split("; " + name + "=");
-        if (parts.length == 2) return parts.pop().split(";").shift();
-        return null;
+    var $consentBanner = $("#cookieConsentBanner");
+
+    if ($consentBanner.length) {
+        // Banner exists in DOM → server determined consent is needed.
+        // Trigger entrance animation after a micro-delay for the CSS transition to kick in.
+        requestAnimationFrame(function () {
+            $consentBanner.addClass("show");
+        });
+
+        $("#btnAcceptCookies").click(function () {
+            hideBanner();
+            $.post("/api/visitor/consent-accept");
+        });
+
+        $("#btnRejectCookies").click(function () {
+            hideBanner();
+            $.post("/api/visitor/consent-reject");
+        });
     }
-
-    function setCookie(name, value, days) {
-        var expires = "";
-        if (days) {
-            var date = new Date();
-            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            expires = "; expires=" + date.toUTCString();
-        }
-        var secure = window.location.protocol === "https:" ? "; Secure" : "";
-        document.cookie = name + "=" + encodeURIComponent(value || "") + expires + "; path=/; SameSite=Strict" + secure;
-    }
-
-    function getConsentValue() {
-        var cookieValue = getCookie(consentCookieName);
-        if (cookieValue !== null) {
-            return cookieValue;
-        }
-
-        try {
-            return localStorage.getItem(consentStorageKey);
-        } catch (e) {
-            return null;
-        }
-    }
-
-    function setConsentValue(value) {
-        setCookie(consentCookieName, value, 365);
-
-        try {
-            localStorage.setItem(consentStorageKey, value);
-        } catch (e) {
-            // localStorage may be unavailable in some privacy modes; the cookie is the primary source.
-        }
-    }
-
-    var consentValue = getConsentValue();
-    
-    if (consentValue === null) {
-        var $banner = $("#cookieConsentBanner");
-        $banner.show();
-        setTimeout(function() {
-            $banner.addClass("show");
-        }, 100);
-    }
-
-    $("#btnAcceptCookies").click(function () {
-        setConsentValue("1");
-        hideBanner();
-        // Trigger a background post to silently track this user immediately
-        $.post("/api/visitor/consent-accept");
-    });
-
-    $("#btnRejectCookies").click(function () {
-        setConsentValue("0");
-        hideBanner();
-    });
 
     function hideBanner() {
-        var $banner = $("#cookieConsentBanner");
-        $banner.removeClass("show");
-        setTimeout(function() {
-            $banner.hide();
+        $consentBanner.removeClass("show");
+        setTimeout(function () {
+            $consentBanner.remove();
         }, 400);
     }
 });

@@ -129,8 +129,10 @@
         </div>
     </footer>
 
-    <!-- Cookie Consent Banner -->
-    <div id="cookieConsentBanner" class="cookie-consent-banner" style="display: none;">
+    @if (!Context.Request.Cookies.ContainsKey("df_cookie_consent"))
+    {
+    <!-- Cookie Consent Banner (server-rendered only when no consent cookie exists) -->
+    <div id="cookieConsentBanner" class="cookie-consent-banner">
         <div class="cookie-content">
             <div class="cookie-icon-wrapper">
                 <i class="bi bi-shield-fill-check"></i>
@@ -147,6 +149,7 @@
             </div>
         </div>
     </div>
+    }
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

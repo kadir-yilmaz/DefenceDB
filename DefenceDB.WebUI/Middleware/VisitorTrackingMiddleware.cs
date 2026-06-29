@@ -54,7 +54,7 @@ public class VisitorTrackingMiddleware
                     Expires = DateTimeOffset.UtcNow.AddYears(1),
                     HttpOnly = true,
                     Secure = context.Request.IsHttps,
-                    SameSite = SameSiteMode.Strict
+                    SameSite = SameSiteMode.Lax
                 });
             }
         }
