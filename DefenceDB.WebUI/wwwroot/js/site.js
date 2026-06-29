@@ -174,13 +174,19 @@ $(document).ready(function () {
         });
 
         $("#btnAcceptCookies").click(function () {
-            hideBanner();
-            $.post("/api/visitor/consent-accept");
+            var $buttons = $(".cookie-btn");
+            $buttons.prop("disabled", true);
+            $.post("/api/visitor/consent-accept").always(function() {
+                hideBanner();
+            });
         });
 
         $("#btnRejectCookies").click(function () {
-            hideBanner();
-            $.post("/api/visitor/consent-reject");
+            var $buttons = $(".cookie-btn");
+            $buttons.prop("disabled", true);
+            $.post("/api/visitor/consent-reject").always(function() {
+                hideBanner();
+            });
         });
     }
 

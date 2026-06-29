@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    DEFENCEDB - NAVBAR & MEGA MENU STYLES
    ========================================================================== */
 
@@ -27,7 +27,8 @@
     color: #ffffff !important;
     border: 1px solid rgba(255, 255, 255, 0.15) !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
-    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease !important;
+    padding-left: 38px !important;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease, padding 0.3s ease !important;
 }
 
     #searchInput::placeholder {
@@ -37,18 +38,119 @@
 
     #searchInput:focus {
         background-color: #0f172a !important;
-        border-color: var(--accent, #f59e0b) !important;
-        box-shadow: 0 0 12px rgba(245, 158, 11, 0.25), 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+        border-color: #ffc107 !important; /* Bright warning yellow on focus */
+        box-shadow: 0 0 12px rgba(255, 193, 7, 0.25), 0 2px 10px rgba(0, 0, 0, 0.3) !important;
         color: #ffffff !important;
     }
 
-#searchContainer .bi-search {
+#searchContainer {
+    position: relative;
+}
+
+#searchContainer form .bi-search {
     color: rgba(255, 255, 255, 0.65) !important;
     transition: color 0.3s ease;
 }
 
-#searchContainer:focus-within .bi-search {
+#searchContainer form:focus-within .bi-search {
     color: var(--accent, #f59e0b) !important;
+}
+
+/* Mobile search trigger buttons and icons */
+#mobileSearchTrigger {
+    color: var(--accent, #f59e0b) !important;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+#mobileSearchTrigger:hover {
+    transform: scale(1.1);
+}
+
+/* Mobile responsive expanding search bar styles */
+@media (max-width: 767.98px) {
+    #searchContainer {
+        position: static !important;
+    }
+
+    #searchContainer form {
+        display: none !important; /* Collapsed state: hide form completely (override Bootstrap d-flex) */
+        width: 100%;
+    }
+
+    #searchInput {
+        width: 100% !important;
+        padding: 8px 40px 8px 42px !important; /* Spacing for search icon on left, close icon on right */
+        opacity: 1 !important;
+        background-color: #0b0f19 !important;
+        border: 1px solid #ffc107 !important; /* Bright warning yellow border */
+        pointer-events: auto !important;
+        margin: 0 !important;
+        box-shadow: 0 0 10px rgba(255, 193, 7, 0.2) !important;
+    }
+
+    #searchInput:focus {
+        border-color: #ffc107 !important;
+        box-shadow: 0 0 10px rgba(255, 193, 7, 0.25) !important;
+    }
+
+    /* When expanded, the form appears as a full-width sub-row directly under the navbar */
+    #searchContainer.expanded form {
+        display: flex !important;
+        position: absolute !important;
+        top: 100%;
+        left: 0;
+        right: 0;
+        width: 100%;
+        z-index: 1050;
+        background: var(--bg-navbar, #0f172a);
+        border-top: 1px solid rgba(255, 193, 7, 0.2) !important; /* Bright warning yellow border */
+        border-bottom: 1px solid rgba(255, 193, 7, 0.2) !important; /* Bright warning yellow border */
+        padding: 10px 16px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        border-radius: 0;
+    }
+
+    #searchContainer.expanded #mobileSearchClose {
+        display: block !important;
+    }
+
+    #searchContainer.expanded #searchSuggestions {
+        position: absolute !important;
+        top: 100% !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        margin-top: 0 !important;
+        border-radius: 0 0 12px 12px !important;
+    }
+
+    /* Align and equalize mobile secondary trigger buttons */
+    #mobileSearchTrigger {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        vertical-align: middle !important;
+        height: 100%;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        line-height: 1 !important;
+    }
+
+    /* Unify mobile header secondary icons (Categories grid, Search magnifying glass, Benchmark speedometer) */
+    .categories-trigger-btn i,
+    #mobileSearchTrigger i,
+    .nav-link i.bi-speedometer2 {
+        font-size: 1.28rem !important; /* Exactly equal size */
+        color: #ffc107 !important;     /* Bright warning yellow */
+    }
+
+    /* Keep the brand shield logo larger */
+    .navbar-brand i.bi-shield-fill {
+        font-size: 1.65rem !important;
+        color: #ffc107 !important;     /* Bright warning yellow */
+    }
 }
 
 /* ===================================
@@ -66,8 +168,8 @@
     padding: 8px 14px;
     margin: 0;
     background: transparent;
-    color: var(--theme-color, #f59e0b);
-    border: none;
+    color: #ffc107;
+    border: 1px solid transparent;
     border-radius: 6px;
     font-weight: 600;
     font-size: 0.95rem;
@@ -76,9 +178,10 @@
 }
 
     .categories-trigger-btn:hover, .categories-trigger-btn.active {
-        background: var(--theme-color, #f59e0b);
-        color: #1c1d1f;
-        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+        background: #000000 !important;
+        color: #ffc107 !important;
+        border-color: #ffc107 !important;
+        box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
     }
 
     .categories-trigger-btn i {

@@ -1,4 +1,4 @@
-﻿document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () {
     // === Mega Menu ===
     const triggerBtn = document.getElementById('categoriesTriggerBtn');
     const megaMenu = document.getElementById('megaMenu');
@@ -119,4 +119,68 @@
             closeMenu();
         }
     });
+
+    // === Mobile / Desktop Search Bar Expanding & Autocomplete Focus ===
+    const searchInput = document.getElementById('searchInput');
+    const searchContainer = document.getElementById('searchContainer');
+    const searchSuggestions = document.getElementById('searchSuggestions');
+    const mobileSearchTrigger = document.getElementById('mobileSearchTrigger');
+    const mobileSearchClose = document.getElementById('mobileSearchClose');
+
+    if (searchInput && searchContainer) {
+        // Desktop focus scaling
+        searchInput.addEventListener('focus', function () {
+            if (window.innerWidth >= 768) {
+                this.style.width = '450px';
+            }
+        });
+
+        // Desktop blur scaling
+        searchInput.addEventListener('blur', function () {
+            if (window.innerWidth >= 768) {
+                setTimeout(() => {
+                    if (searchSuggestions && !searchSuggestions.matches(':hover')) {
+                        searchInput.style.width = '240px';
+                    }
+                }, 200);
+            }
+        });
+
+        // Mobile click trigger to expand search
+        if (mobileSearchTrigger) {
+            mobileSearchTrigger.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                searchContainer.classList.add('expanded');
+                // Allow CSS transition to kick in before focus
+                setTimeout(() => {
+                    searchInput.focus();
+                }, 50);
+            });
+        }
+
+        // Mobile close button to collapse search
+        if (mobileSearchClose) {
+            mobileSearchClose.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                searchContainer.classList.remove('expanded');
+                searchInput.value = '';
+                searchInput.style.width = '';
+                if (searchSuggestions) {
+                    searchSuggestions.classList.add('d-none');
+                }
+            });
+        }
+
+        // Collapse search on mobile if clicked outside
+        document.addEventListener('click', function (e) {
+            if (!searchContainer.contains(e.target)) {
+                if (window.innerWidth < 768) {
+                    searchContainer.classList.remove('expanded');
+                    searchInput.style.width = '';
+                }
+            }
+        });
+    }
 });

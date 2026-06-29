@@ -377,20 +377,28 @@
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Kapat"></button>
                     </div>
                     <div class="modal-body pt-3">
-                        <div class="mb-3">
-                            <label class="form-label text-muted small fw-semibold">1. Kategori Seçin</label>
-                            <select id="modalCategorySelect" class="form-select shadow-sm" style="background-color: var(--admin-bg-secondary); color: var(--admin-text); border-color: var(--admin-border);">
-                                <option value="">-- Kategori Seçin --</option>
-                            </select>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-semibold">1. Üst Kategori Seçin</label>
+                                <select id="modalParentCategorySelect" class="form-select shadow-sm" style="background-color: var(--admin-bg-secondary); color: var(--admin-text); border-color: var(--admin-border);">
+                                    <option value="">-- Tüm Üst Kategoriler --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-semibold">2. Alt Kategori Seçin</label>
+                                <select id="modalSubCategorySelect" class="form-select shadow-sm" style="background-color: var(--admin-bg-secondary); color: var(--admin-text); border-color: var(--admin-border);" disabled>
+                                    <option value="">-- Önce Üst Kategori Seçin --</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="mb-3" id="modalSearchContainer" style="display:none;">
-                            <label class="form-label text-muted small fw-semibold">2. Ürün Ara</label>
+                        <div class="mb-3" id="modalSearchContainer">
+                            <label class="form-label text-muted small fw-semibold">Ürün Ara (İsteğe Bağlı)</label>
                             <input type="text" id="modalProductSearch" class="form-control form-control-sm" placeholder="Ürün adıyla hızlıca filtrele..." style="background-color: var(--admin-bg-secondary); color: var(--admin-text); border-color: var(--admin-border);" />
                         </div>
                         <div class="mb-3">
                             <label class="form-label text-muted small fw-semibold">3. Eklenecek Ürünleri Seçin</label>
                             <div id="modalProductsContainer" class="border rounded p-2 shadow-inner" style="max-height: 300px; overflow-y: auto; background-color: var(--admin-bg-secondary); border-color: var(--admin-border) !important;">
-                                <div class="text-muted small text-center py-4"><i class="bi bi-arrow-up-circle fs-4 d-block mb-2 text-secondary"></i> Önce yukarıdan bir kategori seçin.</div>
+                                <div class="text-muted small text-center py-4"><i class="bi bi-search fs-4 d-block mb-2 text-secondary"></i> Arama yapmak için yazın veya üst kısımdan kategori seçin.</div>
                             </div>
                         </div>
                     </div>
@@ -777,44 +785,98 @@
                 .Select(p => new {
                     id = p.Id,
                     name = p.Name,
+                    categoryId = p.CategoryId,
                     categoryName = p.Category?.Name ?? "Diğer Ekipmanlar",
                     imagePath = p.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? p.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg",
                     country = p.Country
                 }).ToList()));
 
+            var categoriesData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(((IEnumerable<DefenceDB.EL.Models.Category>)ViewBag.Categories)
+                .Select(c => new {
+                    id = c.Id,
+                    name = c.Name,
+                    subCategories = c.SubCategories?.Select(sc => new {
+                        id = sc.Id,
+                        name = sc.Name
+                    }).ToList()
+                }).ToList()));
+
             var initialRelationIds = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Model.SourceRelationships?.Select(r => r.TargetProductId) ?? Enumerable.Empty<int>()).Concat(Model.TargetRelationships?.Select(r => r.SourceProductId) ?? Enumerable.Empty<int>()).Distinct().ToList()));
             var selectedRelationIds = [];
 
-            // Kategorileri doldur
-            var categories = [...new Set(allProductsData.map(p => p.categoryName))].sort();
-            var catSelect = $('#modalCategorySelect');
-            categories.forEach(function(cat) {
-                catSelect.append(new Option(cat, cat));
+            // Üst Kategorileri Doldur
+            var parentSelect = $('#modalParentCategorySelect');
+            categoriesData.forEach(function(cat) {
+                parentSelect.append(new Option(cat.name, cat.id));
             });
 
-            // Kategori değişince ürünleri getir
-            catSelect.on('change', function() {
-                var cat = $(this).val();
+            // Üst kategori seçilince alt kategorileri doldur
+            parentSelect.on('change', function() {
+                var parentId = $(this).val();
+                var subSelect = $('#modalSubCategorySelect');
+                subSelect.empty();
+
+                if (!parentId) {
+                    subSelect.append(new Option('-- Önce Üst Kategori Seçin --', ''));
+                    subSelect.prop('disabled', true);
+                } else {
+                    subSelect.append(new Option('-- Tüm Alt Kategoriler --', ''));
+                    var parentCat = categoriesData.find(c => c.id == parentId);
+                    if (parentCat && parentCat.subCategories) {
+                        parentCat.subCategories.forEach(function(sc) {
+                            subSelect.append(new Option(sc.name, sc.id));
+                        });
+                    }
+                    subSelect.prop('disabled', false);
+                }
+                updateFilteredProducts();
+            });
+
+            // Alt kategori değişince veya arama yapılınca listeyi güncelle
+            $('#modalSubCategorySelect').on('change', updateFilteredProducts);
+            $('#modalProductSearch').on('input keyup', updateFilteredProducts);
+
+            function updateFilteredProducts() {
+                var parentCatId = $('#modalParentCategorySelect').val();
+                var subCatId = $('#modalSubCategorySelect').val();
+                var query = $('#modalProductSearch').val().trim().toLowerCase();
+
+                var filtered = allProductsData;
+
+                // 1. Kategori filtreleme
+                if (subCatId) {
+                    var subCatIdInt = parseInt(subCatId);
+                    filtered = filtered.filter(p => p.categoryId === subCatIdInt);
+                } else if (parentCatId) {
+                    var parentCatIdInt = parseInt(parentCatId);
+                    var parentCat = categoriesData.find(c => c.id === parentCatIdInt);
+                    if (parentCat) {
+                        var subIds = (parentCat.subCategories || []).map(sc => sc.id);
+                        filtered = filtered.filter(p => p.categoryId === parentCatIdInt || subIds.includes(p.categoryId));
+                    }
+                }
+
+                // 2. Arama kelimesi filtreleme
+                if (query.length > 0) {
+                    filtered = filtered.filter(p => p.name.toLowerCase().indexOf(query) > -1);
+                }
+
+                // 3. Render
                 var container = $('#modalProductsContainer');
                 container.empty();
 
-                if (!cat) {
-                    $('#modalSearchContainer').hide();
-                    container.append('<div class="text-muted small text-center py-4"><i class="bi bi-arrow-up-circle fs-4 d-block mb-2 text-secondary"></i> Önce yukarıdan bir kategori seçin.</div>');
+                // Eğer kategori seçilmemişse ve arama kelimesi çok kısaysa
+                if (!parentCatId && !subCatId && query.length < 2) {
+                    container.append('<div class="text-muted small text-center py-4"><i class="bi bi-search fs-4 d-block mb-2 text-secondary"></i> Arama yapmak için yazın veya üst kısımdan kategori seçin.</div>');
                     return;
                 }
 
-                $('#modalSearchContainer').show();
-                $('#modalProductSearch').val('');
-
-                var catProducts = allProductsData.filter(p => p.categoryName === cat);
-                if (catProducts.length === 0) {
-                    container.append('<div class="text-muted small text-center py-4">Bu kategoride ürün bulunamadı.</div>');
+                if (filtered.length === 0) {
+                    container.append('<div class="text-muted small text-center py-4">Kriterlere uygun ürün bulunamadı.</div>');
                     return;
                 }
 
-                catProducts.forEach(function(p) {
-                    // Zaten seçiliyse
+                filtered.forEach(function(p) {
                     var isChecked = selectedRelationIds.includes(p.id) ? 'checked disabled' : '';
                     
                     var html = `
@@ -829,20 +891,7 @@
                     `;
                     container.append(html);
                 });
-            });
-
-            // Canlı Arama (Modal İçi)
-            $('#modalProductSearch').on('keyup', function() {
-                var query = $(this).val().toLowerCase();
-                $('#modalProductsContainer .modal-product-item').each(function() {
-                    var name = $(this).data('name');
-                    if (name.indexOf(query) > -1) {
-                        $(this).show();
-                    } else {
-                        $(this).hide();
-                    }
-                });
-            });
+            }
 
             // Ekle butonuna tıklandığında
             $('#btnAddSelectedRelations').on('click', function() {
@@ -856,7 +905,8 @@
                 $('#addRelationModal').modal('hide');
                 
                 // Seçimleri temizle ki modal tekrar açıldığında temiz gelsin
-                $('#modalCategorySelect').val('').trigger('change');
+                $('#modalParentCategorySelect').val('').trigger('change');
+                $('#modalProductSearch').val('');
             });
 
             window.removeRelation = function(id) {

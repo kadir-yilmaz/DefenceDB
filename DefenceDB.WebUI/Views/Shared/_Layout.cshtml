@@ -129,7 +129,7 @@
         </div>
     </footer>
 
-    @if (!Context.Request.Cookies.ContainsKey("df_cookie_consent"))
+    @if (!Context.Request.Cookies.ContainsKey("df_visitor_id"))
     {
     <!-- Cookie Consent Banner (server-rendered only when no consent cookie exists) -->
     <div id="cookieConsentBanner" class="cookie-consent-banner">

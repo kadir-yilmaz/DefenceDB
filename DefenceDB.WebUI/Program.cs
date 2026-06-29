@@ -222,21 +222,14 @@ app.MapGet("/debug/headers", (HttpContext context) =>
 
 app.MapPost("/api/visitor/consent-accept", async (HttpContext context, IVisitorService visitorService) =>
 {
-    context.Response.Cookies.Append("df_cookie_consent", "1", new CookieOptions
-    {
-        Expires = DateTimeOffset.UtcNow.AddYears(1),
-        HttpOnly = true,
-        Secure = context.Request.IsHttps,
-        SameSite = SameSiteMode.Lax
-    });
-
     var visitorId = Guid.NewGuid().ToString("N");
     context.Response.Cookies.Append("df_visitor_id", visitorId, new CookieOptions
     {
         Expires = DateTimeOffset.UtcNow.AddYears(1),
         HttpOnly = true,
         Secure = context.Request.IsHttps,
-        SameSite = SameSiteMode.Lax
+        SameSite = SameSiteMode.Lax,
+        Path = "/"
     });
 
     var userAgent = context.Request.Headers["User-Agent"].ToString();
@@ -246,12 +239,13 @@ app.MapPost("/api/visitor/consent-accept", async (HttpContext context, IVisitorS
 
 app.MapPost("/api/visitor/consent-reject", (HttpContext context) =>
 {
-    context.Response.Cookies.Append("df_cookie_consent", "0", new CookieOptions
+    context.Response.Cookies.Append("df_visitor_id", "rejected", new CookieOptions
     {
         Expires = DateTimeOffset.UtcNow.AddYears(1),
         HttpOnly = true,
         Secure = context.Request.IsHttps,
-        SameSite = SameSiteMode.Lax
+        SameSite = SameSiteMode.Lax,
+        Path = "/"
     });
     return Results.Ok();
 });

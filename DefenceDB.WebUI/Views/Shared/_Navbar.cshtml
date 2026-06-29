@@ -78,19 +78,24 @@
                 </div>
             </div>
 
-            <button class="navbar-toggler border-0 shadow-none ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTopContent" aria-controls="navbarTopContent" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            <div class="d-flex align-items-center gap-3 ms-auto">
+                <div id="searchContainer">
+                    <!-- Mobile trigger button (aligned with grid/logo in the main row) -->
+                    <button type="button" id="mobileSearchTrigger" class="btn btn-link p-0 border-0 d-md-none" style="font-size: 1.25rem; line-height: 1; color: #ffc107 !important;">
+                        <i class="bi bi-search"></i>
+                    </button>
 
-            <div class="collapse navbar-collapse" id="navbarTopContent">
-                <div class="flex-grow-1"></div>
-                <div class="me-3 my-2 my-lg-0 position-relative" id="searchContainer">
-                    <form asp-controller="Product" asp-action="Index" method="get" class="position-relative">
-                        <i class="bi bi-search position-absolute text-secondary-theme" style="left: 14px; top: 50%; transform: translateY(-50%); font-size: 0.9rem; z-index: 5;"></i>
+                    <form asp-controller="Product" asp-action="Index" method="get" class="position-relative d-flex align-items-center">
+                        <!-- Desktop search icon -->
+                        <i class="bi bi-search d-none d-md-block position-absolute text-secondary-theme" style="left: 14px; top: 50%; transform: translateY(-50%); font-size: 0.9rem; z-index: 5;"></i>
+                        <!-- Mobile sub-row search icon (styled with same yellow warning color) -->
+                        <i class="bi bi-search d-md-none position-absolute" style="left: 28px; top: 50%; transform: translateY(-50%); font-size: 0.9rem; z-index: 5; color: #ffc107 !important;"></i>
+                        
                         <input type="text" id="searchInput" name="search" class="form-control rounded-pill bg-theme text-primary-theme border-theme"
-                               style="padding-left: 38px; width: 240px; font-size: 0.85rem; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);"
-                               placeholder="Platform ara..." autocomplete="off"
-                               onfocus="this.style.width='450px'" onblur="setTimeout(() => { if(!$('#searchSuggestions').is(':hover')) this.style.width='240px'; }, 200)" />
+                               placeholder="Platform ara..." autocomplete="off" />
+                        <button type="button" id="mobileSearchClose" class="btn btn-link text-secondary-theme p-0 border-0 d-none" style="position: absolute; right: 28px; top: 50%; transform: translateY(-50%); z-index: 5; font-size: 1.2rem; line-height: 1;">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
                     </form>
 
                     <div id="searchSuggestions" class="position-absolute w-100 bg-theme-card border border-theme rounded-3 shadow-lg d-none mt-2" style="z-index: 1050; max-height: 400px; overflow-y: auto;">
@@ -99,9 +104,9 @@
                     </div>
                 </div>
 
-                <a asp-controller="Benchmark" asp-action="Index" class="nav-link text-warning d-flex align-items-center gap-1 ms-2" style="font-size: 0.85rem; font-weight: 600; white-space: nowrap;">
-                    <i class="bi bi-speedometer2"></i>
-                    <span class="d-none d-lg-inline">Benchmark</span>
+                <a asp-controller="Benchmark" asp-action="Index" class="nav-link text-warning d-flex align-items-center gap-1" style="font-size: 0.95rem; font-weight: 600; white-space: nowrap;">
+                    <i class="bi bi-speedometer2" style="font-size: 1.25rem;"></i>
+                    <span class="d-none d-md-inline">Benchmark</span>
                 </a>
             </div>
         </div>

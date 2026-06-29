@@ -257,6 +257,7 @@ public class ProductManagementController : Controller
         }
 
         Console.WriteLine($"Product found: {product.Name}");
+        ViewBag.Categories = await _categoryQueryService.GetCategoriesWithChildrenAsync();
         ViewBag.AllProducts = await _productQueryService.GetAllProductsAsync();
         ViewBag.ReturnUrl = returnUrl;
         return View("Edit", product);

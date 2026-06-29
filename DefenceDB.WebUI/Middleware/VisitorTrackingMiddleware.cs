@@ -30,32 +30,17 @@ public class VisitorTrackingMiddleware
 
         string? visitorId = null;
 
-        // Sadece çerez izni verilmişse (df_cookie_consent == "1"), 
-        // GET isteklerini, HTML sayfalarını ve bot olmayan kullanıcıları takip et
-        var consent = context.Request.Cookies["df_cookie_consent"];
-        if (consent == "1" &&
-            isGet && 
-            !path.StartsWithSegments("/api") &&
-            !IsStaticFile(path) &&
-            !IsBot(userAgent))
+        // df_visitor_id cookie kontrolü (1 yıllık kalıcı çerez veya "rejected" değeri)
+        if (context.Request.Cookies.TryGetValue("df_visitor_id", out var existingId) && 
+            !string.IsNullOrWhiteSpace(existingId) && 
+            existingId != "rejected")
         {
-            // df_visitor_id cookie kontrolü (1 yıllık kalıcı çerez)
-            if (context.Request.Cookies.TryGetValue("df_visitor_id", out var existingId) && !string.IsNullOrWhiteSpace(existingId))
+            if (isGet && 
+                !path.StartsWithSegments("/api") &&
+                !IsStaticFile(path) &&
+                !IsBot(userAgent))
             {
                 visitorId = existingId;
-            }
-            else
-            {
-                // Yeni bir visitorId oluştur (yeni tekil kullanıcı)
-                visitorId = Guid.NewGuid().ToString("N");
-                
-                context.Response.Cookies.Append("df_visitor_id", visitorId, new CookieOptions
-                {
-                    Expires = DateTimeOffset.UtcNow.AddYears(1),
-                    HttpOnly = true,
-                    Secure = context.Request.IsHttps,
-                    SameSite = SameSiteMode.Lax
-                });
             }
         }
 
