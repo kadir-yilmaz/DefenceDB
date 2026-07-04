@@ -2,6 +2,9 @@
 @{
     var categories = ViewBag.Categories as List<ArticleCategory> ?? new List<ArticleCategory>();
     var isEdit = Model.Id > 0;
+    var categoryHasError = ViewData.ModelState[nameof(Model.ArticleCategoryId)]?.Errors.Any() == true;
+    var titleHasError = ViewData.ModelState[nameof(Model.Title)]?.Errors.Any() == true;
+    var contentHasError = ViewData.ModelState[nameof(Model.ContentMarkdown)]?.Errors.Any() == true;
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -25,12 +28,12 @@
     <div class="row g-3">
         <div class="col-lg-8">
             <label asp-for="Title" class="form-label">Başlık</label>
-            <input asp-for="Title" class="form-control" />
+            <input asp-for="Title" class="form-control @(titleHasError ? "is-invalid" : "")" />
             <span asp-validation-for="Title" class="text-danger"></span>
         </div>
         <div class="col-lg-4">
             <label asp-for="ArticleCategoryId" class="form-label">Kategori</label>
-            <select asp-for="ArticleCategoryId" class="form-select">
+            <select asp-for="ArticleCategoryId" class="form-select @(categoryHasError ? "is-invalid" : "")" id="articleCategorySelect">
                 <option value="">Kategori seçin</option>
                 @foreach (var category in categories)
                 {
@@ -53,7 +56,7 @@
         </div>
         <div class="col-12">
             <label asp-for="ContentMarkdown" class="form-label">Markdown İçerik</label>
-            <textarea asp-for="ContentMarkdown" class="form-control font-monospace" rows="22"></textarea>
+            <textarea asp-for="ContentMarkdown" class="form-control font-monospace @(contentHasError ? "is-invalid" : "")" rows="22"></textarea>
             <span asp-validation-for="ContentMarkdown" class="text-danger"></span>
         </div>
     </div>
@@ -65,3 +68,15 @@
         </button>
     </div>
 </form>
+
+<script>
+    document.currentScript.previousElementSibling.addEventListener('submit', function (event) {
+        const category = document.getElementById('articleCategorySelect');
+        if (category && !category.value) {
+            event.preventDefault();
+            category.classList.add('is-invalid');
+            category.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            category.focus();
+        }
+    });
+</script>
