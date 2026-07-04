@@ -1,0 +1,219 @@
+using DefenceDB.DAL;
+using DefenceDB.EL.Extensions;
+using DefenceDB.EL.Models;
+using DefenceDB.WebUI.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace DefenceDB.WebUI.Areas.Admin.Controllers;
+
+[Area("Admin")]
+[Authorize(Policy = "EditorPolicy")]
+public class ArticleManagementController : Controller
+{
+    private readonly AppDbContext _context;
+    private readonly INotificationService _notificationService;
+
+    public ArticleManagementController(AppDbContext context, INotificationService notificationService)
+    {
+        _context = context;
+        _notificationService = notificationService;
+    }
+
+    public async Task<IActionResult> Index(int? categoryId)
+    {
+        var query = _context.Articles
+            .AsNoTracking()
+            .Include(a => a.ArticleCategory)
+            .AsQueryable();
+
+        if (categoryId.HasValue)
+            query = query.Where(a => a.ArticleCategoryId == categoryId.Value);
+
+        ViewBag.Categories = await GetCategoriesAsync();
+        ViewBag.SelectedCategoryId = categoryId;
+
+        var articles = await query
+            .OrderByDescending(a => a.PublishedAt ?? a.CreatedAt)
+            .ToListAsync();
+
+        return View(articles);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Create()
+    {
+        ViewBag.Categories = await GetCategoriesAsync();
+        return View(new Article { IsPublished = true, PublishedAt = DateTime.UtcNow });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(Article article)
+    {
+        await PrepareArticleForSaveAsync(article);
+
+        if (!ModelState.IsValid)
+        {
+            ViewBag.Categories = await GetCategoriesAsync();
+            return View(article);
+        }
+
+        _context.Articles.Add(article);
+        await _context.SaveChangesAsync();
+
+        _notificationService.Success("Makale basariyla eklendi.", "Basarili");
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Edit(int id)
+    {
+        var article = await _context.Articles.FindAsync(id);
+        if (article == null)
+            return NotFound();
+
+        ViewBag.Categories = await GetCategoriesAsync();
+        return View(article);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(int id, Article form)
+    {
+        var article = await _context.Articles.FindAsync(id);
+        if (article == null)
+            return NotFound();
+
+        article.Title = form.Title;
+        article.Summary = null;
+        article.ContentMarkdown = form.ContentMarkdown;
+        article.ArticleCategoryId = form.ArticleCategoryId;
+        article.IsPublished = form.IsPublished;
+        article.IsShowcase = form.IsShowcase;
+        article.PublishedAt = form.IsPublished ? (article.PublishedAt ?? DateTime.UtcNow) : null;
+        article.UpdatedAt = DateTime.UtcNow;
+
+        await PrepareArticleForSaveAsync(article, id);
+
+        if (!ModelState.IsValid)
+        {
+            ViewBag.Categories = await GetCategoriesAsync();
+            return View(article);
+        }
+
+        await _context.SaveChangesAsync();
+
+        _notificationService.Success("Makale basariyla guncellendi.", "Basarili");
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var article = await _context.Articles.FindAsync(id);
+        if (article == null)
+            return NotFound();
+
+        _context.Articles.Remove(article);
+        await _context.SaveChangesAsync();
+
+        _notificationService.Success("Makale silindi.", "Basarili");
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleShowcase(int id, bool state)
+    {
+        var article = await _context.Articles.FindAsync(id);
+        if (article == null)
+            return Json(new { success = false, message = "Makale bulunamadi." });
+
+        article.IsShowcase = state;
+        article.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return Json(new { success = true, message = "Makale vitrin durumu guncellendi." });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddCategory(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            _notificationService.Error("Kategori adi bos olamaz.", "Hata");
+            return RedirectToAction(nameof(Index));
+        }
+
+        var slug = name.ToSlug();
+        if (await _context.ArticleCategories.AnyAsync(c => c.Slug == slug))
+        {
+            _notificationService.Error("Bu kategori zaten var.", "Hata");
+            return RedirectToAction(nameof(Index));
+        }
+
+        var nextSortOrder = await _context.ArticleCategories.AnyAsync()
+            ? await _context.ArticleCategories.MaxAsync(c => c.SortOrder) + 1
+            : 1;
+
+        _context.ArticleCategories.Add(new ArticleCategory
+        {
+            Name = name.Trim(),
+            Slug = slug,
+            SortOrder = nextSortOrder
+        });
+        await _context.SaveChangesAsync();
+
+        _notificationService.Success("Makale kategorisi eklendi.", "Basarili");
+        return RedirectToAction(nameof(Index));
+    }
+
+    private async Task<List<ArticleCategory>> GetCategoriesAsync()
+    {
+        return await _context.ArticleCategories
+            .AsNoTracking()
+            .OrderBy(c => c.SortOrder)
+            .ThenBy(c => c.Name)
+            .ToListAsync();
+    }
+
+    private async Task PrepareArticleForSaveAsync(Article article, int? existingId = null)
+    {
+        article.Title = article.Title?.Trim() ?? string.Empty;
+        article.Slug = await CreateUniqueSlugAsync(article.Title, existingId);
+        article.Summary = null;
+        article.ContentMarkdown = article.ContentMarkdown?.Trim() ?? string.Empty;
+
+        if (article.IsPublished && article.PublishedAt == null)
+            article.PublishedAt = DateTime.UtcNow;
+
+        if (!article.IsPublished)
+            article.PublishedAt = null;
+
+        if (!await _context.ArticleCategories.AnyAsync(c => c.Id == article.ArticleCategoryId))
+            ModelState.AddModelError(nameof(article.ArticleCategoryId), "Geçerli bir kategori seçin.");
+
+    }
+
+    private async Task<string> CreateUniqueSlugAsync(string title, int? existingId = null)
+    {
+        var baseSlug = title.ToSlug();
+        if (string.IsNullOrWhiteSpace(baseSlug))
+            baseSlug = "makale";
+
+        var slug = baseSlug;
+        var suffix = 2;
+
+        while (await _context.Articles.AnyAsync(a => a.Slug == slug && (!existingId.HasValue || a.Id != existingId.Value)))
+        {
+            slug = $"{baseSlug}-{suffix}";
+            suffix++;
+        }
+
+        return slug;
+    }
+}

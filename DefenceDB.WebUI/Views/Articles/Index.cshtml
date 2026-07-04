@@ -1,0 +1,70 @@
+@model List<Article>
+@{
+    ViewData["Title"] = "Makaleler";
+    var categories = ViewBag.Categories as List<ArticleCategory> ?? new List<ArticleCategory>();
+    var currentCategory = ViewBag.CurrentCategory as ArticleCategory;
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+}
+
+<link rel="stylesheet" href="~/css/articles.css" asp-append-version="true" />
+
+<section class="articles-page">
+    <div class="container py-5">
+        <div class="articles-header">
+            <div>
+                <h1>Makaleler</h1>
+                <p>Envanter notları, karşılaştırmalar ve savunma teknolojisi üzerine derlemeler.</p>
+            </div>
+        </div>
+
+        <div class="article-category-bar" aria-label="Makale kategorileri">
+            <a class="article-category-pill @(currentCategory == null ? "active" : "")" asp-controller="Articles" asp-action="Index">Tümü</a>
+            @foreach (var category in categories)
+            {
+                <a class="article-category-pill @(currentCategory?.Id == category.Id ? "active" : "")"
+                   asp-controller="Articles"
+                   asp-action="Index"
+                   asp-route-categorySlug="@category.Slug">@category.Name</a>
+            }
+        </div>
+
+        @if (Model.Any())
+        {
+            <div class="article-grid">
+                @foreach (var article in Model)
+                {
+                    <a asp-controller="Articles" asp-action="Detail" asp-route-slug="@article.Slug" class="article-paper-card">
+                        <span class="article-paper-category">@article.ArticleCategory?.Name</span>
+                        <h2>@article.Title</h2>
+                        <time datetime="@((article.PublishedAt ?? article.CreatedAt).ToString("yyyy-MM-dd"))">@((article.PublishedAt ?? article.CreatedAt).ToString("dd.MM.yyyy"))</time>
+                        <span class="article-paper-view">
+                            Görüntüle <i class="bi bi-arrow-right"></i>
+                        </span>
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="article-empty">
+                <i class="bi bi-journal-text"></i>
+                <p>Bu kategoride henüz yayımlanmış makale yok.</p>
+            </div>
+        }
+
+        @if (totalPages > 1)
+        {
+            <nav class="article-pagination" aria-label="Makale sayfaları">
+                @for (var i = 1; i <= totalPages; i++)
+                {
+                    <a class="@(i == currentPage ? "active" : "")"
+                       asp-controller="Articles"
+                       asp-action="Index"
+                       asp-route-categorySlug="@currentCategory?.Slug"
+                       asp-route-page="@i">@i</a>
+                }
+            </nav>
+        }
+    </div>
+</section>

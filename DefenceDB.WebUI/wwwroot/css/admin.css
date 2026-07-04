@@ -765,6 +765,37 @@ body {
 .admin-badge.info { background: rgba(59, 130, 246, 0.12); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); }
 .admin-badge.danger { background: rgba(239, 68, 68, 0.12); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
 
+.article-category-scroll {
+    max-height: 220px;
+    overflow-y: auto;
+    border: 1px solid var(--admin-border);
+    border-radius: 8px;
+    background: var(--admin-bg-secondary);
+}
+
+.article-category-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .8rem 1rem;
+    border-bottom: 1px solid var(--admin-border);
+}
+
+.article-category-row:last-child {
+    border-bottom: 0;
+}
+
+.article-category-row span {
+    color: var(--admin-text-primary);
+    font-weight: 700;
+}
+
+.article-category-row small {
+    color: var(--admin-text-muted);
+    font-family: monospace;
+}
+
 /* === FORMS === */
 .admin-form-control {
     background: var(--admin-bg-secondary);

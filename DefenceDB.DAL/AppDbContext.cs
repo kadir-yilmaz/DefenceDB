@@ -12,6 +12,8 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
     }
 
     public DbSet<Category> Categories { get; set; } = null!;
+    public DbSet<ArticleCategory> ArticleCategories { get; set; } = null!;
+    public DbSet<Article> Articles { get; set; } = null!;
     public DbSet<DefenseProduct> DefenseProducts { get; set; } = null!;
     public DbSet<ProductRelationship> ProductRelationships { get; set; } = null!;
     public DbSet<ProductImage> ProductImages { get; set; } = null!;

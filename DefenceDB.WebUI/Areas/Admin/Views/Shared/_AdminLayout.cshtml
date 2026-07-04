@@ -39,6 +39,11 @@
                     <i class="bi bi-list-nested"></i>
                     <span>Kategori Yönetimi</span>
                 </a>
+                <a href="@Url.Action("Index", "ArticleManagement", new { area = "Admin" })"
+                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "ArticleManagement" ? "active" : "")">
+                    <i class="bi bi-journal-richtext"></i>
+                    <span>Makale Yönetimi</span>
+                </a>
             </div>
 
             @if (User.IsInRole("Admin"))

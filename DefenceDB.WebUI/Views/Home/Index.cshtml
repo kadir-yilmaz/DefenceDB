@@ -1,6 +1,7 @@
 @{
     var categories = ViewBag.Categories as List<Category> ?? new List<Category>();
     var recentProducts = ViewBag.RecentProducts as List<DefenseProduct> ?? new List<DefenseProduct>();
+    var showcaseArticles = ViewBag.ShowcaseArticles as List<Article> ?? new List<Article>();
     ViewData["IsHome"] = true;
 }
 
@@ -121,6 +122,41 @@
                     </div>
                 </div>
                 showIndex++;
+            }
+        </div>
+    </section>
+}
+
+@if (showcaseArticles.Any())
+{
+    <section class="container mb-5">
+        <div class="row mb-4 align-items-center">
+            <div class="col-md-8">
+                <h2 class="text-primary-theme"><i class="bi bi-journal-richtext text-warning me-2"></i> Öne Çıkan Makaleler</h2>
+                <p class="text-secondary-theme mb-0">Editörün seçtiği analizler ve derlemeler.</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-2 mt-md-0">
+                <a asp-controller="Articles" asp-action="Index" class="text-warning text-decoration-none fw-bold">
+                    Tüm Makaleleri Gör <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="grid-5-columns">
+            @{ var articleIndex = 0; }
+            @foreach (var article in showcaseArticles)
+            {
+                <div class="reveal-card" style="--delay: @(articleIndex * 35)ms;">
+                    <article class="home-article-card h-100" onclick="location.href='@Url.Action("Detail", "Articles", new { slug = article.Slug })'">
+                        <span class="home-article-category">@article.ArticleCategory?.Name</span>
+                        <h3 title="@article.Title">@article.Title</h3>
+                        <div class="home-article-footer">
+                            <time datetime="@((article.PublishedAt ?? article.CreatedAt).ToString("yyyy-MM-dd"))">@((article.PublishedAt ?? article.CreatedAt).ToString("dd.MM.yyyy"))</time>
+                            <i class="bi bi-arrow-right"></i>
+                        </div>
+                    </article>
+                </div>
+                articleIndex++;
             }
         </div>
     </section>

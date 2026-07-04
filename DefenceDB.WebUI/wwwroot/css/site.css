@@ -582,6 +582,7 @@ h1, h2, h3, h4, h5, h6, .brand-text {
     color: #94a3b8;
     font-family: 'Inter', sans-serif;
     position: relative;
+    padding-top: 1.75rem;
 }
 
     .premium-footer::before {
@@ -621,9 +622,132 @@ h1, h2, h3, h4, h5, h6, .brand-text {
 
 .footer-bottom {
     background: #030408;
-    padding: 1.25rem 0;
+    padding: .75rem 0;
     font-size: 0.8rem;
     color: #64748b;
+    margin-top: 1rem;
+}
+
+.footer-bottom .row {
+    flex-direction: row;
+    gap: 0;
+}
+
+.footer-bottom .col-md-6 {
+    margin-bottom: 0 !important;
+}
+
+.premium-footer > .container.text-center {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) minmax(360px, 1fr);
+    grid-template-areas:
+        "brand benchmark"
+        "brand visitor";
+    grid-template-rows: auto auto;
+    align-items: start;
+    gap: 1rem 2.5rem;
+    text-align: left !important;
+}
+
+.premium-footer > .container.text-center > .d-flex:first-child {
+    grid-area: brand;
+    justify-content: flex-start !important;
+    margin-bottom: .35rem !important;
+}
+
+.premium-footer > .container.text-center > p {
+    grid-area: brand;
+    align-self: end;
+    margin-bottom: 0 !important;
+    max-width: 32ch;
+    padding-top: 2.6rem;
+}
+
+.premium-footer > .container.text-center > .mt-3 {
+    grid-area: visitor;
+    margin-top: .55rem !important;
+    justify-content: flex-end !important;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    min-height: 0;
+}
+
+.footer-benchmark-callout {
+    grid-area: benchmark;
+    max-width: none;
+    width: 100%;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    background: transparent;
+    margin: 0 !important;
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: .45rem;
+}
+
+.footer-benchmark-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    color: #fbbf24;
+    font-weight: 800;
+    text-decoration: none;
+    margin-bottom: 0;
+}
+
+.footer-benchmark-link:hover {
+    color: #f59e0b;
+}
+
+.footer-benchmark-callout p {
+    color: #94a3b8;
+    font-size: .8rem;
+    line-height: 1.55;
+    max-width: 54ch;
+    margin-left: auto;
+}
+
+@media (max-width: 991.98px) {
+    .premium-footer > .container.text-center {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "brand"
+            "benchmark"
+            "visitor";
+        text-align: center !important;
+    }
+
+    .premium-footer > .container.text-center > .d-flex:first-child,
+    .premium-footer > .container.text-center > .mt-3 {
+        justify-content: center !important;
+    }
+
+    .premium-footer > .container.text-center > p,
+    .premium-footer > .container.text-center > .mt-3,
+    .footer-benchmark-callout {
+        max-width: 680px;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
+    .footer-bottom .col-md-6 {
+        text-align: center !important;
+    }
+
+    .footer-benchmark-callout {
+        text-align: center;
+        align-items: center;
+    }
+
+    .footer-benchmark-callout p {
+        margin-left: auto;
+        margin-right: auto;
+    }
 }
 
 /* Cookie Consent Banner Styling */

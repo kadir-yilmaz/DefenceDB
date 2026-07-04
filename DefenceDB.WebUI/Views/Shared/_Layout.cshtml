@@ -82,7 +82,7 @@
     </div>
 
     <!-- Premium Thick Dark Footer with Glowing Defense Emblems -->
-<footer class="premium-footer pt-5 mt-auto">
+<footer class="premium-footer mt-auto">
         @inject Microsoft.Extensions.Configuration.IConfiguration Configuration
         @inject DefenceDB.BLL.Abstract.IVisitorService VisitorService
         @{
@@ -112,10 +112,20 @@
                     benzersiz ziyaretçi
                 </span>
             </div>
+
+            <div class="footer-benchmark-callout mt-4 mx-auto">
+                <a asp-controller="Benchmark" asp-action="Index" class="footer-benchmark-link">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Performans Benchmark</span>
+                </a>
+                <p class="mb-0">
+                    Sorgu performansını TPT, CQRS read model ve cache yaklaşımları arasında karşılaştırmak için kullanılır.
+                </p>
+            </div>
         </div>
 
         <!-- System copyright bottom row -->
-        <div class="footer-bottom mt-4">
+        <div class="footer-bottom">
             <div class="container">
                 <div class="row align-items-center">
                     <div class="col-md-6 text-center text-md-start mb-2 mb-md-0">

@@ -1,0 +1,67 @@
+@model Article
+@{
+    var categories = ViewBag.Categories as List<ArticleCategory> ?? new List<ArticleCategory>();
+    var isEdit = Model.Id > 0;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 style="font-family: 'Outfit', sans-serif; font-weight: 700; margin: 0;">
+            <i class="bi bi-journal-richtext text-warning me-2"></i> @(isEdit ? "Makale Düzenle" : "Yeni Makale")
+        </h4>
+        <p style="color: var(--admin-text-muted); font-size: 0.85rem; margin: 4px 0 0;">
+            Markdown içeriği direkt editör alanına yapıştırabilirsiniz. Sayfa adresi başlıktan otomatik oluşturulur.
+        </p>
+    </div>
+    <a asp-action="Index" class="btn-admin-outline">
+        <i class="bi bi-arrow-left"></i> Geri
+    </a>
+</div>
+
+<form asp-action="@(isEdit ? "Edit" : "Create")" asp-route-id="@(isEdit ? Model.Id : null)" method="post" class="form-card">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <label asp-for="Title" class="form-label">Başlık</label>
+            <input asp-for="Title" class="form-control" />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+        <div class="col-lg-4">
+            <label asp-for="ArticleCategoryId" class="form-label">Kategori</label>
+            <select asp-for="ArticleCategoryId" class="form-select">
+                <option value="">Kategori seçin</option>
+                @foreach (var category in categories)
+                {
+                    <option value="@category.Id">@category.Name</option>
+                }
+            </select>
+            <span asp-validation-for="ArticleCategoryId" class="text-danger"></span>
+        </div>
+        <div class="col-lg-4 d-flex align-items-end">
+            <div class="d-flex gap-4 mb-2">
+                <div class="form-check form-switch">
+                    <input asp-for="IsPublished" class="form-check-input" role="switch" />
+                    <label asp-for="IsPublished" class="form-check-label">Yayında</label>
+                </div>
+                <div class="form-check form-switch">
+                    <input asp-for="IsShowcase" class="form-check-input" role="switch" />
+                    <label asp-for="IsShowcase" class="form-check-label">Vitrin</label>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <label asp-for="ContentMarkdown" class="form-label">Markdown İçerik</label>
+            <textarea asp-for="ContentMarkdown" class="form-control font-monospace" rows="22"></textarea>
+            <span asp-validation-for="ContentMarkdown" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <a asp-action="Index" class="btn-admin-outline">İptal</a>
+        <button type="submit" class="btn-admin-primary">
+            <i class="bi bi-save"></i> Kaydet
+        </button>
+    </div>
+</form>

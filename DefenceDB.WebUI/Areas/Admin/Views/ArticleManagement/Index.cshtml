@@ -1,0 +1,186 @@
+@model List<Article>
+@{
+    ViewData["Title"] = "Makale Yönetimi";
+    var categories = ViewBag.Categories as List<ArticleCategory> ?? new List<ArticleCategory>();
+    int? selectedCategoryId = ViewBag.SelectedCategoryId as int?;
+}
+
+<div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <h4 style="font-family: 'Outfit', sans-serif; font-weight: 700; margin: 0;">
+            <i class="bi bi-journal-richtext text-warning me-2"></i> Makaleler
+        </h4>
+        <p style="color: var(--admin-text-muted); font-size: 0.85rem; margin: 4px 0 0;">
+            Markdown içerikli makaleleri ve makale kategorilerini buradan yönetin.
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn-admin-outline" data-bs-toggle="modal" data-bs-target="#articleCategoryModal">
+            <i class="bi bi-folder-plus"></i> Kategori Ekle
+        </button>
+        <a asp-action="Create" class="btn-admin-success">
+            <i class="bi bi-plus-circle-fill"></i> Yeni Makale
+        </a>
+    </div>
+</div>
+
+<div class="table-wrapper mb-4">
+    <div class="table-body p-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label text-muted">Filtre</label>
+                <select class="admin-form-control" onchange="location.href=this.value">
+                    <option value="@Url.Action("Index")">Tüm Kategoriler</option>
+                    @foreach (var category in categories)
+                    {
+                        if (selectedCategoryId == category.Id)
+                        {
+                            <option value="@Url.Action("Index", new { categoryId = category.Id })" selected>@category.Name</option>
+                        }
+                        else
+                        {
+                            <option value="@Url.Action("Index", new { categoryId = category.Id })">@category.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="articleCategoryModal" tabindex="-1" aria-labelledby="articleCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--admin-surface); color: var(--admin-text-primary); border: 1px solid var(--admin-border); border-radius: 8px;">
+            <form asp-action="AddCategory" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="articleCategoryModalLabel">
+                        <i class="bi bi-folder-plus text-warning me-2"></i> Makale Kategorileri
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="modal-body pt-0">
+                    <label class="form-label text-muted">Yeni Kategori Adı</label>
+                    <div class="d-flex gap-2 mb-4">
+                        <input type="text" name="name" class="admin-form-control" placeholder="Örn: Analiz" autocomplete="off" />
+                        <button type="submit" class="btn-admin-primary flex-shrink-0">
+                            <i class="bi bi-save"></i> Kaydet
+                        </button>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted" style="font-size: .85rem;">Mevcut Kategoriler</span>
+                        <span class="admin-badge info">@categories.Count kategori</span>
+                    </div>
+                    <div class="article-category-scroll">
+                        @foreach (var category in categories)
+                        {
+                            <div class="article-category-row">
+                                <span>@category.Name</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-body">
+        <div class="table-responsive">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Başlık</th>
+                        <th>Kategori</th>
+                        <th>Durum</th>
+                        <th>Vitrin</th>
+                        <th>Tarih</th>
+                        <th class="text-end">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var article in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div style="font-weight: 600;">@article.Title</div>
+                            </td>
+                            <td><span class="admin-badge info">@article.ArticleCategory?.Name</span></td>
+                            <td>
+                                @if (article.IsPublished)
+                                {
+                                    <span class="admin-badge active">Yayında</span>
+                                }
+                                else
+                                {
+                                    <span class="admin-badge warning">Taslak</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="form-check form-switch" style="display:flex; align-items:center; height: 100%;">
+                                    <input class="form-check-input article-showcase-toggle" type="checkbox"
+                                           role="switch" data-id="@article.Id"
+                                           @(article.IsShowcase ? "checked" : "") style="cursor: pointer; width: 2.5em; height: 1.25em;">
+                                </div>
+                            </td>
+                            <td>@((article.PublishedAt ?? article.CreatedAt).ToString("dd.MM.yyyy"))</td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    @if (article.IsPublished)
+                                    {
+                                        <a asp-area="" asp-controller="Articles" asp-action="Detail" asp-route-slug="@article.Slug" class="btn-icon" target="_blank" title="Görüntüle">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    }
+                                    <a asp-action="Edit" asp-route-id="@article.Id" class="btn-icon info" title="Düzenle">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <form asp-action="Delete" asp-route-id="@article.Id" method="post" onsubmit="return confirm('Bu makaleyi silmek istediğinize emin misiniz?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn-icon danger" title="Sil">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.article-showcase-toggle').forEach(function (toggle) {
+            toggle.addEventListener('change', function () {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+                fetch('@Url.Action("ToggleShowcase", "ArticleManagement", new { area = "Admin" })', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': token
+                    },
+                    body: new URLSearchParams({
+                        id: this.dataset.id,
+                        state: this.checked
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        this.checked = !this.checked;
+                        alert(data.message || 'Vitrin durumu guncellenemedi.');
+                    }
+                })
+                .catch(() => {
+                    this.checked = !this.checked;
+                    alert('Vitrin durumu guncellenemedi.');
+                });
+            });
+        });
+    </script>
+}

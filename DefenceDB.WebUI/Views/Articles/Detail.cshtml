@@ -1,0 +1,29 @@
+@model Article
+@{
+    ViewData["Title"] = Model.Title;
+    var publishedAt = Model.PublishedAt ?? Model.CreatedAt;
+}
+
+<link rel="stylesheet" href="~/css/articles.css" asp-append-version="true" />
+
+<article class="article-detail-page">
+    <div class="container py-5">
+        <a asp-controller="Articles" asp-action="Index" class="article-back-link">
+            <i class="bi bi-arrow-left"></i> Makaleler
+        </a>
+
+        <div class="article-paper">
+            <header class="article-detail-header">
+                <div class="article-card-meta">
+                    <span>@Model.ArticleCategory?.Name</span>
+                    <time datetime="@publishedAt.ToString("yyyy-MM-dd")">@publishedAt.ToString("dd.MM.yyyy")</time>
+                </div>
+                <h1>@Model.Title</h1>
+            </header>
+
+            <div class="article-markdown markdown-content">
+                @Html.Raw(Model.ContentMarkdown.ToHtmlFormat())
+            </div>
+        </div>
+    </div>
+</article>

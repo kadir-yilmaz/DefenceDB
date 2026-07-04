@@ -5,6 +5,7 @@ using DefenceDB.EL.Models;
 using DefenceDB.BLL.Abstract;
 using DefenceDB.BLL.Concrete;
 using DefenceDB.DAL.Seed;
+using DefenceDB.EL.Extensions;
 using NToastNotify;
 using DefenceDB.WebUI.Services;
 
@@ -131,6 +132,7 @@ using (var scope = app.Services.CreateScope())
         await context.Database.MigrateAsync();
 
         await SeedData.InitializeAsync(services, builder.Configuration);
+        await EnsureArticleCategoriesSeededAsync(context, builder.Environment);
         await EnsureReadModelsSyncedAsync(context);
     }
     catch (Exception ex)
@@ -335,4 +337,70 @@ static async Task EnsureReadModelsSyncedAsync(AppDbContext context)
 
     await context.ProductReadModels.AddRangeAsync(readModels);
     await context.SaveChangesAsync();
+}
+
+static async Task EnsureArticleCategoriesSeededAsync(AppDbContext context, IWebHostEnvironment environment)
+{
+    var jsonPath = Path.Combine(environment.WebRootPath, "data", "article-categories.json");
+    if (!File.Exists(jsonPath))
+        return;
+
+    var json = await File.ReadAllTextAsync(jsonPath);
+    var defaults = JsonSerializer.Deserialize<List<ArticleCategorySeedItem>>(
+        json,
+        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+    ) ?? new List<ArticleCategorySeedItem>();
+
+    if (defaults.Count == 0)
+        return;
+
+    var existingCategories = await context.ArticleCategories
+        .ToListAsync();
+
+    var existingBySlug = existingCategories.ToDictionary(c => c.Slug, StringComparer.OrdinalIgnoreCase);
+    var normalizedDefaults = defaults
+        .Where(item => !string.IsNullOrWhiteSpace(item.Name))
+        .Select(item => new
+        {
+            Name = item.Name.Trim(),
+            Slug = string.IsNullOrWhiteSpace(item.Slug) ? item.Name.ToSlug() : item.Slug.ToSlug(),
+            item.SortOrder
+        })
+        .ToList();
+
+    foreach (var item in normalizedDefaults)
+    {
+        if (existingBySlug.TryGetValue(item.Slug, out var existing))
+        {
+            existing.Name = item.Name;
+            existing.SortOrder = item.SortOrder;
+            existing.UpdatedAt = DateTime.UtcNow;
+        }
+    }
+
+    var categoriesToAdd = normalizedDefaults
+        .Where(item => !existingBySlug.ContainsKey(item.Slug))
+        .Select(item => new ArticleCategory
+        {
+            Name = item.Name,
+            Slug = item.Slug,
+            SortOrder = item.SortOrder
+        })
+        .ToList();
+
+    if (categoriesToAdd.Count == 0)
+    {
+        await context.SaveChangesAsync();
+        return;
+    }
+
+    await context.ArticleCategories.AddRangeAsync(categoriesToAdd);
+    await context.SaveChangesAsync();
+}
+
+public sealed class ArticleCategorySeedItem
+{
+    public string Name { get; set; } = string.Empty;
+    public string? Slug { get; set; }
+    public int SortOrder { get; set; }
 }

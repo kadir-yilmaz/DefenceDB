@@ -1,0 +1,10 @@
+@model Article
+@{
+    ViewData["Title"] = "Makale Düzenle";
+}
+
+<partial name="_ArticleForm" model="Model" />
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

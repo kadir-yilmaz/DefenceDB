@@ -1,0 +1,5 @@
+[
+  { "name": "Ülke Envanter", "slug": "ulke-envanter", "sortOrder": 1 },
+  { "name": "Diğer", "slug": "diger", "sortOrder": 2 },
+  { "name": "Kıyaslama", "slug": "kiyaslama", "sortOrder": 3 }
+]
