@@ -4,7 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 namespace DefenceDB.WebUI.Middleware;
 
 /// <summary>
-/// Her HTTP isteğinde ziyaretçiyi takip eden middleware
+/// Her HTTP isteğinde ziyaretçiyi otomatik olarak takip eden middleware.
+/// Rıza gerektirmez — anonim istatistik çerezi kişisel veri toplamaz.
+/// İlk ziyarette df_visitor_id cookie'si otomatik set edilir.
 /// </summary>
 public class VisitorTrackingMiddleware
 {
@@ -28,43 +30,55 @@ public class VisitorTrackingMiddleware
         var path = context.Request.Path;
         var userAgent = context.Request.Headers["User-Agent"].ToString();
 
-        string? visitorId = null;
-
-        // df_visitor_id cookie kontrolü (1 yıllık kalıcı çerez veya "rejected" değeri)
-        if (context.Request.Cookies.TryGetValue("df_visitor_id", out var existingId) && 
-            !string.IsNullOrWhiteSpace(existingId) && 
-            existingId != "rejected")
+        // Statik dosya, API ve bot isteklerini atla
+        if (!isGet || path.StartsWithSegments("/api") || IsStaticFile(path) || IsBot(userAgent))
         {
-            if (isGet && 
-                !path.StartsWithSegments("/api") &&
-                !IsStaticFile(path) &&
-                !IsBot(userAgent))
-            {
-                visitorId = existingId;
-            }
+            await _next(context);
+            return;
         }
 
-        // Önce response'u gönder
+        string? visitorId = null;
+
+        // df_visitor_id cookie kontrolü
+        if (context.Request.Cookies.TryGetValue("df_visitor_id", out var existingId) &&
+            !string.IsNullOrWhiteSpace(existingId) &&
+            existingId != "rejected") // Eski "rejected" cookie'leri varsa yeni UUID ile değiştir
+        {
+            visitorId = existingId;
+        }
+        else
+        {
+            // Yeni ziyaretçi — otomatik UUID oluştur ve cookie set et
+            visitorId = Guid.NewGuid().ToString("N");
+
+            context.Response.Cookies.Append("df_visitor_id", visitorId, new CookieOptions
+            {
+                Expires = DateTimeOffset.UtcNow.AddYears(1),
+                HttpOnly = true,
+                Secure = context.Request.IsHttps,
+                SameSite = SameSiteMode.Lax,
+                Path = "/"
+            });
+        }
+
+        // Response'u gönder
         await _next(context);
 
         // Response gönderildikten sonra visitor tracking yap (fire-and-forget)
-        if (visitorId != null)
+        _ = Task.Run(async () =>
         {
-            _ = Task.Run(async () =>
+            try
             {
-                try
-                {
-                    using var scope = _scopeFactory.CreateScope();
-                    var visitorService = scope.ServiceProvider.GetRequiredService<IVisitorService>();
-                    
-                    await visitorService.TrackVisitorAsync(visitorId, userAgent);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error in background visitor tracking");
-                }
-            });
-        }
+                using var scope = _scopeFactory.CreateScope();
+                var visitorService = scope.ServiceProvider.GetRequiredService<IVisitorService>();
+
+                await visitorService.TrackVisitorAsync(visitorId, userAgent);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in background visitor tracking");
+            }
+        });
     }
 
     /// <summary>
@@ -72,9 +86,9 @@ public class VisitorTrackingMiddleware
     /// </summary>
     private bool IsStaticFile(PathString path)
     {
-        var staticExtensions = new[] { ".css", ".js", ".jpg", ".jpeg", ".png", ".gif", 
+        var staticExtensions = new[] { ".css", ".js", ".jpg", ".jpeg", ".png", ".gif",
             ".svg", ".ico", ".woff", ".woff2", ".ttf", ".eot", ".map", ".json" };
-        
+
         return staticExtensions.Any(ext => path.Value?.EndsWith(ext, StringComparison.OrdinalIgnoreCase) ?? false);
     }
 

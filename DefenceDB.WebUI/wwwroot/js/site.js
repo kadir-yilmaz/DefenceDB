@@ -160,40 +160,40 @@ $(document).ready(function () {
     });
 
     // ----------------------------------------------------
-    // 4. Cookie Consent Banner
-    // The banner HTML is server-rendered only when no consent cookie exists.
-    // JS only handles the entrance animation and button clicks.
+    // 4. Cookie Notice Banner (Bilgilendirme)
+    // Banner HTML sunucu tarafında render edilir (df_cookie_notice cookie'si yoksa).
+    // JS çift koruma sağlar: cache'ten gelen eski HTML'de banner varsa bile
+    // cookie kontrolü yapıp banner'ı göstermeden kaldırır.
     // ----------------------------------------------------
-    var $consentBanner = $("#cookieConsentBanner");
+    var $noticeBanner = $("#cookieNoticeBanner");
 
-    if ($consentBanner.length) {
-        // Banner exists in DOM → server determined consent is needed.
-        // Trigger entrance animation after a micro-delay for the CSS transition to kick in.
-        requestAnimationFrame(function () {
-            $consentBanner.addClass("show");
-        });
+    if ($noticeBanner.length) {
+        // Çift koruma: Cache'ten gelen HTML'de banner olabilir ama cookie zaten set edilmişse gösterme
+        if (document.cookie.indexOf("df_cookie_notice=") !== -1) {
+            $noticeBanner.remove();
+        } else {
+            // Banner gösterilmeli — giriş animasyonu
+            requestAnimationFrame(function () {
+                $noticeBanner.addClass("show");
+            });
 
-        $("#btnAcceptCookies").click(function () {
-            var $buttons = $(".cookie-btn");
-            $buttons.prop("disabled", true);
-            $.post("/api/visitor/consent-accept").always(function() {
+            $("#btnDismissNotice").click(function () {
+                $(this).prop("disabled", true);
+
+                // JS cookie set et (HttpOnly değil — sadece banner gösterim kontrolü)
+                var expires = new Date();
+                expires.setFullYear(expires.getFullYear() + 1);
+                document.cookie = "df_cookie_notice=1; path=/; expires=" + expires.toUTCString() + "; SameSite=Lax";
+
                 hideBanner();
             });
-        });
-
-        $("#btnRejectCookies").click(function () {
-            var $buttons = $(".cookie-btn");
-            $buttons.prop("disabled", true);
-            $.post("/api/visitor/consent-reject").always(function() {
-                hideBanner();
-            });
-        });
+        }
     }
 
     function hideBanner() {
-        $consentBanner.removeClass("show");
+        $noticeBanner.removeClass("show");
         setTimeout(function () {
-            $consentBanner.remove();
+            $noticeBanner.remove();
         }, 400);
     }
 });

@@ -139,23 +139,22 @@
         </div>
     </footer>
 
-    @if (!Context.Request.Cookies.ContainsKey("df_visitor_id"))
+    @if (!Context.Request.Cookies.ContainsKey("df_cookie_notice"))
     {
-    <!-- Cookie Consent Banner (server-rendered only when no consent cookie exists) -->
-    <div id="cookieConsentBanner" class="cookie-consent-banner">
+    <!-- Çerez Bilgilendirme Banner'ı (sunucu tarafında render — yalnızca df_cookie_notice yoksa) -->
+    <div id="cookieNoticeBanner" class="cookie-consent-banner">
         <div class="cookie-content">
             <div class="cookie-icon-wrapper">
                 <i class="bi bi-shield-fill-check"></i>
             </div>
             <div class="cookie-text-container">
-                <span class="cookie-title">Çerez ve Gizlilik Ayarları</span>
+                <span class="cookie-title">Çerez Bilgilendirmesi</span>
                 <p class="cookie-description">
-                    Sitemizin ziyaretçi istatistiklerini doğru analiz edebilmek için tamamen anonim performans çerezleri kullanmaktayız.
+                    Bu site, ziyaretçi istatistiklerini anonim olarak ölçmek için çerez kullanmaktadır. Kişisel veri toplanmamaktadır.
                 </p>
             </div>
             <div class="cookie-buttons">
-                <button id="btnRejectCookies" class="btn btn-outline-secondary btn-sm cookie-btn">Reddet</button>
-                <button id="btnAcceptCookies" class="btn btn-warning btn-sm cookie-btn text-dark fw-bold">Kabul Et</button>
+                <button id="btnDismissNotice" class="btn btn-warning btn-sm cookie-btn text-dark fw-bold">Anladım</button>
             </div>
         </div>
     </div>

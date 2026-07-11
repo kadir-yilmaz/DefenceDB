@@ -222,35 +222,6 @@ app.MapGet("/debug/headers", (HttpContext context) =>
     return Results.Text(result.ToString());
 });
 
-app.MapPost("/api/visitor/consent-accept", async (HttpContext context, IVisitorService visitorService) =>
-{
-    var visitorId = Guid.NewGuid().ToString("N");
-    context.Response.Cookies.Append("df_visitor_id", visitorId, new CookieOptions
-    {
-        Expires = DateTimeOffset.UtcNow.AddYears(1),
-        HttpOnly = true,
-        Secure = context.Request.IsHttps,
-        SameSite = SameSiteMode.Lax,
-        Path = "/"
-    });
-
-    var userAgent = context.Request.Headers["User-Agent"].ToString();
-    await visitorService.TrackVisitorAsync(visitorId, userAgent);
-    return Results.Ok();
-});
-
-app.MapPost("/api/visitor/consent-reject", (HttpContext context) =>
-{
-    context.Response.Cookies.Append("df_visitor_id", "rejected", new CookieOptions
-    {
-        Expires = DateTimeOffset.UtcNow.AddYears(1),
-        HttpOnly = true,
-        Secure = context.Request.IsHttps,
-        SameSite = SameSiteMode.Lax,
-        Path = "/"
-    });
-    return Results.Ok();
-});
 
 app.Run();
 
