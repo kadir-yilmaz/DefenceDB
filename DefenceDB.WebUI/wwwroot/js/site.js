@@ -172,7 +172,8 @@ $(document).ready(function () {
         if (document.cookie.indexOf("df_cookie_notice=") !== -1) {
             $noticeBanner.remove();
         } else {
-            // Banner gösterilmeli — giriş animasyonu
+            // Banner gösterilmeli — önce display:none kaldır, sonra animasyon
+            $noticeBanner.css("display", "");
             requestAnimationFrame(function () {
                 $noticeBanner.addClass("show");
             });
