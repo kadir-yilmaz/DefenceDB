@@ -160,31 +160,31 @@ $(document).ready(function () {
     });
 
     // ----------------------------------------------------
-    // 4. Cookie Notice Banner (Bilgilendirme)
+    // 4. System Notice Banner (Bilgilendirme)
     // Banner HTML her zaman render edilir (display:none ile).
     // Inline script cookie varsa DOM'dan kaldırır (jQuery öncesi).
     // Bu kod sadece banner hâlâ DOM'daysa (cookie yok) çalışır.
     // ----------------------------------------------------
-    var $noticeBanner = $("#cookieNoticeBanner");
+    var $sysAlert = $("#dfSystemAlert");
 
-    if ($noticeBanner.length) {
+    if ($sysAlert.length) {
         // Cookie yok → banner gösterilmeli
-        $noticeBanner.css("display", "");
+        $sysAlert.css("display", "");
         requestAnimationFrame(function () {
-            $noticeBanner.addClass("show");
+            $sysAlert.addClass("show");
         });
 
-        $("#btnDismissNotice").click(function () {
+        $("#btnDismissAlert").click(function () {
             $(this).prop("disabled", true);
 
             // JS cookie set et (1 yıl)
             var expires = new Date();
             expires.setFullYear(expires.getFullYear() + 1);
-            document.cookie = "df_cookie_notice=1; path=/; expires=" + expires.toUTCString() + "; SameSite=Lax";
+            document.cookie = "df_alert_ack=1; path=/; expires=" + expires.toUTCString() + "; SameSite=Lax";
 
-            $noticeBanner.removeClass("show");
+            $sysAlert.removeClass("show");
             setTimeout(function () {
-                $noticeBanner.remove();
+                $sysAlert.remove();
             }, 400);
         });
     }

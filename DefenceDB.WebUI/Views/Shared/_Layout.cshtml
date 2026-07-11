@@ -140,28 +140,28 @@
     </footer>
 
     <!-- Çerez Bilgilendirme Banner'ı — her zaman render edilir, gösterim JS tarafında kontrol edilir -->
-    <div id="cookieNoticeBanner" class="cookie-consent-banner" style="display:none">
-        <div class="cookie-content">
-            <div class="cookie-icon-wrapper">
+    <div id="dfSystemAlert" class="df-sys-alert" style="display:none">
+        <div class="df-alert-body">
+            <div class="df-alert-icon">
                 <i class="bi bi-shield-fill-check"></i>
             </div>
-            <div class="cookie-text-container">
-                <span class="cookie-title">Çerez Bilgilendirmesi</span>
-                <p class="cookie-description">
+            <div class="df-alert-text">
+                <span class="df-alert-title">Çerez Bilgilendirmesi</span>
+                <p class="df-alert-desc">
                     Bu site, ziyaretçi istatistiklerini anonim olarak ölçmek için çerez kullanmaktadır. Kişisel veri toplanmamaktadır.
                 </p>
             </div>
-            <div class="cookie-buttons">
-                <button id="btnDismissNotice" class="btn btn-warning btn-sm cookie-btn text-dark fw-bold">Anladım</button>
+            <div class="df-alert-buttons">
+                <button id="btnDismissAlert" class="btn btn-warning btn-sm df-alert-btn text-dark fw-bold">Anladım</button>
             </div>
         </div>
     </div>
     <script>
         // Inline — jQuery beklenmeden hemen çalışır, sıfır flash garantisi
         (function() {
-            var b = document.getElementById('cookieNoticeBanner');
+            var b = document.getElementById('dfSystemAlert');
             if (!b) return;
-            if (document.cookie.indexOf('df_cookie_notice=') !== -1) {
+            if (document.cookie.indexOf('df_alert_ack=') !== -1) {
                 b.parentNode.removeChild(b);
             }
         })();

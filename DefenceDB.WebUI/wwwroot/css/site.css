@@ -750,8 +750,8 @@ h1, h2, h3, h4, h5, h6, .brand-text {
     }
 }
 
-/* Cookie Consent Banner Styling */
-.cookie-consent-banner {
+/* System Alert Banner Styling (Generic naming to bypass adblockers/Brave shields) */
+.df-sys-alert {
     position: fixed;
     bottom: 24px;
     left: 50%;
@@ -770,20 +770,20 @@ h1, h2, h3, h4, h5, h6, .brand-text {
     pointer-events: none;
 }
 
-.cookie-consent-banner.show {
+.df-sys-alert.show {
     transform: translateX(-50%) translateY(0);
     opacity: 1;
     pointer-events: auto;
 }
 
-.cookie-content {
+.df-alert-body {
     display: flex;
     align-items: center;
     gap: 16px;
     flex-wrap: wrap;
 }
 
-.cookie-icon-wrapper {
+.df-alert-icon {
     width: 44px;
     height: 44px;
     background: rgba(245, 158, 11, 0.1);
@@ -797,12 +797,12 @@ h1, h2, h3, h4, h5, h6, .brand-text {
     flex-shrink: 0;
 }
 
-.cookie-text-container {
+.df-alert-text {
     flex-grow: 1;
     flex-basis: 250px;
 }
 
-.cookie-title {
+.df-alert-title {
     font-family: var(--font-heading);
     font-size: 1.05rem;
     font-weight: 700;
@@ -811,21 +811,21 @@ h1, h2, h3, h4, h5, h6, .brand-text {
     margin-bottom: 2px;
 }
 
-.cookie-description {
+.df-alert-desc {
     font-size: 0.8rem;
     color: #9ca3af;
     margin: 0;
     line-height: 1.5;
 }
 
-.cookie-buttons {
+.df-alert-buttons {
     display: flex;
     gap: 10px;
     margin-left: auto;
     flex-shrink: 0;
 }
 
-.cookie-btn {
+.df-alert-btn {
     border-radius: 8px !important;
     padding: 8px 16px !important;
     font-size: 0.8rem !important;
@@ -833,16 +833,16 @@ h1, h2, h3, h4, h5, h6, .brand-text {
 }
 
 @media (max-width: 576px) {
-    .cookie-consent-banner {
+    .df-sys-alert {
         padding: 16px;
         bottom: 16px;
     }
-    .cookie-content {
+    .df-alert-body {
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
     }
-    .cookie-buttons {
+    .df-alert-buttons {
         width: 100%;
         justify-content: flex-end;
         margin-top: 6px;
