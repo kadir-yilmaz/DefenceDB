@@ -161,41 +161,32 @@ $(document).ready(function () {
 
     // ----------------------------------------------------
     // 4. Cookie Notice Banner (Bilgilendirme)
-    // Banner HTML sunucu tarafında render edilir (df_cookie_notice cookie'si yoksa).
-    // JS çift koruma sağlar: cache'ten gelen eski HTML'de banner varsa bile
-    // cookie kontrolü yapıp banner'ı göstermeden kaldırır.
+    // Banner HTML her zaman render edilir (display:none ile).
+    // Inline script cookie varsa DOM'dan kaldırır (jQuery öncesi).
+    // Bu kod sadece banner hâlâ DOM'daysa (cookie yok) çalışır.
     // ----------------------------------------------------
     var $noticeBanner = $("#cookieNoticeBanner");
 
     if ($noticeBanner.length) {
-        // Çift koruma: Cache'ten gelen HTML'de banner olabilir ama cookie zaten set edilmişse gösterme
-        if (document.cookie.indexOf("df_cookie_notice=") !== -1) {
-            $noticeBanner.remove();
-        } else {
-            // Banner gösterilmeli — önce display:none kaldır, sonra animasyon
-            $noticeBanner.css("display", "");
-            requestAnimationFrame(function () {
-                $noticeBanner.addClass("show");
-            });
+        // Cookie yok → banner gösterilmeli
+        $noticeBanner.css("display", "");
+        requestAnimationFrame(function () {
+            $noticeBanner.addClass("show");
+        });
 
-            $("#btnDismissNotice").click(function () {
-                $(this).prop("disabled", true);
+        $("#btnDismissNotice").click(function () {
+            $(this).prop("disabled", true);
 
-                // JS cookie set et (HttpOnly değil — sadece banner gösterim kontrolü)
-                var expires = new Date();
-                expires.setFullYear(expires.getFullYear() + 1);
-                document.cookie = "df_cookie_notice=1; path=/; expires=" + expires.toUTCString() + "; SameSite=Lax";
+            // JS cookie set et (1 yıl)
+            var expires = new Date();
+            expires.setFullYear(expires.getFullYear() + 1);
+            document.cookie = "df_cookie_notice=1; path=/; expires=" + expires.toUTCString() + "; SameSite=Lax";
 
-                hideBanner();
-            });
-        }
-    }
-
-    function hideBanner() {
-        $noticeBanner.removeClass("show");
-        setTimeout(function () {
-            $noticeBanner.remove();
-        }, 400);
+            $noticeBanner.removeClass("show");
+            setTimeout(function () {
+                $noticeBanner.remove();
+            }, 400);
+        });
     }
 });
 
