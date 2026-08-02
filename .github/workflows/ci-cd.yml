@@ -67,7 +67,7 @@ jobs:
 
           Write-Host "Publishing & Deploying via WebDeploy to $site ($server)..."
 
-          dotnet publish DefenceDB.WebUI/DefenceDB.WebUI.csproj `
+          dotnet build DefenceDB.WebUI/DefenceDB.WebUI.csproj `
             -c Release `
             /p:DeployOnBuild=true `
             /p:PublishProvider=WebDeploy `
