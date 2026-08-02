@@ -36,10 +36,7 @@ jobs:
       - name: Build Solution
         run: dotnet build --configuration Release --no-restore
 
-      - name: Publish Web Application
-        run: dotnet publish DefenceDB.WebUI/DefenceDB.WebUI.csproj -c Release -o ./publish
-
-      - name: Deploy via WebDeploy
+      - name: Deploy via WebDeploy (MonsterASP / siteasp.net)
         shell: powershell
         run: |
           $rawJson = @"
@@ -68,10 +65,11 @@ jobs:
               exit 1
           }
 
-          Write-Host "Deploying DefenceDB via WebDeploy (preserving wwwroot/images, wwwroot/thumbs, wwwroot/videos)..."
+          Write-Host "Publishing & Deploying via WebDeploy to $site ($server)..."
 
           dotnet publish DefenceDB.WebUI/DefenceDB.WebUI.csproj `
             -c Release `
+            /p:DeployOnBuild=true `
             /p:PublishProvider=WebDeploy `
             /p:PublishUrl=$server `
             /p:DeployIisAppPath=$site `
