@@ -3,9 +3,10 @@ using System.ComponentModel.DataAnnotations;
 namespace DefenceDB.EL.Models;
 
 /// <summary>
-/// Tüm savunma ürünlerinin ana soyut sınıfı. TPT (Table-Per-Type) kalıtımı ile modeller bu sınıftan türer.
+/// Tüm savunma ürünlerinin tek entity sınıfı.
+/// Kategoriye özel özellikler Specs (JSON column) dictionary'sinde saklanır.
 /// </summary>
-public abstract class DefenseProduct : BaseEntity
+public class DefenseProduct : BaseEntity
 {
     [Required, MaxLength(200)]
     public string Name { get; set; } = string.Empty;
@@ -45,6 +46,9 @@ public abstract class DefenseProduct : BaseEntity
     // Category FK
     public int CategoryId { get; set; }
     public Category Category { get; set; } = null!;
+
+    // Kategoriye özel dinamik özellikler — JSON column olarak saklanır
+    public Dictionary<string, string> Specs { get; set; } = new();
 
     // Relationships (source = this product uses/relates to target)
     public ICollection<ProductRelationship> SourceRelationships { get; set; } = new List<ProductRelationship>();

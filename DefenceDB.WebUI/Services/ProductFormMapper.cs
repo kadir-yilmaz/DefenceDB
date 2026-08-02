@@ -1,43 +1,30 @@
 using DefenceDB.EL.Extensions;
 using DefenceDB.EL.Models;
-using Microsoft.AspNetCore.Http;
-using System;
-using System.Linq;
+using DefenceDB.BLL.Abstract;
 
 namespace DefenceDB.WebUI.Services;
 
 public class ProductFormMapper : IProductFormMapper
 {
+    private readonly ICategoryQueryService _categoryQueryService;
+
+    public ProductFormMapper(ICategoryQueryService categoryQueryService)
+    {
+        _categoryQueryService = categoryQueryService;
+    }
+
     public DefenseProduct? MapFromFormForCreate(IFormCollection form)
     {
-        string? modelTypeFullName = form["ModelTypeFullName"];
-        if (string.IsNullOrEmpty(modelTypeFullName)) return null;
-
-        Type? modelType = Type.GetType(modelTypeFullName);
-        
-        // Fallback arama
-        if (modelType == null)
-        {
-            modelType = AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(a => a.GetTypes())
-                .FirstOrDefault(t => t.FullName == modelTypeFullName);
-        }
-        
-        if (modelType == null) return null;
-
-        var instance = Activator.CreateInstance(modelType) as DefenseProduct;
-        if (instance == null) return null;
-
+        var instance = new DefenseProduct();
         MapBaseProperties(form, instance);
-        MapSpecificProperties(form, instance, modelType);
-
+        MapSpecsFromForm(form, instance);
         return instance;
     }
 
     public void MapFromFormForEdit(IFormCollection form, DefenseProduct existingInstance)
     {
         MapBaseProperties(form, existingInstance);
-        MapSpecificProperties(form, existingInstance, existingInstance.GetType());
+        MapSpecsFromForm(form, existingInstance);
     }
 
     private void MapBaseProperties(IFormCollection form, DefenseProduct instance)
@@ -47,6 +34,7 @@ public class ProductFormMapper : IProductFormMapper
         instance.Manufacturer = form["Manufacturer"].ToString();
         instance.Status = form["Status"].ToString();
         instance.Description = form["Description"].ToString();
+        instance.NatoReportingName = form["NatoReportingName"].ToString();
         
         instance.IsActive = form["IsActive"].ToString().Contains("true", StringComparison.OrdinalIgnoreCase);
         instance.IsShowcase = form["IsShowcase"].ToString().Contains("true", StringComparison.OrdinalIgnoreCase);
@@ -55,60 +43,46 @@ public class ProductFormMapper : IProductFormMapper
         {
             instance.CategoryId = catId;
         }
+
+        if (int.TryParse(form["YearIntroduced"], out int year))
+        {
+            instance.YearIntroduced = year;
+        }
         
         instance.VideoUrl = form["VideoUrl"].ToString();
         instance.Slug = instance.Name?.ToSlug() ?? "";
     }
 
-    private void MapSpecificProperties(IFormCollection form, DefenseProduct instance, Type modelType)
+    private void MapSpecsFromForm(IFormCollection form, DefenseProduct instance)
     {
-        var baseProperties = typeof(DefenseProduct).GetProperties().Select(p => p.Name).ToList();
-        var specificProperties = modelType.GetProperties().Where(p => !baseProperties.Contains(p.Name)).ToList();
-
-        foreach (var prop in specificProperties)
+        // Specs_ prefix ile gelen form alanlarını Specs dictionary'sine yaz
+        var specs = new Dictionary<string, string>();
+        
+        foreach (var key in form.Keys)
         {
-            if (form.TryGetValue(prop.Name, out var values))
+            if (key.StartsWith("Specs_", StringComparison.OrdinalIgnoreCase))
             {
-                var valueStr = values.FirstOrDefault();
-                if (string.IsNullOrEmpty(valueStr) && prop.PropertyType != typeof(bool)) continue;
-
-                object? convertedValue = null;
+                var specName = key.Substring("Specs_".Length);
+                var value = form[key].ToString();
                 
-                try 
+                if (!string.IsNullOrWhiteSpace(value))
                 {
-                    if (prop.PropertyType == typeof(bool))
-                    {
-                        convertedValue = values.ToString().Contains("true", StringComparison.OrdinalIgnoreCase);
-                    }
-                    else if (prop.PropertyType.IsEnum)
-                    {
-                        convertedValue = Enum.Parse(prop.PropertyType, valueStr!);
-                    }
-                    else if (Nullable.GetUnderlyingType(prop.PropertyType)?.IsEnum == true)
-                    {
-                        convertedValue = Enum.Parse(Nullable.GetUnderlyingType(prop.PropertyType)!, valueStr!);
-                    }
-                    else if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(int?))
-                    {
-                        convertedValue = int.Parse(valueStr!);
-                    }
-                    else if (prop.PropertyType == typeof(byte) || prop.PropertyType == typeof(byte?))
-                    {
-                        convertedValue = byte.Parse(valueStr!);
-                    }
-                    else if (prop.PropertyType == typeof(double) || prop.PropertyType == typeof(double?))
-                    {
-                        convertedValue = double.Parse(valueStr!, System.Globalization.CultureInfo.InvariantCulture);
-                    }
-                    else
-                    {
-                        convertedValue = valueStr;
-                    }
-                    
-                    prop.SetValue(instance, convertedValue);
+                    specs[specName] = value;
                 }
-                catch { /* Dönüşüm hatasını yoksay */ }
             }
         }
+
+        // Checkbox'lar için: Specs_Bool_ prefix
+        foreach (var key in form.Keys)
+        {
+            if (key.StartsWith("Specs_Bool_", StringComparison.OrdinalIgnoreCase))
+            {
+                var specName = key.Substring("Specs_Bool_".Length);
+                var value = form[key].ToString().Contains("true", StringComparison.OrdinalIgnoreCase);
+                specs[specName] = value.ToString();
+            }
+        }
+
+        instance.Specs = specs;
     }
 }

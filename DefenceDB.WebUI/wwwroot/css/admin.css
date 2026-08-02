@@ -839,7 +839,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--admin-bg);
+    background: #020617; /* Dark slate */
     position: relative;
     overflow: hidden;
 }
@@ -865,17 +865,17 @@ body {
 }
 
 .login-card {
-    background: var(--admin-glass);
+    background: rgba(15, 23, 42, 0.7); /* Slate 900 with transparency */
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border: 1px solid var(--admin-glass-border);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--radius-lg);
     padding: 48px 40px;
     width: 100%;
     max-width: 420px;
     position: relative;
     z-index: 1;
-    box-shadow: 0 32px 64px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 32px 64px rgba(0, 0, 0, 0.5);
 }
 
 .login-logo {
@@ -926,16 +926,16 @@ body {
     display: block;
     font-size: 0.8rem;
     font-weight: 600;
-    color: var(--admin-text-secondary);
+    color: #94a3b8;
     margin-bottom: 8px;
 }
 
 .login-form .form-group input {
     width: 100%;
-    background: var(--admin-bg);
-    border: 1px solid var(--admin-border);
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-sm);
-    color: var(--admin-text);
+    color: #f8fafc;
     padding: 12px 16px;
     font-size: 0.9rem;
     transition: all 0.2s ease;
@@ -944,8 +944,8 @@ body {
 
 .login-form .form-group input:focus {
     outline: none;
-    border-color: var(--admin-accent);
-    box-shadow: 0 0 0 3px var(--admin-accent-glow);
+    border-color: #ffc107;
+    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.2);
 }
 
 .login-form .remember-row {
@@ -964,25 +964,24 @@ body {
 
 .login-btn {
     width: 100%;
-    background: linear-gradient(135deg, var(--admin-accent), #d97706);
-    color: #0a0e1a;
+    background: #ffc107;
+    color: #000;
+    font-weight: 600;
+    font-size: 1rem;
     border: none;
     padding: 14px;
-    border-radius: var(--radius-sm);
-    font-weight: 700;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    transition: all 0.2s ease;
 }
 
 .login-btn:hover {
-    background: linear-gradient(135deg, var(--admin-accent-hover), #f59e0b);
+    background: #ffca2c;
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.3);
+    box-shadow: 0 8px 24px rgba(255, 193, 7, 0.4);
 }
 
 /* === ACCESS DENIED === */

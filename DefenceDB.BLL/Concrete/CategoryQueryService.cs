@@ -43,13 +43,10 @@ public class CategoryQueryService : ICategoryQueryService
         return await _context.Categories
             .AsNoTracking()
             .Include(c => c.SubCategories)
+            .Include(c => c.Attributes.OrderBy(a => a.DisplayOrder))
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
-    /// <summary>
-    /// Fetches category metadata by slug WITHOUT loading TPT products.
-    /// Products are queried separately via the ReadModel.
-    /// </summary>
     public async Task<Category?> GetCategoryBySlugAsync(string slug)
     {
         return await _context.Categories
@@ -75,11 +72,6 @@ public class CategoryQueryService : ICategoryQueryService
         return categories;
     }
 
-    /// <summary>
-    /// Returns root categories with their sub-categories.
-    /// Does NOT include Products (avoids TPT JOIN explosion).
-    /// Product counts are fetched separately via GetCategoryProductCountsAsync().
-    /// </summary>
     public async Task<List<Category>> GetCategoriesWithChildrenAsync()
     {
         var cacheKey = "categories:tree";
@@ -107,8 +99,7 @@ public class CategoryQueryService : ICategoryQueryService
     }
 
     /// <summary>
-    /// Returns a dictionary of CategoryId -> product count from the ReadModel table.
-    /// This avoids TPT JOIN explosions when loading product counts per category.
+    /// CategoryId -> product count, doğrudan DefenseProducts tablosundan.
     /// </summary>
     public async Task<Dictionary<int, int>> GetCategoryProductCountsAsync()
     {
@@ -117,7 +108,7 @@ public class CategoryQueryService : ICategoryQueryService
         if (cached != null)
             return cached;
 
-        var counts = await _context.ProductReadModels
+        var counts = await _context.DefenseProducts
             .AsNoTracking()
             .GroupBy(p => p.CategoryId)
             .Select(g => new { CategoryId = g.Key, Count = g.Count() })
@@ -125,5 +116,50 @@ public class CategoryQueryService : ICategoryQueryService
 
         await _cacheService.SetAsync(cacheKey, counts, DefaultCacheDuration);
         return counts;
+    }
+
+    /// <summary>
+    /// Doğrudan bir kategoriye tanımlı attribute'ları döner.
+    /// </summary>
+    public async Task<List<CategoryAttribute>> GetCategoryAttributesAsync(int categoryId)
+    {
+        return await _context.CategoryAttributes
+            .AsNoTracking()
+            .Where(a => a.CategoryId == categoryId)
+            .OrderBy(a => a.DisplayOrder)
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// Bir kategorinin kendi + üst kategorilerinden miras alınan tüm attribute'ları döner.
+    /// Alt kategoriler, üst kategorilerinin attribute'larını da gösterir.
+    /// </summary>
+    public async Task<List<CategoryAttribute>> GetInheritedAttributesAsync(int categoryId)
+    {
+        var allAttributes = new List<CategoryAttribute>();
+        var visitedIds = new HashSet<int>();
+        int? currentId = categoryId;
+
+        while (currentId.HasValue && !visitedIds.Contains(currentId.Value))
+        {
+            visitedIds.Add(currentId.Value);
+
+            var attrs = await _context.CategoryAttributes
+                .AsNoTracking()
+                .Where(a => a.CategoryId == currentId.Value)
+                .OrderBy(a => a.DisplayOrder)
+                .ToListAsync();
+            allAttributes.AddRange(attrs);
+
+            var category = await _context.Categories
+                .AsNoTracking()
+                .Where(c => c.Id == currentId.Value)
+                .Select(c => c.ParentCategoryId)
+                .FirstOrDefaultAsync();
+            currentId = category;
+        }
+
+        // Üst kategorilerden gelenler sonda, kendi attribute'ları başta
+        return allAttributes;
     }
 }

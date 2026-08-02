@@ -1,106 +1,47 @@
 @{
-    var currentCategory = ViewBag.CurrentCategory as Category;
-    var filterProps = ViewBag.FilterProperties as List<System.Reflection.PropertyInfo>;
+    var currentCategory = ViewBag.CurrentCategory as DefenceDB.EL.Models.Category;
+    var filterAttributes = ViewBag.FilterAttributes as List<DefenceDB.EL.Models.CategoryAttribute>;
 }
 
-@if (filterProps != null && filterProps.Any())
+@if (filterAttributes != null && filterAttributes.Any())
 {
     <form method="get" action="@Url.Action("Index", "Product")">
         <input type="hidden" name="categorySlug" value="@(currentCategory?.Slug)" />
         <input type="hidden" name="country" value="@ViewBag.CurrentCountry" />
         <input type="hidden" name="search" value="@ViewBag.CurrentSearch" />
         
-        @foreach (var prop in filterProps)
+        @foreach (var attr in filterAttributes)
         {
-            var currentVal = Context.Request.Query[prop.Name].ToString();
+            var currentVal = Context.Request.Query[attr.Name].ToString();
             
             <div class="mb-3">
-                <label class="form-label text-secondary-theme small">@prop.Name</label>
+                <label class="form-label text-secondary-theme small">@attr.DisplayName</label>
                 
-                @if (prop.Name == "Generation")
+                @if (attr.Type == DefenceDB.EL.Models.AttributeType.Boolean)
                 {
-                    <select name="@prop.Name" class="form-select form-select-sm bg-theme text-primary-theme border-theme" onchange="sessionStorage.setItem('filterScroll', window.scrollY); this.form.submit()">
-                        <option value="">Tümü</option>
-                        <option value="1" selected="@(currentVal == "1" ? "selected" : null)">1. Nesil</option>
-                        <option value="2" selected="@(currentVal == "2" ? "selected" : null)">2. Nesil</option>
-                        <option value="3" selected="@(currentVal == "3" ? "selected" : null)">3. Nesil</option>
-                        <option value="4" selected="@(currentVal == "4" ? "selected" : null)">4. Nesil</option>
-                        <option value="4.5" selected="@(currentVal == "4.5" ? "selected" : null)">4.5 Nesil</option>
-                        <option value="5" selected="@(currentVal == "5" ? "selected" : null)">5. Nesil</option>
-                        <option value="6" selected="@(currentVal == "6" ? "selected" : null)">6. Nesil</option>
-                    </select>
-                }
-                else if (prop.PropertyType == typeof(bool))
-                {
-                    <select name="@prop.Name" class="form-select form-select-sm bg-theme text-primary-theme border-theme" onchange="sessionStorage.setItem('filterScroll', window.scrollY); this.form.submit()">
+                    <select name="@attr.Name" class="form-select form-select-sm bg-theme text-primary-theme border-theme" onchange="sessionStorage.setItem('filterScroll', window.scrollY); this.form.submit()">
                         <option value="">Tümü</option>
                         <option value="true" selected="@(currentVal == "true" ? "selected" : null)">Evet</option>
                         <option value="false" selected="@(currentVal == "false" ? "selected" : null)">Hayır</option>
                     </select>
                 }
-                else if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(int?))
+                else if (attr.Type == DefenceDB.EL.Models.AttributeType.Dropdown && attr.Options != null && attr.Options.Any())
                 {
-                    <input type="number" name="@prop.Name" class="form-control form-control-sm bg-theme text-primary-theme border-theme" placeholder="Sayı girin..." value="@currentVal" onchange="sessionStorage.setItem('filterScroll', window.scrollY); this.form.submit()" />
-                }
-                else if (prop.PropertyType == typeof(double) || prop.PropertyType == typeof(double?))
-                {
-                    <input type="number" step="0.01" name="@prop.Name" class="form-control form-control-sm bg-theme text-primary-theme border-theme" placeholder="Sayı girin..." value="@currentVal" onchange="sessionStorage.setItem('filterScroll', window.scrollY); this.form.submit()" />
-                }
-                else if (prop.Name == "GuidanceType")
-                {
-                    string[] availableTypes = new[] { "IR", "IIR", "RF", "SARH", "Pasif", "EO" };
-                    var currentVals = Context.Request.Query[prop.Name].ToArray();
-                    
-                    <div class="d-flex flex-column gap-2 mt-2">
-                        @foreach(var type in availableTypes)
-                        {
-                            bool isChecked = currentVals.Contains(type);
-                            <div class="form-check custom-checkbox">
-                                <input class="form-check-input border-theme" type="checkbox" name="@prop.Name" value="@type" id="filter_guidance_@type" @(isChecked ? "checked" : "") onchange="sessionStorage.setItem('filterScroll', window.scrollY); this.form.submit()">
-                                <label class="form-check-label text-primary-theme small" for="filter_guidance_@type">@type</label>
-                            </div>
-                        }
-                    </div>
-                }
-                else if (prop.Name == "FoxCode")
-                {
-                    string[] availableFoxes = new[] { "1", "2", "3" };
-                    <select name="@prop.Name" class="form-select form-select-sm bg-theme text-primary-theme border-theme" onchange="sessionStorage.setItem('filterScroll', window.scrollY); this.form.submit()">
+                    <select name="@attr.Name" class="form-select form-select-sm bg-theme text-primary-theme border-theme" onchange="sessionStorage.setItem('filterScroll', window.scrollY); this.form.submit()">
                         <option value="">Tümü</option>
-                        @foreach(var fox in availableFoxes)
+                        @foreach(var opt in attr.Options)
                         {
-                            if (currentVal == fox)
-                            {
-                                <option value="@fox" selected>Fox @fox</option>
-                            }
-                            else
-                            {
-                                <option value="@fox">Fox @fox</option>
-                            }
+                            <option value="@opt" selected="@(currentVal == opt ? "selected" : null)">@opt</option>
                         }
                     </select>
                 }
-                else if (prop.Name == "BallisticType")
+                else if (attr.Type == DefenceDB.EL.Models.AttributeType.Number)
                 {
-                    string[] ballisticTypes = new[] { "SRBM", "MRBM", "IRBM", "ICBM", "SLBM", "ALBM" };
-                    <select name="@prop.Name" class="form-select form-select-sm bg-theme text-primary-theme border-theme" onchange="sessionStorage.setItem('filterScroll', window.scrollY); this.form.submit()">
-                        <option value="">Tümü</option>
-                        @foreach(var bt in ballisticTypes)
-                        {
-                            if (currentVal == bt)
-                            {
-                                <option value="@bt" selected>@bt</option>
-                            }
-                            else
-                            {
-                                <option value="@bt">@bt</option>
-                            }
-                        }
-                    </select>
+                    <input type="number" step="any" name="@attr.Name" class="form-control form-control-sm bg-theme text-primary-theme border-theme" placeholder="Sayı girin..." value="@currentVal" onchange="sessionStorage.setItem('filterScroll', window.scrollY); this.form.submit()" />
                 }
                 else
                 {
-                    <input type="text" name="@prop.Name" class="form-control form-control-sm bg-theme text-primary-theme border-theme" placeholder="Aranacak değer..." value="@currentVal" onchange="sessionStorage.setItem('filterScroll', window.scrollY); this.form.submit()" />
+                    <input type="text" name="@attr.Name" class="form-control form-control-sm bg-theme text-primary-theme border-theme" placeholder="Aranacak değer..." value="@currentVal" onchange="sessionStorage.setItem('filterScroll', window.scrollY); this.form.submit()" />
                 }
             </div>
         }

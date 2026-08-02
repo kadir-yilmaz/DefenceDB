@@ -33,14 +33,14 @@
                                             @foreach (var sub in root.SubCategories.OrderBy(s => s.Name))
                                             {
                                                 var isSel = preselectedId == sub.Id ? " selected" : "";
-                                                @Html.Raw($"<option value=\"{sub.Id}\" data-model-type=\"{sub.ModelTypeName}\"{isSel}>{sub.Name}</option>")
+                                                @Html.Raw($"<option value=\"{sub.Id}\"{isSel}>{sub.Name}</option>")
                                             }
                                         </optgroup>
                                     }
-                                    else if (!string.IsNullOrEmpty(root.ModelTypeName))
+                                    else
                                     {
                                         var isSel2 = preselectedId == root.Id ? " selected" : "";
-                                        @Html.Raw($"<option value=\"{root.Id}\" data-model-type=\"{root.ModelTypeName}\"{isSel2}>{root.Name}</option>")
+                                        @Html.Raw($"<option value=\"{root.Id}\"{isSel2}>{root.Name}</option>")
                                     }
                                 }
                             </select>
@@ -275,62 +275,24 @@
         });
 
         function renderAttributeField(attr) {
-            var label = '<label class="form-label">' + attr.displayName + '</label>';
+            var label = '<label class="form-label">' + attr.displayName + (attr.isRequired ? ' <span class="text-danger">*</span>' : '') + '</label>';
+            var req = attr.isRequired ? 'required' : '';
+            var inputName = 'Specs_' + attr.name;
+            
             switch (attr.kind) {
-                case 'FoxCode':
-                    return '<div class="mb-3">' + label +
-                        '<select name="'+attr.name+'" class="form-select"><option value="">-- Secin --</option>' +
-                        '<option value="1">Fox 1</option><option value="2">Fox 2</option><option value="3">Fox 3</option></select></div>';
-                case 'BallisticType':
-                    return '<div class="mb-3">' + label +
-                        '<select name="'+attr.name+'" class="form-select"><option value="">-- Tip Secin --</option>' +
-                        ['SRBM','MRBM','IRBM','ICBM','SLBM','ALBM'].map(function(v){return '<option value="'+v+'">'+v+'</option>';}).join('') + '</select></div>';
-                case 'FighterGeneration':
-                    return '<div class="mb-3">' + label +
-                        '<select name="'+attr.name+'" class="form-select">' +
-                        '<option value="1">1. Nesil</option><option value="2">2. Nesil</option><option value="3">3. Nesil</option>' +
-                        '<option value="4" selected>4. Nesil</option><option value="4.5">4.5 Nesil</option><option value="5">5. Nesil</option><option value="6">6. Nesil</option></select></div>';
-                case 'GuidanceType':
-                    var types = [{code:'IR',label:'IR (Kizilotesi)'},{code:'IIR',label:'IIR (Goruntuleyici IR)'},{code:'RF',label:'RF (Aktif Radar)'},{code:'SARH',label:'SARH (Yari Aktif Radar)'},{code:'Pasif',label:'Pasif Radar'},{code:'EO',label:'EO (Elektro-Optik)'}];
-                    var checks = '<div class="d-flex flex-wrap gap-3 mb-2">';
-                    types.forEach(function(t) {
-                        checks += '<div class="form-check custom-checkbox"><input class="form-check-input guidance-checkbox" type="checkbox" value="'+t.code+'" id="guid_dyn_'+t.code+'">' +
-                            '<label class="form-check-label" for="guid_dyn_'+t.code+'">'+t.label+'</label></div>';
-                    });
-                    checks += '</div><input type="hidden" name="GuidanceType" id="GuidanceTypeHidden" />';
-                    return '<div class="mb-3">' + label + checks + '</div>';
-                case 'FrequencyBand':
-                    var bands = ['L-Band','S-Band','C-Band','X-Band','Ku-Band','Ka-Band','UHF','VHF'];
-                    var checks = '<div class="d-flex flex-wrap gap-3 mb-2">';
-                    bands.forEach(function(b) {
-                        checks += '<div class="form-check custom-checkbox"><input class="form-check-input freq-checkbox" type="checkbox" value="'+b+'" id="freq_dyn_'+b+'">' +
-                            '<label class="form-check-label fw-bold" for="freq_dyn_'+b+'">'+b+'</label></div>';
-                    });
-                    checks += '</div><input type="hidden" name="FrequencyBand" id="FrequencyBandHidden" />';
-                    return '<div class="mb-3">' + label + checks + '</div>';
-                case 'CoolingSystem':
-                    var sys = [{val:'Sivi Sogutma (Liquid)',id:'Sivi'},{val:'Hava Sogutma (Air)',id:'Hava'}];
-                    var checks = '<div class="d-flex flex-wrap gap-3 mb-2">';
-                    sys.forEach(function(s) {
-                        checks += '<div class="form-check custom-checkbox"><input class="form-check-input cooling-checkbox" type="checkbox" value="'+s.val+'" id="cool_dyn_'+s.id+'">' +
-                            '<label class="form-check-label" for="cool_dyn_'+s.id+'">'+s.val+'</label></div>';
-                    });
-                    checks += '</div><input type="hidden" name="CoolingSystem" id="CoolingSystemHidden" />';
-                    return '<div class="mb-3">' + label + checks + '</div>';
                 case 'bool':
+                    inputName = 'Specs_Bool_' + attr.name;
                     return '<div class="mb-3">' + label +
-                        '<div class="form-check form-switch"><input class="form-check-input" type="checkbox" name="'+attr.name+'" value="true">' +
-                        '<input type="hidden" name="'+attr.name+'" value="false"></div></div>';
+                        '<div class="form-check form-switch"><input class="form-check-input" type="checkbox" name="'+inputName+'" value="true" '+req+'>' +
+                        '<input type="hidden" name="'+inputName+'" value="false"></div></div>';
                 case 'enum':
                     var opts = '<option value="">-- Secin --</option>';
-                    (attr.enumValues || []).forEach(function(v) { opts += '<option value="'+v+'">'+v+'</option>'; });
-                    return '<div class="mb-3">' + label + '<select name="'+attr.name+'" class="form-select">'+opts+'</select></div>';
-                case 'int':
-                    return '<div class="mb-3">' + label + '<input type="number" name="'+attr.name+'" class="form-control" /></div>';
+                    (attr.options || []).forEach(function(v) { opts += '<option value="'+v+'">'+v+'</option>'; });
+                    return '<div class="mb-3">' + label + '<select name="'+inputName+'" class="form-select" '+req+'>'+opts+'</select></div>';
                 case 'number':
-                    return '<div class="mb-3">' + label + '<input type="number" step="0.01" name="'+attr.name+'" class="form-control" /></div>';
+                    return '<div class="mb-3">' + label + '<input type="number" step="any" name="'+inputName+'" class="form-control" '+req+' /></div>';
                 default:
-                    return '<div class="mb-3">' + label + '<input type="text" name="'+attr.name+'" class="form-control" /></div>';
+                    return '<div class="mb-3">' + label + '<input type="text" name="'+inputName+'" class="form-control" '+req+' /></div>';
             }
         }
 

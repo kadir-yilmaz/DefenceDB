@@ -27,7 +27,7 @@ public class ImageProcessingService : IImageProcessingService
         _logger = logger;
         _env = env;
 
-        var provider = configuration["Storage:Provider"] ?? "Minio";
+        var provider = configuration["Storage:Provider"] ?? "Local";
         _useLocalStorage = string.Equals(provider, "Local", StringComparison.OrdinalIgnoreCase);
 
         if (!_useLocalStorage)
@@ -82,8 +82,8 @@ public class ImageProcessingService : IImageProcessingService
                 Quality = 80
             });
 
-            // Thumbnail'i local'e kaydet
-            var thumbsFolder = Path.Combine(uploadsFolder, "thumbs");
+            // Thumbnail'i local'e kaydet (wwwroot/thumbs)
+            var thumbsFolder = Path.Combine(_env.WebRootPath, "thumbs");
             if (!Directory.Exists(thumbsFolder))
             {
                 Directory.CreateDirectory(thumbsFolder);
@@ -269,8 +269,10 @@ public class ImageProcessingService : IImageProcessingService
                 if (string.IsNullOrEmpty(fileName)) return;
 
                 var uploadsFolder = Path.Combine(_env.WebRootPath, "images", "products");
+                var thumbsFolder = Path.Combine(_env.WebRootPath, "thumbs");
+
                 var mainFilePath = Path.Combine(uploadsFolder, fileName);
-                var thumbFilePath = Path.Combine(uploadsFolder, "thumbs", fileName);
+                var thumbFilePath = Path.Combine(thumbsFolder, fileName);
 
                 if (System.IO.File.Exists(mainFilePath))
                 {

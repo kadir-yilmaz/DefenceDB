@@ -12,7 +12,7 @@ public interface IProductQueryService
     Task<List<DefenseProduct>> GetRecentProductsAsync(int count = 6);
     Task<List<DefenseProduct>> GetShowcaseProductsAsync();
     Task<List<DefenseProduct>> SearchProductsAsync(string query);
-    Task<List<ProductReadModel>> SearchSuggestionsAsync(string term, int maxResults = 8);
+    Task<List<DefenseProduct>> SearchSuggestionsAsync(string term, int maxResults = 8);
     Task<ProductImage?> GetProductImageByIdAsync(int imageId);
     Task<(List<DefenseProduct> Products, int TotalItems)> GetFilteredProductsAsync(ProductFilterQueryModel queryModel);
 }

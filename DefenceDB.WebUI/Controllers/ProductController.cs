@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using DefenceDB.BLL.Abstract;
 using DefenceDB.EL.Models;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using System.Reflection;
 
 namespace DefenceDB.WebUI.Controllers;
 
@@ -22,7 +20,6 @@ public class ProductController : Controller
 
     public async Task<IActionResult> Index(string? categorySlug, string? country, string? search, int page = 1)
     {
-        // 1. Yeni Query Model nesnesini oluştur ve temel filtreleri bağla
         var queryModel = new ProductFilterQueryModel
         {
             CategorySlug = categorySlug,
@@ -32,7 +29,7 @@ public class ProductController : Controller
             PageSize = 30
         };
 
-        Category currentCategory = null;
+        Category? currentCategory = null;
         if (!string.IsNullOrEmpty(categorySlug))
         {
             currentCategory = await _categoryQueryService.GetCategoryBySlugAsync(categorySlug);
@@ -40,7 +37,7 @@ public class ProductController : Controller
             {
                 ViewBag.CurrentCategory = currentCategory;
 
-                // URL'den gelen dinamik TPT filtrelerini yakala (Mach, FoxCode vb.)
+                // URL'den gelen dinamik Specs filtrelerini yakala
                 foreach (var key in Request.Query.Keys)
                 {
                     if (key == "categorySlug" || key == "country" || key == "search" || key == "page") continue;
@@ -63,29 +60,18 @@ public class ProductController : Controller
         if (!string.IsNullOrEmpty(search)) ViewBag.CurrentSearch = search;
         if (!string.IsNullOrEmpty(country)) ViewBag.CurrentCountry = country;
 
-        // 2. Servis katmanından filtrelenmiş veriyi tek parça halinde çek
         var (pagedProducts, totalItems) = await _productQueryService.GetFilteredProductsAsync(queryModel);
 
         int totalPages = (int)Math.Ceiling(totalItems / (double)queryModel.PageSize);
         page = Math.Max(1, Math.Min(page, totalPages > 0 ? totalPages : 1));
 
-        // 3. Sol menüdeki filtre paneli için property'leri belirle
-        // Parent kategori (ModelTypeName null) → tip-bazlı filtre gösterme
-        // Leaf kategori (ModelTypeName dolu) → o tipe ait spesifik filtreleri göster
-        if (currentCategory != null && !string.IsNullOrEmpty(currentCategory.ModelTypeName))
+        // Sol menüdeki filtre paneli için CategoryAttribute'ları yükle
+        if (currentCategory != null)
         {
-            var modelType = GetTypeFromModelTypeName(currentCategory.ModelTypeName);
-            if (modelType != null)
-            {
-                var baseProperties = typeof(DefenseProduct).GetProperties().Select(p => p.Name).ToList();
-                var specificProperties = modelType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                    .Where(p => !baseProperties.Contains(p.Name))
-                    .ToList();
-                ViewBag.FilterProperties = specificProperties;
-            }
+            var filterAttributes = await _categoryQueryService.GetInheritedAttributesAsync(currentCategory.Id);
+            ViewBag.FilterAttributes = filterAttributes;
         }
 
-        // 4. Sabit görünümleri doldur (cached)
         ViewBag.Categories = await _categoryQueryService.GetCategoriesWithChildrenAsync();
         ViewBag.CategoryCounts = await _categoryQueryService.GetCategoryProductCountsAsync();
         ViewBag.CountriesList = await GetCountriesAsync();
@@ -117,6 +103,10 @@ public class ProductController : Controller
 
         ViewBag.RivalProducts = rivalProducts;
 
+        // Detay sayfası için CategoryAttribute bilgilerini yükle (DisplayName gösterimi için)
+        var categoryAttributes = await _categoryQueryService.GetInheritedAttributesAsync(product.CategoryId);
+        ViewBag.CategoryAttributes = categoryAttributes;
+
         return View(product);
     }
 
@@ -126,26 +116,24 @@ public class ProductController : Controller
         if (string.IsNullOrWhiteSpace(term))
             return Json(new List<object>());
 
-        // Lightweight SQL-level search — no full product load
-        var models = await _productQueryService.SearchSuggestionsAsync(term, 8);
+        var products = await _productQueryService.SearchSuggestionsAsync(term, 8);
 
-        var matches = models.Select(m => new {
-            id = m.Id,
-            slug = m.Slug,
-            name = m.Name,
-            manufacturer = m.Manufacturer,
-            categoryName = m.CategoryName,
-            country = m.Country,
-            flagUrl = DefenceDB.WebUI.Models.CountryHelper.GetFlagUrl(m.Country),
-            image = m.MainImageUrl ?? "/images/default.jpg"
+        var matches = products.Select(p => new {
+            id = p.Id,
+            slug = p.Slug,
+            name = p.Name,
+            manufacturer = p.Manufacturer,
+            categoryName = p.Category?.Name,
+            country = p.Country,
+            flagUrl = DefenceDB.WebUI.Models.CountryHelper.GetFlagUrl(p.Country),
+            image = p.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath
+                    ?? p.Images?.FirstOrDefault()?.ImagePath
+                    ?? "/images/default.jpg"
         }).ToList();
 
         return Json(matches);
     }
 
-    /// <summary>
-    /// Loads countries.json once and caches it permanently.
-    /// </summary>
     private async Task<List<DefenceDB.WebUI.Models.CountryHelper.CountryItem>> GetCountriesAsync()
     {
         const string cacheKey = "countries:list";
@@ -168,22 +156,5 @@ public class ProductController : Controller
         {
             return new List<DefenceDB.WebUI.Models.CountryHelper.CountryItem>();
         }
-    }
-
-    /// <summary>
-    /// Resolves a ModelTypeName (fully qualified .NET type name) to a Type.
-    /// Type.GetType() fails for types in other assemblies, so we search all loaded assemblies.
-    /// </summary>
-    private static Type? GetTypeFromModelTypeName(string modelTypeName)
-    {
-        // Try direct resolution first
-        var type = Type.GetType(modelTypeName);
-        if (type != null)
-            return type;
-
-        // Fallback: search all loaded assemblies by FullName
-        return AppDomain.CurrentDomain.GetAssemblies()
-            .SelectMany(a => a.GetTypes())
-            .FirstOrDefault(t => t.FullName == modelTypeName);
     }
 }

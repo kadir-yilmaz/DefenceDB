@@ -187,11 +187,15 @@ body {
     overflow-x: auto;
     padding: 4px 2px 8px;
     margin-top: 12px;
-    scrollbar-width: thin;
+    scrollbar-width: none;
     max-width: 100%;
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
     will-change: transform;
+    scroll-behavior: smooth;
+}
+.thumbs-container::-webkit-scrollbar {
+    display: none;
 }
 .gallery-thumb {
     width: 86px;

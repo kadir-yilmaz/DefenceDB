@@ -10,7 +10,6 @@ namespace DefenceDB.BLL.Concrete;
 
 /// <summary>
 /// Invalidates in-memory cache when products or product images are changed.
-/// Replaces the old ElasticSyncInterceptor (Elasticsearch removed).
 /// </summary>
 public class ReadModelCacheInterceptor : SaveChangesInterceptor
 {

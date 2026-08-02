@@ -16,9 +16,12 @@ appsettings.json
 appsettings.Production.json
 .env
 
-# Static Assets (Videos & Uploaded Images)
+# Dynamic Uploaded Assets (Products, Thumbs, Videos)
 DefenceDB.WebUI/wwwroot/images/products/*
 !DefenceDB.WebUI/wwwroot/images/products/.gitkeep
+
+DefenceDB.WebUI/wwwroot/thumbs/*
+!DefenceDB.WebUI/wwwroot/thumbs/.gitkeep
 
 # Security & Deploy Files
 DefenceDB.WebUI/App_Data/

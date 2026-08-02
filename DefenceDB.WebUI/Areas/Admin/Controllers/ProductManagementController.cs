@@ -1,11 +1,8 @@
 
-using System.Reflection;
-using DefenceDB.EL.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using DefenceDB.BLL.Abstract;
 using DefenceDB.EL.Models;
-using DefenceDB.EL.Extensions;
 using DefenceDB.WebUI.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -53,7 +50,6 @@ public class ProductManagementController : Controller
                 categorySlug = currentCategory.Slug;
                 categorySlugsList.Add(currentCategory.Slug);
 
-                // Alt kategorilerin slug bilgilerini listeye ekler
                 if (currentCategory.SubCategories != null && currentCategory.SubCategories.Any())
                 {
                     categorySlugsList.AddRange(currentCategory.SubCategories.Select(sc => sc.Slug));
@@ -64,7 +60,6 @@ public class ProductManagementController : Controller
             }
         }
 
-        // Filtre modelinin hazırlanması
         var queryModel = new ProductFilterQueryModel
         {
             CategorySlug = (currentCategory?.SubCategories != null && currentCategory.SubCategories.Any()) ? null : categorySlug,
@@ -73,7 +68,6 @@ public class ProductManagementController : Controller
             PageSize = 50
         };
 
-        // Üst kategoriye ait tüm alt kırılımları filtreye dahil eder
         if (categorySlugsList.Count > 1)
         {
             queryModel.DynamicFilters ??= new Dictionary<string, List<string>>();
@@ -82,10 +76,8 @@ public class ProductManagementController : Controller
 
         if (!string.IsNullOrEmpty(country)) ViewBag.CurrentCountry = country;
 
-        // Verilerin filtrelenmiş olarak çekilmesi
         var (products, totalItems) = await _productQueryService.GetFilteredProductsAsync(queryModel);
 
-        // Sayfalama hesaplamaları
         int totalPages = (int)Math.Ceiling(totalItems / (double)queryModel.PageSize);
         page = Math.Max(1, Math.Min(page, totalPages > 0 ? totalPages : 1));
 
@@ -116,72 +108,41 @@ public class ProductManagementController : Controller
     [HttpGet]
     public async Task<IActionResult> Create(int? categoryId)
     {
-        // Kategorileri dropdown icin hazirla
         ViewBag.Categories = await _categoryQueryService.GetCategoriesWithChildrenAsync();
         ViewBag.AllProducts = await _productQueryService.GetAllProductsAsync();
         ViewBag.PreselectedCategoryId = categoryId;
         return View("Create");
     }
 
+    /// <summary>
+    /// Kategori seçildiğinde o kategorinin attribute'larını JSON olarak döner.
+    /// Admin create/edit formunda dinamik alan üretmek için kullanılır.
+    /// </summary>
     [HttpGet]
     public async Task<IActionResult> GetCategoryAttributes(int categoryId)
     {
-        var category = await _categoryQueryService.GetCategoryByIdAsync(categoryId);
-        if (category == null) return NotFound();
-
-        Type modelType = GetTypeFromCategory(category);
-        if (modelType == null) return Json(new { error = "Model tipi bulunamadi" });
-
-        var baseProperties = typeof(DefenseProduct)
-            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Select(p => p.Name)
-            .ToHashSet();
-
-        var attributes = modelType
-            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => !baseProperties.Contains(p.Name))
-            .Select(p => {
-                var underlyingType = Nullable.GetUnderlyingType(p.PropertyType) ?? p.PropertyType;
-                string kind = ResolveAttributeKind(p.Name, underlyingType, p.PropertyType);
-                List<string> enumValues = null;
-                if (kind == "enum" && underlyingType.IsEnum)
+        var attributes = await _categoryQueryService.GetInheritedAttributesAsync(categoryId);
+        
+        return Json(new {
+            attributes = attributes.Select(a => new {
+                name = a.Name,
+                displayName = a.DisplayName,
+                type = a.Type.ToString(),
+                kind = a.Type switch
                 {
-                    enumValues = Enum.GetNames(underlyingType).ToList();
-                }
-                return new {
-                    name = p.Name,
-                    displayName = LocalizationHelper.GetDisplayName(p.Name, "tr"),
-                    type = p.PropertyType.Name,
-                    kind,
-                    enumValues
-                };
+                    AttributeType.Boolean => "bool",
+                    AttributeType.Number => "number",
+                    AttributeType.Dropdown => "enum",
+                    _ => "text"
+                },
+                options = a.Options,
+                isRequired = a.IsRequired
             })
-            .ToList();
-
-        return Json(new { modelTypeName = modelType.FullName, attributes });
-    }
-
-    private static string ResolveAttributeKind(string propName, Type underlyingType, Type fullType)
-    {
-        // Ozel isimli alanlar
-        return propName switch
-        {
-            "GuidanceType" => "GuidanceType",
-            "FoxCode" => "FoxCode",
-            "FrequencyBand" => "FrequencyBand",
-            "CoolingSystem" => "CoolingSystem",
-            "BallisticType" => "BallisticType",
-            "FighterGeneration" => "FighterGeneration",
-            _ when underlyingType.IsEnum => "enum",
-            _ when underlyingType == typeof(bool) => "bool",
-            _ when underlyingType == typeof(int) || underlyingType == typeof(byte) => "int",
-            _ when underlyingType == typeof(double) || underlyingType == typeof(decimal) => "number",
-            _ => "text"
-        };
+        });
     }
 
     [HttpPost]
-    [RequestSizeLimit(104_857_600)] // 100 MB
+    [RequestSizeLimit(104_857_600)]
     [RequestFormLimits(MultipartBodyLengthLimit = 104_857_600)]
     public async Task<IActionResult> Create(IFormCollection form)
     {
@@ -231,40 +192,29 @@ public class ProductManagementController : Controller
     }
 
     [HttpGet]
-    public IActionResult TestEdit(int id)
-    {
-        return Content($"Test Edit called with ID: {id}. Area: Admin, Controller: ProductManagement");
-    }
-
-    [HttpGet]
     public async Task<IActionResult> Edit(int id, string? returnUrl = null)
     {
-        // Debug için log
-        Console.WriteLine($"Edit GET called with id: {id}");
-        
         if (id <= 0)
-        {
-            Console.WriteLine("ID is invalid (<=0)");
             return BadRequest("Geçersiz ürün ID'si");
-        }
 
         var product = await _productQueryService.GetProductByIdAsync(id);
         
         if (product == null) 
-        {
-            Console.WriteLine($"Product with ID {id} not found in database");
             return NotFound($"ID: {id} olan ürün bulunamadı");
-        }
 
-        Console.WriteLine($"Product found: {product.Name}");
         ViewBag.Categories = await _categoryQueryService.GetCategoriesWithChildrenAsync();
         ViewBag.AllProducts = await _productQueryService.GetAllProductsAsync();
         ViewBag.ReturnUrl = returnUrl;
+        
+        // Kategori attribute'larını yükle (edit formda göstermek için)
+        var categoryAttributes = await _categoryQueryService.GetInheritedAttributesAsync(product.CategoryId);
+        ViewBag.CategoryAttributes = categoryAttributes;
+        
         return View("Edit", product);
     }
 
     [HttpPost]
-    [RequestSizeLimit(104_857_600)] // 100 MB
+    [RequestSizeLimit(104_857_600)]
     [RequestFormLimits(MultipartBodyLengthLimit = 104_857_600)]
     public async Task<IActionResult> Edit(int id, IFormCollection form)
     {
@@ -273,7 +223,7 @@ public class ProductManagementController : Controller
 
         _formMapper.MapFromFormForEdit(form, instance);
 
-        // Resim Yükleme (Mevcutlara Ek Olarak)
+        // Resim Yükleme
         var uploadedImages = HttpContext.Request.Form.Files.GetFiles("UploadedImages");
         if (uploadedImages != null && uploadedImages.Count > 0)
         {
@@ -300,7 +250,6 @@ public class ProductManagementController : Controller
             }
         }
 
-        // Ürünü ve (varsa) yeni resimlerini tek seferde kaydet
         await _productCommandService.UpdateProductAsync(instance);
 
         // İlişkileri Kaydet
@@ -311,17 +260,14 @@ public class ProductManagementController : Controller
         }
         else
         {
-            // Hiçbiri seçilmediyse tümünü temizle
             await _productCommandService.UpdateProductRelationshipsAsync(instance.Id, new List<int>());
         }
 
         _notificationService.Success("Ürün başarıyla güncellendi.", "Başarılı");
 
-        // Filtre parametrelerini koruyarak geri dön
         if (form.TryGetValue("returnUrl", out var returnUrlValues) && !string.IsNullOrEmpty(returnUrlValues.FirstOrDefault()))
         {
             var returnUrl = returnUrlValues.First();
-            // returnUrl query string formatinda olmali (?categoryId=5&country=Turkey gibi)
             if (returnUrl.StartsWith("?"))
                 return LocalRedirect("~/Admin/ProductManagement" + returnUrl);
         }
@@ -336,10 +282,7 @@ public class ProductManagementController : Controller
         var image = await _productQueryService.GetProductImageByIdAsync(imageId);
         if (image == null) return Json(new { success = false, message = "Resim bulunamadı." });
 
-        // MinIO'dan sil
         await _imageService.DeleteImageAsync(image.ImagePath);
-
-        // Veritabanından sil
         await _productCommandService.DeleteProductImageAsync(image);
 
         return Json(new { success = true });
@@ -363,7 +306,6 @@ public class ProductManagementController : Controller
             }
         }
 
-        // Veritabanından topluca sil
         await _productCommandService.DeleteProductImagesAsync(imageIds);
 
         return Json(new { success = true, message = $"{successCount} adet resim başarıyla silindi." });
@@ -387,47 +329,21 @@ public class ProductManagementController : Controller
         var product = await _productQueryService.GetProductByIdAsync(id);
         if (product == null) return NotFound();
 
-        // 1) Eski Resimleri MinIO'dan Sil
         if (product.Images != null && product.Images.Any())
         {
             foreach (var img in product.Images)
             {
                 await _imageService.DeleteImageAsync(img.ImagePath);
             }
-
-            // Veritabanından resimleri sil (Cascading delete yoksa)
             await _productCommandService.DeleteProductImagesAsync(product.Images.Select(i => i.Id));
         }
 
-        // 2) İki yönlü bağlantıları tamamen temizle
         await _productCommandService.UpdateProductRelationshipsAsync(id, new List<int>());
-
-        // 3) Ürünü Sil
         await _productCommandService.DeleteProductAsync(id);
 
         _notificationService.Success("Ürün başarıyla silindi.", "Başarılı");
         return RedirectToAction(nameof(Index));
     }
-
-    private Type GetTypeFromCategory(Category category)
-    {
-        if (string.IsNullOrEmpty(category.ModelTypeName)) 
-            return null;
-
-        // Try getting type directly
-        Type modelType = Type.GetType(category.ModelTypeName);
-        
-        // Fallback for different assemblies
-        if (modelType == null)
-        {
-            modelType = AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(a => a.GetTypes())
-                .FirstOrDefault(t => t.FullName == category.ModelTypeName);
-        }
-        
-        return modelType;
-    }
-
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -441,27 +357,5 @@ public class ProductManagementController : Controller
         await _productCommandService.UpdateProductAsync(product);
 
         return Json(new { success = true, message = "Ürün vitrin durumu güncellendi." });
-    }
-
-    private async Task<List<T>> ToListAsyncSafe<T>(IQueryable<T> source)
-    {
-        if (source.Provider.GetType().Name.StartsWith("EnumerableQuery"))
-            return source.ToList();
-
-        if (source is IAsyncEnumerable<T>)
-            return await source.ToListAsync();
-            
-        return source.ToList();
-    }
-
-    private async Task<int> CountAsyncSafe<T>(IQueryable<T> source)
-    {
-        if (source.Provider.GetType().Name.StartsWith("EnumerableQuery"))
-            return source.Count();
-
-        if (source is IAsyncEnumerable<T>)
-            return await source.CountAsync();
-            
-        return source.Count();
     }
 }

@@ -11,4 +11,8 @@ public interface ICategoryQueryService
     Task<List<Category>> GetCategoriesWithChildrenAsync();
     Task<Category?> GetCategoryWithSubCategoriesAsync(int id);
     Task<Dictionary<int, int>> GetCategoryProductCountsAsync();
+
+    // Attribute queries
+    Task<List<CategoryAttribute>> GetCategoryAttributesAsync(int categoryId);
+    Task<List<CategoryAttribute>> GetInheritedAttributesAsync(int categoryId);
 }

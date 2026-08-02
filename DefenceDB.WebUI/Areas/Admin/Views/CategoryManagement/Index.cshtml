@@ -1,19 +1,37 @@
-@model IEnumerable<DefenceDB.EL.Models.Category>
+@using DefenceDB.EL.Models
+@model IEnumerable<Category>
 
 @{
     ViewData["Title"] = "Kategori Yönetimi";
+
+    // Flattening for display
+    var flattenedCategories = new System.Collections.Generic.List<(Category Category, int Level)>();
+    void Flatten(IEnumerable<Category> cats, int level)
+    {
+        foreach (var c in cats.OrderBy(x => x.Name))
+        {
+            flattenedCategories.Add((c, level));
+            if (c.SubCategories != null && c.SubCategories.Any())
+            {
+                Flatten(c.SubCategories, level + 1);
+            }
+        }
+    }
+    Flatten(Model, 0);
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h4 style="font-family: 'Outfit', sans-serif; font-weight: 700; margin: 0;">
-            <i class="bi bi-list-nested text-warning me-2"></i> Kategori Yönetimi
+            <i class="bi bi-list-nested text-warning me-2"></i> Kategoriler
         </h4>
         <p style="color: var(--admin-text-muted); font-size: 0.85rem; margin: 4px 0 0;">
-            "Navbar'da Göster" ile üst barda öne çıkan kategorileri belirleyin. Tüm kategorilere "Kategoriler" menüsünden ulaşılabilir.
+            Tüm savunma platformu kategorilerini ve hiyerarşisini buradan yönetebilirsiniz.
         </p>
     </div>
-    <span class="admin-badge info">@Model.Count() Ana Kategori</span>
+    <a href="@Url.Action("Create")" class="btn btn-outline-primary fw-bold">
+        <i class="bi bi-plus-lg me-1"></i> Yeni Kategori
+    </a>
 </div>
 
 <div class="table-wrapper">
@@ -22,72 +40,61 @@
             <table class="admin-table">
                 <thead>
                     <tr>
-                        <th style="width: 5%;">#</th>
-                        <th style="width: 30%;">Kategori Adı</th>
-                        <th style="width: 10%;">İkon</th>
-                        <th style="width: 15%;">Alt Kategori</th>
-                        <th style="width: 15%;">Navbar'da Göster</th>
-                        <th style="width: 15%;">Slug</th>
-                        <th style="width: 10%;">İşlemler</th>
+                        <th style="width: 50%;">Kategori Hiyerarşisi</th>
+                        <th style="width: 25%; text-align: center;">Ana Sayfada Göster</th>
+                        <th style="width: 25%; text-align: center;">İşlemler</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var cat in Model.OrderBy(c => c.Name))
+                    @foreach (var item in flattenedCategories)
                     {
+                        var cat = item.Category;
+                        var level = item.Level;
+                        var padding = level * 30;
+                        var icon = string.IsNullOrEmpty(cat.IconClass) ? "bi-tag-fill" : cat.IconClass;
+                        var hasSub = cat.SubCategories != null && cat.SubCategories.Any();
+
                         <tr>
-                            <td>@cat.Id</td>
-                            <td>
-                                <div style="font-weight: 600;">@cat.Name</div>
+                            <td style="padding-left: @(padding + 16)px;">
+                                <div class="d-flex align-items-center gap-2">
+                                    @if (level > 0)
+                                    {
+                                        <span style="color: var(--admin-border); margin-right: 4px;">|_</span>
+                                    }
+                                    <i class="bi @icon text-primary fs-5"></i>
+                                    <span style="font-weight: @(level == 0 ? "700" : "500"); color: var(--admin-text);">@cat.Name</span>
+                                    @if (hasSub)
+                                    {
+                                        <span class="badge bg-secondary opacity-75 ms-2" style="font-size: 0.7rem;">@cat.SubCategories.Count alt</span>
+                                    }
+                                </div>
                             </td>
-                            <td>
-                                @if (!string.IsNullOrEmpty(cat.IconClass))
-                                {
-                                    <i class="@cat.IconClass text-primary fs-5"></i>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">-</span>
-                                }
-                            </td>
-                            <td>
-                                <span class="admin-badge info">@cat.SubCategories.Count</span>
-                            </td>
-                            <td>
-                                @if (cat.IsShowcase)
-                                {
-                                    <span class="badge bg-success">Gösteriliyor</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-secondary">Gizli</span>
-                                }
-                            </td>
-                            <td>
-                                <code style="font-size: 0.8rem; color: var(--admin-text-muted);">@cat.Slug</code>
-                            </td>
-                            <td>
+                            <td class="text-center">
                                 <form asp-action="ToggleShowcase" asp-route-id="@cat.Id" method="post" class="d-inline">
                                     @Html.AntiForgeryToken()
-                                    @if (cat.IsShowcase)
-                                    {
-                                        <button type="submit" class="btn btn-sm btn-outline-secondary" title="Navbar'dan kaldır">
-                                            <i class="bi bi-eye-slash"></i>
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        <button type="submit" class="btn btn-sm btn-outline-success" title="Navbar'da göster">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                    }
+                                    <div class="form-check form-switch d-inline-block m-0">
+                                        <input class="form-check-input" type="checkbox" role="switch" 
+                                               onchange="this.form.submit()" @(cat.IsShowcase ? "checked" : "") style="cursor: pointer;">
+                                    </div>
+                                </form>
+                            </td>
+                            <td class="text-center">
+                                <a href="@Url.Action("Edit", new { id = cat.Id })" class="btn btn-sm btn-outline-primary me-1" title="Düzenle">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <form asp-action="Delete" asp-route-id="@cat.Id" method="post" class="d-inline" onsubmit="return confirm('Bu kategoriyi silmek istediğinize emin misiniz? Alt kategorileri varsa önce onları silmeniz gerekebilir.');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Sil">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>
                     }
-                    @if (!Model.Any())
+                    @if (!flattenedCategories.Any())
                     {
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-4">
+                            <td colspan="3" class="text-center text-muted py-4">
                                 Kayıtlı kategori bulunamadı.
                             </td>
                         </tr>

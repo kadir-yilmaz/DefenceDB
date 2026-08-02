@@ -12,7 +12,6 @@ using DefenceDB.WebUI.Services;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.DataProtection;
 using DefenceDB.WebUI.Middleware;
-using System.Reflection;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -133,7 +132,6 @@ using (var scope = app.Services.CreateScope())
 
         await SeedData.InitializeAsync(services, builder.Configuration);
         await EnsureArticleCategoriesSeededAsync(context, builder.Environment);
-        await EnsureReadModelsSyncedAsync(context);
     }
     catch (Exception ex)
     {
@@ -224,91 +222,6 @@ app.MapGet("/debug/headers", (HttpContext context) =>
 
 
 app.Run();
-
-static async Task EnsureReadModelsSyncedAsync(AppDbContext context)
-{
-    // Only sync products that are missing or stale in the ReadModel (incremental sync).
-    // This avoids the costly DELETE + full re-INSERT on every startup.
-    var existingIds = (await context.ProductReadModels
-        .AsNoTracking()
-        .Select(r => r.Id)
-        .ToListAsync()).ToHashSet();
-
-    var allProductIds = await context.DefenseProducts
-        .AsNoTracking()
-        .Select(p => p.Id)
-        .ToListAsync();
-
-    var missingIds = allProductIds.Where(id => !existingIds.Contains(id)).ToList();
-
-    if (missingIds.Count == 0 && existingIds.Count == allProductIds.Count)
-    {
-        // ReadModel is already in sync — skip entirely
-        return;
-    }
-
-    // If there are stale entries (products deleted but ReadModel still has them), clean up
-    var staleIds = existingIds.Where(id => !allProductIds.Contains(id)).ToList();
-    if (staleIds.Count > 0)
-    {
-        var staleReadModels = context.ProductReadModels.Where(r => staleIds.Contains(r.Id));
-        context.ProductReadModels.RemoveRange(staleReadModels);
-        await context.SaveChangesAsync();
-    }
-
-    if (missingIds.Count == 0)
-        return;
-
-    // Only load and sync the missing products
-    var products = await context.DefenseProducts
-        .AsNoTracking()
-        .Include(p => p.Category)
-        .Include(p => p.Images)
-        .Where(p => missingIds.Contains(p.Id))
-        .ToListAsync();
-
-    var baseProperties = typeof(DefenseProduct)
-        .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-        .Select(p => p.Name)
-        .ToHashSet();
-
-    var readModels = products.Select(product =>
-    {
-        var specificProperties = product.GetType()
-            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => !baseProperties.Contains(p.Name))
-            .ToDictionary(p => p.Name, p => p.GetValue(product));
-
-        return new ProductReadModel
-        {
-            Id = product.Id,
-            Name = product.Name,
-            Slug = product.Slug,
-            NatoReportingName = product.NatoReportingName,
-            Description = product.Description,
-            Country = product.Country,
-            Manufacturer = product.Manufacturer,
-            YearIntroduced = product.YearIntroduced,
-            ThumbnailUrl = product.ThumbnailUrl,
-            Status = product.Status,
-            IsActive = product.IsActive,
-            IsShowcase = product.IsShowcase,
-            VideoUrl = product.VideoUrl,
-            CategoryId = product.CategoryId,
-            CategoryName = product.Category?.Name ?? "",
-            CategorySlug = product.Category?.Slug ?? "",
-            ProductType = product.GetType().Name,
-            MainImageUrl = product.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath
-                           ?? product.Images?.FirstOrDefault()?.ImagePath,
-            SpecificPropertiesJson = JsonSerializer.Serialize(specificProperties),
-            CreatedAt = product.CreatedAt,
-            UpdatedAt = product.UpdatedAt
-        };
-    }).ToList();
-
-    await context.ProductReadModels.AddRangeAsync(readModels);
-    await context.SaveChangesAsync();
-}
 
 static async Task EnsureArticleCategoriesSeededAsync(AppDbContext context, IWebHostEnvironment environment)
 {

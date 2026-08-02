@@ -11,12 +11,6 @@
     }
 
     ViewData["Title"] = Model.Name;
-    
-    // Türün kendine has özelliklerini (base class hariç) bulalım
-    var baseProps = typeof(DefenceDB.EL.Models.DefenseProduct).GetProperties().Select(p => p.Name).ToList();
-    var specificProps = Model.GetType().GetProperties()
-        .Where(p => !baseProps.Contains(p.Name))
-        .ToList();
 
     var mainImage = Model.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? Model.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
     var galleryImages = Model.Images?.Where(i => i.ImagePath != mainImage).ToList() ?? new List<DefenceDB.EL.Models.ProductImage>();
@@ -115,8 +109,8 @@
                 </div>
                 <ul class="spec-list">
                     <li class="spec-item">
-                        <div class="spec-label">Platform Türü</div>
-                        <div class="spec-value">@Model.GetType().Name</div>
+                        <div class="spec-label">Kategori</div>
+                        <div class="spec-value">@Model.Category?.Name</div>
                     </li>
                     <li class="spec-item">
                         <div class="spec-label">Üretici Ülke</div>
@@ -147,44 +141,46 @@
                     <i class="bi bi-cpu-fill text-warning"></i> Teknik Özellikler
                 </div>
                 <ul class="spec-list">
-                    @if (specificProps.Any())
+                    @if (Model.Specs != null && Model.Specs.Any())
                     {
-                        foreach (var prop in specificProps)
+                        var attributes = ViewBag.CategoryAttributes as List<DefenceDB.EL.Models.CategoryAttribute> ?? new List<DefenceDB.EL.Models.CategoryAttribute>();
+                        var validKeys = attributes.Any() 
+                            ? attributes.Select(a => a.Name).ToHashSet(StringComparer.OrdinalIgnoreCase) 
+                            : null;
+
+                        foreach (var spec in Model.Specs)
                         {
-                            var value = prop.GetValue(Model);
+                            if (validKeys != null && !validKeys.Contains(spec.Key))
+                            {
+                                continue;
+                            }
+
+                            var attr = attributes.FirstOrDefault(a => string.Equals(a.Name, spec.Key, StringComparison.OrdinalIgnoreCase));
+                            var displayName = attr?.DisplayName ?? DefenceDB.EL.Helpers.LocalizationHelper.GetDisplayName(spec.Key, "tr");
+                            var type = attr?.Type ?? DefenceDB.EL.Models.AttributeType.Text;
+                            
                             <li class="spec-item d-flex align-items-center">
-                                <div class="spec-label">@DefenceDB.EL.Helpers.LocalizationHelper.GetDisplayName(prop.Name, "tr")</div>
-                                @if (prop.PropertyType == typeof(bool) || prop.PropertyType == typeof(bool?))
+                                <div class="spec-label">@displayName</div>
+                                @if (type == DefenceDB.EL.Models.AttributeType.Boolean || spec.Value.Equals("true", StringComparison.OrdinalIgnoreCase) || spec.Value.Equals("false", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    if (value is bool bVal)
-                                    {
-                                        <div class="spec-value">
-                                            @if (bVal)
-                                            {
-                                                <i class="bi bi-check-circle-fill text-success" style="font-size: 1.25rem;"></i>
-                                            }
-                                            else
-                                            {
-                                                <i class="bi bi-x-circle-fill text-danger" style="font-size: 1.25rem;"></i>
-                                            }
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        <div class="spec-value">-</div>
-                                    }
+                                    <div class="spec-value">
+                                        @if (spec.Value.Equals("true", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <i class="bi bi-check-circle-fill text-success" style="font-size: 1.25rem;"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-x-circle-fill text-danger" style="font-size: 1.25rem;"></i>
+                                        }
+                                    </div>
                                 }
-                                else if (prop.Name == "FoxCode" && value is byte foxCode)
+                                else if (spec.Key == "FoxCode" && !spec.Value.StartsWith("Fox", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    <div class="spec-value fw-bold text-danger">Fox @foxCode</div>
-                                }
-                                else if (prop.PropertyType.IsEnum || (Nullable.GetUnderlyingType(prop.PropertyType)?.IsEnum == true))
-                                {
-                                    <div class="spec-value">@(value != null ? DefenceDB.EL.Helpers.LocalizationHelper.GetDisplayName(value.ToString(), "tr") : "-")</div>
+                                    <div class="spec-value fw-bold text-danger">Fox @spec.Value</div>
                                 }
                                 else
                                 {
-                                    <div class="spec-value">@(value?.ToString() ?? "-")</div>
+                                    <div class="spec-value">@spec.Value</div>
                                 }
                             </li>
                         }

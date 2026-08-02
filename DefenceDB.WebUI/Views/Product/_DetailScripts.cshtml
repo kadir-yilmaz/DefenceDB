@@ -93,7 +93,11 @@
         // Thumbnail active classes
         var thumbs = document.querySelectorAll('.gallery-thumb');
         thumbs.forEach(function(t, idx) {
-            t.classList.toggle('active', idx === currentImageIndex);
+            var isActive = (idx === currentImageIndex);
+            t.classList.toggle('active', isActive);
+            if (isActive) {
+                t.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
         });
 
         // Lightbox sync
@@ -145,12 +149,14 @@
     }
 
     document.addEventListener('keydown', function(e) {
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+
         var modal = document.getElementById('lightboxModal');
-        if (modal && modal.classList.contains('show')) {
-            if (e.key === 'ArrowRight') navigateGallery(1);
-            else if (e.key === 'ArrowLeft') navigateGallery(-1);
-            else if (e.key === 'Escape') closeLightbox();
-        }
+        var isLightboxOpen = modal && modal.classList.contains('show');
+
+        if (e.key === 'ArrowRight') navigateGallery(1);
+        else if (e.key === 'ArrowLeft') navigateGallery(-1);
+        else if (e.key === 'Escape' && isLightboxOpen) closeLightbox();
     });
 
     // Initial preloads on load

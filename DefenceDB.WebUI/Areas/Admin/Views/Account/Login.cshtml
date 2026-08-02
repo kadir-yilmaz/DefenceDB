@@ -18,10 +18,14 @@
 <body>
     <div class="login-wrapper">
         <div class="login-card">
-            <div class="login-logo">
-                <i class="bi bi-shield-fill-check"></i>
-                <h2>DefenceDB Admin</h2>
-                <p>Yönetim paneline erişmek için giriş yapın</p>
+            <div class="login-logo text-center mb-4">
+                <div class="d-flex align-items-center justify-content-center gap-2 mb-2" style="font-family: 'Outfit', sans-serif;">
+                    <i class="bi bi-shield-fill" style="font-size: 2.5rem; color: #ffc107; filter: drop-shadow(0 0 12px rgba(255, 193, 7, 0.4));"></i>
+                    <span style="font-size: 2.2rem; font-weight: 700; color: #fff; letter-spacing: -0.02em;">
+                        DEFENCE<strong style="color: #ffc107;">DB</strong>
+                    </span>
+                </div>
+                <p style="color: #94a3b8; font-size: 0.95rem; margin: 0;">Yönetim paneline erişmek için giriş yapın</p>
             </div>
 
             @if (ViewBag.Error != null)
@@ -47,12 +51,10 @@
                     <label for="password">
                         <i class="bi bi-lock-fill me-1"></i> Şifre
                     </label>
-                    <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password" />
-                </div>
-
-                <div class="remember-row">
-                    <input type="checkbox" id="rememberMe" name="rememberMe" value="true" />
-                    <label for="rememberMe">Beni Hatırla</label>
+                    <div style="position: relative;">
+                        <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password" style="width: 100%; padding-right: 40px;" />
+                        <i class="bi bi-eye-slash" id="togglePassword" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6c757d; font-size: 1.1rem;"></i>
+                    </div>
                 </div>
 
                 <button type="submit" class="login-btn">
@@ -68,5 +70,17 @@
             </div>
         </div>
     </div>
+
+    <script>
+        const togglePassword = document.querySelector('#togglePassword');
+        const password = document.querySelector('#password');
+
+        togglePassword.addEventListener('click', function (e) {
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+            this.classList.toggle('bi-eye');
+            this.classList.toggle('bi-eye-slash');
+        });
+    </script>
 </body>
 </html>

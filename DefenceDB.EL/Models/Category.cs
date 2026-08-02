@@ -5,6 +5,7 @@ namespace DefenceDB.EL.Models;
 /// <summary>
 /// Hiyerarşik kategori ağacı. Self-referencing yapı ile parent-child ilişkisi.
 /// Örnek: Radar Sistemleri > Uçak Radarları > ...
+/// Admin panelden dinamik olarak oluşturulabilir.
 /// </summary>
 public class Category : BaseEntity
 {
@@ -20,9 +21,6 @@ public class Category : BaseEntity
     [MaxLength(50)]
     public string? IconClass { get; set; }
 
-    [MaxLength(255)]
-    public string? ModelTypeName { get; set; }
-
     public int SortOrder { get; set; }
     
     public bool IsShowcase { get; set; } = false;
@@ -34,4 +32,7 @@ public class Category : BaseEntity
 
     // Products in this category
     public ICollection<DefenseProduct> Products { get; set; } = new List<DefenseProduct>();
+
+    // Category attributes (dynamic spec definitions)
+    public ICollection<CategoryAttribute> Attributes { get; set; } = new List<CategoryAttribute>();
 }

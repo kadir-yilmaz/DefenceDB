@@ -1,19 +1,12 @@
 @model DefenceDB.EL.Models.DefenseProduct
 @{
     ViewData["Title"] = "Ürün Ekle";
-    
-    var baseProperties = typeof(DefenceDB.EL.Models.DefenseProduct).GetProperties()
-        .Select(p => p.Name).ToList();
-        
-    var specificProperties = Model.GetType().GetProperties()
-        .Where(p => !baseProperties.Contains(p.Name))
-        .ToList();
+    var categoryAttributes = ViewBag.CategoryAttributes as List<DefenceDB.EL.Models.CategoryAttribute> ?? new List<DefenceDB.EL.Models.CategoryAttribute>();
 }
 
 <div class="container mt-4">
-    <h2>@Model.GetType().Name Düzenle</h2>
+    <h2>@Model.Category?.Name Düzenle - @Model.Name</h2>
     <form id="productForm" asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
-        <input type="hidden" name="ModelTypeFullName" value="@Model.GetType().FullName" />
         <input type="hidden" asp-for="Id" />
         <input type="hidden" asp-for="CategoryId" />
         <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
@@ -65,166 +58,57 @@
                 </div>
             </div>
 
-            <!-- Tipe Özel Özellikler (Reflection) -->
+            <!-- Tipe Özel Özellikler (Specs JSON) -->
             <div class="col-md-6 mb-4">
                 <div class="card border-info">
-                    <div class="card-header bg-info text-white">@Model.GetType().Name Özellikleri</div>
+                    <div class="card-header bg-info text-white">@Model.Category?.Name Özellikleri</div>
                     <div class="card-body">
-                        @if (!specificProperties.Any())
+                        @if (!categoryAttributes.Any())
                         {
                             <p class="text-muted">Bu modele özel ekstra alan bulunmuyor.</p>
                         }
                         
-                        @foreach (var prop in specificProperties)
+                        @foreach (var attr in categoryAttributes)
                         {
-                            var propValue = prop.GetValue(Model);
+                            var specValue = "";
+                            if (Model.Specs != null && Model.Specs.TryGetValue(attr.Name, out var val))
+                            {
+                                specValue = val;
+                            }
+                            
+                            var inputName = "Specs_" + attr.Name;
+                            var req = attr.IsRequired ? "required" : "";
                             
                             <div class="mb-3">
-                                <label class="form-label">@DefenceDB.EL.Helpers.LocalizationHelper.GetDisplayName(prop.Name, "tr")</label>
+                                <label class="form-label">@attr.DisplayName @(attr.IsRequired ? Html.Raw("<span class='text-danger'>*</span>") : null)</label>
                                 
-                                @if (prop.Name == "FighterGeneration")
+                                @if (attr.Type == DefenceDB.EL.Models.AttributeType.Boolean)
                                 {
-                                    var genVal = propValue?.ToString() ?? "4";
-                                    <select name="@prop.Name" class="form-select">
-                                        <option value="1" selected="@(genVal == "1" ? "selected" : null)">1. Nesil</option>
-                                        <option value="2" selected="@(genVal == "2" ? "selected" : null)">2. Nesil</option>
-                                        <option value="3" selected="@(genVal == "3" ? "selected" : null)">3. Nesil</option>
-                                        <option value="4" selected="@(genVal == "4" ? "selected" : null)">4. Nesil</option>
-                                        <option value="4.5" selected="@(genVal == "4.5" || genVal == "4,5" ? "selected" : null)">4.5 Nesil</option>
-                                        <option value="5" selected="@(genVal == "5" ? "selected" : null)">5. Nesil</option>
-                                        <option value="6" selected="@(genVal == "6" ? "selected" : null)">6. Nesil</option>
-                                    </select>
-                                }
-                                else if (prop.PropertyType == typeof(bool))
-                                {
-                                    bool isChecked = propValue != null && (bool)propValue;
+                                    inputName = "Specs_Bool_" + attr.Name;
+                                    bool isChecked = specValue.Equals("true", StringComparison.OrdinalIgnoreCase);
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" name="@prop.Name" value="true" @(isChecked ? "checked" : "")>
-                                        <input type="hidden" name="@prop.Name" value="false">
+                                        <input class="form-check-input" type="checkbox" name="@inputName" value="true" @(isChecked ? "checked" : "") @req>
+                                        <input type="hidden" name="@inputName" value="false">
                                     </div>
                                 }
-                                else if (prop.PropertyType.IsEnum || (Nullable.GetUnderlyingType(prop.PropertyType)?.IsEnum == true))
+                                else if (attr.Type == DefenceDB.EL.Models.AttributeType.Dropdown && attr.Options != null && attr.Options.Any())
                                 {
-                                    var enumType = prop.PropertyType.IsEnum ? prop.PropertyType : Nullable.GetUnderlyingType(prop.PropertyType);
-                                    var enumValues = Enum.GetValues(enumType);
-                                    <select name="@prop.Name" class="form-select">
+                                    <select name="@inputName" class="form-select" @req>
                                         <option value="">-- Seçin --</option>
-                                        @foreach (var val in enumValues)
+                                        @foreach (var opt in attr.Options)
                                         {
-                                            var isSelected = propValue != null && val.ToString() == propValue.ToString() ? "selected" : null;
-                                            <option value="@val" selected="@isSelected">@DefenceDB.EL.Helpers.LocalizationHelper.GetDisplayName(val.ToString(), "tr")</option>
+                                            var isSelected = specValue == opt ? "selected" : null;
+                                            <option value="@opt" selected="@isSelected">@opt</option>
                                         }
                                     </select>
                                 }
-                                else if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(int?))
+                                else if (attr.Type == DefenceDB.EL.Models.AttributeType.Number)
                                 {
-                                    <input type="number" name="@prop.Name" value="@propValue" class="form-control" />
-                                }
-                                else if (prop.PropertyType == typeof(double) || prop.PropertyType == typeof(double?))
-                                {
-                                    <input type="text" name="@prop.Name" value="@(propValue?.ToString()?.Replace(",", "."))" class="form-control" />
-                                }
-                                else if (prop.Name == "FrequencyBand")
-                                {
-                                    string[] availableBands = new[] { "L-Band", "S-Band", "C-Band", "X-Band", "Ku-Band", "Ka-Band", "UHF", "VHF" };
-                                    var currentValStr = (propValue?.ToString() ?? "");
-                                    
-                                    <div class="d-flex flex-wrap gap-3 mb-2">
-                                        @foreach(var band in availableBands)
-                                        {
-                                            bool isChecked = currentValStr.Contains(band);
-                                            <div class="form-check custom-checkbox">
-                                                <input class="form-check-input freq-checkbox" type="checkbox" value="@band" id="freq_@band" @(isChecked ? "checked" : "")>
-                                                <label class="form-check-label fw-bold" for="freq_@band">@band</label>
-                                            </div>
-                                        }
-                                    </div>
-                                    <input type="hidden" name="FrequencyBand" id="FrequencyBandHidden" value="@currentValStr" />
-                                }
-                                else if (prop.Name == "CoolingSystem")
-                                {
-                                    string[] availableCooling = new[] { "Sıvı Soğutma (Liquid)", "Hava Soğutma (Air)" };
-                                    var currentValStr = (propValue?.ToString() ?? "");
-                                    
-                                    <div class="d-flex flex-wrap gap-3 mb-2">
-                                        @foreach(var sys in availableCooling)
-                                        {
-                                            var sysId = sys.Split(' ')[0];
-                                            bool isChecked = currentValStr.Contains(sysId);
-                                            <div class="form-check custom-checkbox">
-                                                <input class="form-check-input cooling-checkbox" type="checkbox" value="@sys" id="cooling_@sysId" @(isChecked ? "checked" : "")>
-                                                <label class="form-check-label" for="cooling_@sysId">@sys</label>
-                                            </div>
-                                        }
-                                    </div>
-                                    <input type="hidden" name="CoolingSystem" id="CoolingSystemHidden" value="@currentValStr" />
-                                }
-                                else if (prop.Name == "GuidanceType")
-                                {
-                                    string[] availableTypes = new[] { "IR (Kızılötesi)", "IIR (Görüntüleyici IR)", "RF (Aktif Radar)", "SARH (Yarı Aktif Radar)", "Pasif Radar", "EO (Elektro-Optik)" };
-                                    var currentValStr = (propValue?.ToString() ?? "").ToUpper();
-                                    
-                                    <div class="d-flex flex-wrap gap-3 mb-2">
-                                        @foreach(var type in availableTypes)
-                                        {
-                                            var typeCode = type.Split(' ')[0]; // IR, IIR, RF, SARH, Pasif, EO
-                                            
-                                            bool isChecked = false;
-                                            if (typeCode == "IR" && (currentValStr.Contains("IR") || currentValStr.Contains("KIZILÖTESI") || currentValStr.Contains("INFRARED")) && !currentValStr.Contains("IIR")) isChecked = true;
-                                            else if (typeCode == "IIR" && currentValStr.Contains("IIR")) isChecked = true;
-                                            else if (typeCode == "RF" && (currentValStr.Contains("RF") || currentValStr.Contains("AKTIF RADAR") || currentValStr.Contains("ACTIVE RADAR"))) isChecked = true;
-                                            else if (typeCode == "SARH" && (currentValStr.Contains("SARH") || currentValStr.Contains("YARI AKTIF"))) isChecked = true;
-                                            else if (typeCode == "Pasif" && currentValStr.Contains("PASIF")) isChecked = true;
-                                            else if (typeCode == "EO" && (currentValStr.Contains("EO") || currentValStr.Contains("ELEKTRO"))) isChecked = true;
-
-                                            <div class="form-check custom-checkbox">
-                                                <input class="form-check-input guidance-checkbox" type="checkbox" value="@typeCode" id="guidance_@typeCode" @(isChecked ? "checked" : "")>
-                                                <label class="form-check-label" for="guidance_@typeCode">@type</label>
-                                            </div>
-                                        }
-                                    </div>
-                                    <input type="hidden" name="GuidanceType" id="GuidanceTypeHidden" value="@propValue" />
-                                }
-                                else if (prop.Name == "FoxCode")
-                                {
-                                    var currentFox = propValue?.ToString() ?? "";
-                                    <select name="FoxCode" class="form-select">
-                                        <option value="">-- Seçin --</option>
-                                        @for (byte fox = 1; fox <= 3; fox++)
-                                        {
-                                            if (currentFox == fox.ToString())
-                                            {
-                                                <option value="@fox" selected>Fox @fox</option>
-                                            }
-                                            else
-                                            {
-                                                <option value="@fox">Fox @fox</option>
-                                            }
-                                        }
-                                    </select>
-                                }
-                                else if (prop.Name == "BallisticType")
-                                {
-                                    string[] ballisticTypes = new[] { "SRBM", "MRBM", "IRBM", "ICBM", "SLBM", "ALBM" };
-                                    var currentBt = propValue?.ToString() ?? "";
-                                    <select name="BallisticType" class="form-select">
-                                        <option value="">-- Tip Seçin --</option>
-                                        @foreach(var bt in ballisticTypes)
-                                        {
-                                            if (currentBt == bt)
-                                            {
-                                                <option value="@bt" selected>@bt</option>
-                                            }
-                                            else
-                                            {
-                                                <option value="@bt">@bt</option>
-                                            }
-                                        }
-                                    </select>
+                                    <input type="number" step="any" name="@inputName" value="@specValue" class="form-control" @req />
                                 }
                                 else
                                 {
-                                    <input type="text" name="@prop.Name" value="@propValue" class="form-control" />
+                                    <input type="text" name="@inputName" value="@specValue" class="form-control" @req />
                                 }
                             </div>
                         }
