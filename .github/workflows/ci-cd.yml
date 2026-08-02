@@ -5,6 +5,7 @@ on:
 
 jobs:
   build-and-deploy:
+    name: Deploy WebUI
     runs-on: windows-latest
 
     steps:
@@ -16,28 +17,25 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Restore dependencies
+        run: dotnet restore
+
       - name: Create appsettings.json from Secrets
-        shell: powershell
+        shell: pwsh
         run: |
-          $json = @"
+          $appsettings = @"
           ${{ secrets.APPSETTINGS_JSON }}
           "@
-          if (-not [string]::IsNullOrWhiteSpace($json.Trim())) {
-              Set-Content -Path "DefenceDB.WebUI/appsettings.json" -Value $json -Encoding UTF8
+          if (-not [string]::IsNullOrWhiteSpace($appsettings.Trim())) {
+              $appsettings | Out-File -FilePath "DefenceDB.WebUI/appsettings.json" -Encoding utf8
               Write-Host "Successfully created DefenceDB.WebUI/appsettings.json from APPSETTINGS_JSON secret."
           } else {
               Write-Error "APPSETTINGS_JSON secret is missing or empty!"
               exit 1
           }
 
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build Solution
-        run: dotnet build --configuration Release --no-restore
-
-      - name: Deploy via WebDeploy (MonsterASP / siteasp.net)
-        shell: powershell
+      - name: Deploy WebUI via WebDeploy
+        shell: pwsh
         run: |
           $rawJson = @"
           ${{ secrets.DEPLOY_SECRETS_JSON }}
@@ -65,17 +63,15 @@ jobs:
               exit 1
           }
 
-          Write-Host "Publishing & Deploying via WebDeploy to $site ($server)..."
+          Write-Host "Publishing and Deploying DefenceDB to $site..."
 
-          dotnet build DefenceDB.WebUI/DefenceDB.WebUI.csproj `
-            -c Release `
-            /p:DeployOnBuild=true `
-            /p:PublishProvider=WebDeploy `
-            /p:PublishUrl=$server `
+          dotnet publish DefenceDB.WebUI -c Release `
+            /p:WebPublishMethod=MSDeploy `
+            /p:MSDeployPublishMethod=WMSVC `
+            /p:MsDeployServiceUrl=$server `
             /p:DeployIisAppPath=$site `
             /p:UserName=$username `
             /p:Password=$password `
-            /p:AllowUntrusted=True `
-            /p:AuthType=Basic `
-            /p:SkipExtraFilesOnServer=True `
-            /p:MSDeploySkipExtraFilesOnServer=True
+            /p:AllowUntrustedCertificate=true `
+            /p:EnableMsDeployAppOffline=true `
+            /p:SkipExtraFilesOnServer=true
