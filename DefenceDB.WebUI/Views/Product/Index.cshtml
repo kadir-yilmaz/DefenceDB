@@ -11,6 +11,28 @@
         return $"/images/thumbs/{fileName}";
     };
 
+    // DisplayName veya Temiz İsim Formatlayıcı
+    string GetSpecLabel(string rawKey)
+    {
+        if (string.IsNullOrWhiteSpace(rawKey)) return "";
+        var cleanKey = rawKey.StartsWith("Bool_", StringComparison.OrdinalIgnoreCase) ? rawKey.Substring(5) : rawKey;
+        
+        var catAttrs = ViewBag.FilterAttributes as List<DefenceDB.EL.Models.CategoryAttribute>;
+        if (catAttrs != null)
+        {
+            var match = catAttrs.FirstOrDefault(a => string.Equals(a.Name, cleanKey, StringComparison.OrdinalIgnoreCase) || string.Equals(a.Name, rawKey, StringComparison.OrdinalIgnoreCase));
+            if (match != null && !string.IsNullOrEmpty(match.DisplayName))
+                return match.DisplayName;
+        }
+
+        var clean = System.Text.RegularExpressions.Regex.Replace(cleanKey, "([a-z])([A-Z])", "$1 $2");
+        if (clean.EndsWith(" Km", StringComparison.OrdinalIgnoreCase)) clean = clean[..^3] + " (km)";
+        else if (clean.EndsWith(" Ft", StringComparison.OrdinalIgnoreCase)) clean = clean[..^3] + " (ft)";
+        else if (clean.EndsWith(" M", StringComparison.OrdinalIgnoreCase)) clean = clean[..^2] + " (m)";
+        else if (clean.EndsWith(" Kg", StringComparison.OrdinalIgnoreCase)) clean = clean[..^3] + " (kg)";
+        return clean;
+    }
+
     // Özyinelemeli (Recursive) Kategori Ürün Sayısı Toplayıcı (Rollup Count)
     int GetCategoryRollupCount(Category cat)
     {
@@ -264,27 +286,22 @@
                                 }
                             </ul>
                         </div>
-
-                        <!-- View Mode Switcher (Sayfa Yenilemesiz Anında Geçiş) -->
-                        <div class="btn-group border border-theme rounded-pill p-1 bg-theme-card shadow-sm" role="group" aria-label="Görünüm Seçeneği">
-                            <button type="button" id="btnGridView" onclick="switchViewMode('grid')" 
-                                    class="btn btn-sm rounded-pill px-3 @(ViewBag.CurrentViewMode != "list" ? "btn-warning text-dark fw-bold shadow-sm" : "text-secondary-theme")" title="Kart Görünümü">
-                                <i class="bi bi-grid-3x3-gap-fill me-1"></i> Kart
-                            </button>
-                            <button type="button" id="btnListView" onclick="switchViewMode('list')" 
-                                    class="btn btn-sm rounded-pill px-3 @(ViewBag.CurrentViewMode == "list" ? "btn-warning text-dark fw-bold shadow-sm" : "text-secondary-theme")" title="Liste Görünümü">
-                                <i class="bi bi-list-ul me-1"></i> Liste
-                            </button>
-                        </div>
                     </div>
                 </div>
 
                 <!-- Row 2: Comprehensive Top Filter Bar (Ülkeler, Durum, Ek Attribute'lar) -->
+                @{
+                    var filterAttrs = ViewBag.FilterAttributes as List<DefenceDB.EL.Models.CategoryAttribute>;
+                    bool isAnyFilterActive = !string.IsNullOrEmpty(ViewBag.CurrentStatus) || 
+                                             !string.IsNullOrEmpty(ViewBag.CurrentSearch) || 
+                                             !string.IsNullOrEmpty(ViewBag.CurrentManufacturer) || 
+                                             !string.IsNullOrEmpty(ViewBag.CurrentSortBy) ||
+                                             (filterAttrs != null && filterAttrs.Any(a => !string.IsNullOrEmpty(Context.Request.Query[a.Name])));
+                }
                 <div class="top-filter-bar bg-theme-card border border-theme rounded-4 p-3 shadow-sm">
                     <form method="get" action="@Url.Action("Index", "Product")" id="topFilterForm" class="d-flex flex-wrap align-items-center gap-2">
                         <input type="hidden" name="categorySlug" value="@(currentCategory?.Slug)" />
                         <input type="hidden" name="search" value="@ViewBag.CurrentSearch" />
-                        <input type="hidden" name="viewMode" value="@ViewBag.CurrentViewMode" />
                         <input type="hidden" name="sortBy" value="@ViewBag.CurrentSortBy" />
 
                         <!-- 1. Ülke Filtresi Dropdown -->
@@ -305,7 +322,7 @@
                             <ul class="dropdown-menu bg-theme-card border-theme shadow-lg" style="max-height: 350px; overflow-y: auto; font-size: 0.86rem;">
                                 <li>
                                     <a class="dropdown-item text-primary-theme d-flex align-items-center gap-2 @(string.IsNullOrEmpty(ViewBag.CurrentCountry) ? "active bg-warning text-dark" : "")" 
-                                       href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, sortBy = ViewBag.CurrentSortBy, viewMode = ViewBag.CurrentViewMode, status = ViewBag.CurrentStatus })">
+                                       href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, sortBy = ViewBag.CurrentSortBy, status = ViewBag.CurrentStatus })">
                                         <i class="bi bi-globe text-muted"></i> Tüm Ülkeler
                                     </a>
                                 </li>
@@ -315,7 +332,7 @@
                                     var flagUrl = "https://flagcdn.com/w20/" + c.Code + ".png";
                                     <li>
                                         <a class="dropdown-item text-primary-theme d-flex align-items-center gap-2 @(string.Equals(ViewBag.CurrentCountry, c.Name, StringComparison.OrdinalIgnoreCase) ? "active bg-warning text-dark" : "bg-theme-hover")" 
-                                           href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = c.Name, sortBy = ViewBag.CurrentSortBy, viewMode = ViewBag.CurrentViewMode, status = ViewBag.CurrentStatus })">
+                                           href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = c.Name, sortBy = ViewBag.CurrentSortBy, status = ViewBag.CurrentStatus })">
                                             <img src="@flagUrl" alt="@c.Name" style="width: 16px; height: auto; border-radius: 2px;" />
                                             @c.Name
                                         </a>
@@ -332,24 +349,21 @@
                                     @(ViewBag.CurrentStatus switch {
                                         "Active" => "Aktif Kullanımda",
                                         "In Development" => "Geliştirme Aşamasında",
-                                        "Prototype" => "Prototip",
+                                        "Retired" => "Emekliye Ayrılmış",
                                         _ => "Tüm Durumlar"
                                     })
                                 </span>
                             </button>
                             <ul class="dropdown-menu bg-theme-card border-theme shadow-lg" style="font-size: 0.86rem;">
-                                <li><a class="dropdown-item text-primary-theme @(string.IsNullOrEmpty(ViewBag.CurrentStatus) ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, sortBy = ViewBag.CurrentSortBy, viewMode = ViewBag.CurrentViewMode })">Tüm Durumlar</a></li>
+                                <li><a class="dropdown-item text-primary-theme @(string.IsNullOrEmpty(ViewBag.CurrentStatus) ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, sortBy = ViewBag.CurrentSortBy })">Tüm Durumlar</a></li>
                                 <li><hr class="dropdown-divider border-theme"></li>
-                                <li><a class="dropdown-item text-primary-theme @(ViewBag.CurrentStatus == "Active" ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, sortBy = ViewBag.CurrentSortBy, viewMode = ViewBag.CurrentViewMode, status = "Active" })"><span class="badge bg-success me-2">●</span>Aktif Kullanımda</a></li>
-                                <li><a class="dropdown-item text-primary-theme @(ViewBag.CurrentStatus == "In Development" ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, sortBy = ViewBag.CurrentSortBy, viewMode = ViewBag.CurrentViewMode, status = "In Development" })"><span class="badge bg-info text-dark me-2">●</span>Geliştirme Aşamasında</a></li>
-                                <li><a class="dropdown-item text-primary-theme @(ViewBag.CurrentStatus == "Prototype" ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, sortBy = ViewBag.CurrentSortBy, viewMode = ViewBag.CurrentViewMode, status = "Prototype" })"><span class="badge bg-warning text-dark me-2">●</span>Prototip</a></li>
+                                <li><a class="dropdown-item text-primary-theme @(ViewBag.CurrentStatus == "Active" ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, sortBy = ViewBag.CurrentSortBy, status = "Active" })"><span class="badge bg-success me-2">●</span>Aktif Kullanımda</a></li>
+                                <li><a class="dropdown-item text-primary-theme @(ViewBag.CurrentStatus == "In Development" ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, sortBy = ViewBag.CurrentSortBy, status = "In Development" })"><span class="badge bg-info text-dark me-2">●</span>Geliştirme Aşamasında</a></li>
+                                <li><a class="dropdown-item text-primary-theme @(ViewBag.CurrentStatus == "Retired" ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, sortBy = ViewBag.CurrentSortBy, status = "Retired" })"><span class="badge bg-secondary me-2">●</span>Emekliye Ayrılmış</a></li>
                             </ul>
                         </div>
 
                         <!-- 3. Dynamic Category Attributes (Ek Özellik Filtreleri) -->
-                        @{
-                            var filterAttrs = ViewBag.FilterAttributes as List<DefenceDB.EL.Models.CategoryAttribute>;
-                        }
                         @if (filterAttrs != null && filterAttrs.Any())
                         {
                             foreach (var attr in filterAttrs)
@@ -367,7 +381,7 @@
                                         
                                         @if (attr.Type == DefenceDB.EL.Models.AttributeType.Boolean)
                                         {
-                                            var baseUrl = Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy, viewMode = ViewBag.CurrentViewMode });
+                                            var baseUrl = Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy });
                                             <div class="d-flex flex-column gap-1">
                                                 <a class="dropdown-item rounded-2 @(string.IsNullOrEmpty(currentAttrVal) ? "active bg-warning text-dark" : "text-primary-theme")" href="@baseUrl">Tümü</a>
                                                 <a class="dropdown-item rounded-2 @(currentAttrVal == "true" ? "active bg-warning text-dark" : "text-primary-theme")" href="@(baseUrl + $"&{attr.Name}=true")">Evet</a>
@@ -376,7 +390,7 @@
                                         }
                                         else if (attr.Type == DefenceDB.EL.Models.AttributeType.Dropdown && attr.Options != null && attr.Options.Any())
                                         {
-                                            var baseUrl = Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy, viewMode = ViewBag.CurrentViewMode });
+                                            var baseUrl = Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy });
                                             <div class="d-flex flex-column gap-1" style="max-height: 200px; overflow-y: auto;">
                                                 <a class="dropdown-item rounded-2 @(string.IsNullOrEmpty(currentAttrVal) ? "active bg-warning text-dark" : "text-primary-theme")" href="@baseUrl">Tümü</a>
                                                 @foreach (var opt in attr.Options)
@@ -396,17 +410,27 @@
                                 </div>
                             }
                         }
+
+                        <!-- Filtreleri Temizle Butonu (Ülke Filtresi Hariç Tutularak Temizler) -->
+                        @if (isAnyFilterActive)
+                        {
+                            <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry })" 
+                               class="btn btn-sm btn-outline-danger rounded-pill px-3 ms-auto d-inline-flex align-items-center gap-1.5 shadow-2xs font-outfit" style="font-size: 0.82rem;" title="Ülke filtresi hariç tüm filtreleri sıfırlar">
+                                <i class="bi bi-x-circle-fill"></i>
+                                <span>Filtreleri Temizle</span>
+                            </a>
+                        }
                     </form>
 
                     <!-- Active Filters Bar (Herhangi bir filtre aktifse görünür) -->
-                    @if (!string.IsNullOrEmpty(ViewBag.CurrentCountry) || !string.IsNullOrEmpty(ViewBag.CurrentStatus) || !string.IsNullOrEmpty(ViewBag.CurrentSearch))
+                    @if (!string.IsNullOrEmpty(ViewBag.CurrentCountry) || !string.IsNullOrEmpty(ViewBag.CurrentStatus) || !string.IsNullOrEmpty(ViewBag.CurrentSearch) || isAnyFilterActive)
                     {
                         <div class="d-flex align-items-center flex-wrap gap-2 pt-2 mt-2 border-top border-theme">
                             <span class="fs-8 text-secondary-theme fw-semibold me-1"><i class="bi bi-funnel-fill text-warning me-1"></i>Aktif Filtreler:</span>
                             
                             @if (!string.IsNullOrEmpty(ViewBag.CurrentCountry))
                             {
-                                <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy, viewMode = ViewBag.CurrentViewMode })" class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-1 text-decoration-none d-inline-flex align-items-center gap-1 fs-8">
+                                <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy })" class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-1 text-decoration-none d-inline-flex align-items-center gap-1 fs-8">
                                     <span>Ülke: @ViewBag.CurrentCountry</span>
                                     <i class="bi bi-x-lg ms-1" style="font-size: 0.65rem;"></i>
                                 </a>
@@ -414,14 +438,14 @@
 
                             @if (!string.IsNullOrEmpty(ViewBag.CurrentStatus))
                             {
-                                <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, sortBy = ViewBag.CurrentSortBy, viewMode = ViewBag.CurrentViewMode })" class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-1 text-decoration-none d-inline-flex align-items-center gap-1 fs-8">
+                                <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, sortBy = ViewBag.CurrentSortBy })" class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-1 text-decoration-none d-inline-flex align-items-center gap-1 fs-8">
                                     <span>Durum: @ViewBag.CurrentStatus</span>
                                     <i class="bi bi-x-lg ms-1" style="font-size: 0.65rem;"></i>
                                 </a>
                             }
 
-                            <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, viewMode = ViewBag.CurrentViewMode })" class="text-secondary-theme fs-8 text-decoration-underline ms-auto">
-                                Tümünü Temizle
+                            <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry })" class="text-danger fs-8 fw-semibold text-decoration-none ms-auto d-inline-flex align-items-center gap-1" title="Ülke filtresi korunur">
+                                <i class="bi bi-arrow-counterclockwise"></i> Filtreleri Temizle
                             </a>
                         </div>
                     }
@@ -431,7 +455,7 @@
             <!-- Products List / Grid -->
             @if (Model.Count == 0)
             {
-                <div class="text-center py-5 bg-theme-card border border-theme rounded-4">
+                <div class="bg-theme-card border border-theme rounded-4 p-5 text-center my-4 shadow-sm">
                     <i class="bi bi-shield-slash text-warning fs-1"></i>
                     <h4 class="mt-3 text-primary-theme">Kayıt Bulunamadı</h4>
                     <p class="text-secondary-theme">Seçilen kriterlere uygun henüz ürün verisi bulunmamaktadır.</p>
@@ -440,116 +464,101 @@
             }
             else
             {
-                <!-- List View (Liste Görünümü - Anında Client-Side Toggle) -->
-                <div id="productListView" class="product-list-view d-flex flex-column gap-3 @(ViewBag.CurrentViewMode == "list" ? "" : "d-none")">
+                <!-- Product List (Ürün Listesi) -->
+                <div id="productListView" class="product-list-view d-flex flex-column gap-3">
                     @foreach (var prod in Model)
                     {
                         var mainImage = prod.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? prod.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
                         var thumbImage = toThumb(mainImage);
                         
-                        <div class="product-list-item bg-theme-card border border-theme rounded-4 p-3 shadow-sm d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3" 
+                        <div class="product-list-item bg-theme-card border border-theme rounded-4 p-3 shadow-sm d-flex flex-column flex-md-row gap-3 align-items-stretch" 
                              style="cursor: pointer; transition: all 0.2s ease;" 
                              onclick="handleProductClick(event, '/Product/Detail/@(prod.Id)-@(prod.Slug)')">
-                            
-                            <div class="d-flex align-items-center gap-3">
+                             
+                            <!-- SOL: Ürün Görseli (Kart Yüksekliği Boyunca) -->
+                            <div class="product-list-img-wrapper" style="width: 130px; flex-shrink: 0; min-height: 100px;">
                                 <img src="@thumbImage" alt="@prod.Name" loading="lazy" decoding="async" 
-                                     style="width: 90px; height: 65px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border-theme);" 
+                                     style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; border: 1px solid var(--border-theme);" 
                                      onerror="this.onerror=null; this.src='@mainImage';" />
-                                
-                                <div>
-                                    <div class="d-flex align-items-center gap-2 mb-1">
-                                        <h5 class="text-primary-theme fw-bold mb-0" style="font-size: 1.05rem;">@prod.Name</h5>
-                                        @if (!string.IsNullOrEmpty(prod.NatoReportingName))
-                                        {
-                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill" style="font-size: 0.75rem;">NATO: "@prod.NatoReportingName"</span>
-                                        }
-                                    </div>
-                                    <div class="d-flex align-items-center gap-2 gap-md-3 text-secondary-theme fs-7 flex-wrap">
-                                        <span><i class="bi bi-folder2 text-warning me-1"></i> @prod.Category?.Name</span>
-                                        <span class="d-none d-sm-inline">•</span>
-                                        <span><i class="bi bi-building me-1"></i> @prod.Manufacturer</span>
-                                    </div>
-                                </div>
                             </div>
 
-                            <div class="d-flex align-items-center justify-content-between justify-content-md-end gap-3 ms-md-auto">
-                                @if (!string.IsNullOrEmpty(prod.Country))
-                                {
+                            <!-- SAĞ: 2 Adet Yuvarlatılmış Kutulu Bölme -->
+                            <div class="d-flex flex-column gap-2 flex-grow-1" style="min-width: 0;">
+                                
+                                <!-- 1. ÜST KUTU: Ürün Adı (Sol), Bayrak & Üretici (Sağ) - Bordersız & Sabit Yükseklikli -->
+                                <div class="bg-theme rounded-3 p-2.5 px-3 d-flex align-items-center justify-content-between gap-2 flex-wrap" style="min-height: 52px;">
+                                    <!-- Sol: Ürün Adı ve NATO -->
                                     <div class="d-flex align-items-center gap-2">
-                                        @if (!string.IsNullOrEmpty(CountryHelper.GetFlagUrl(prod.Country)))
+                                        <h5 class="text-primary-theme fw-bold mb-0" style="font-size: 1.1rem;">@prod.Name</h5>
+                                        @if (!string.IsNullOrEmpty(prod.NatoReportingName))
                                         {
-                                            <img src="@CountryHelper.GetFlagUrl(prod.Country)" alt="@prod.Country" title="@prod.Country" style="width: 22px; height: 15px; object-fit: cover; border-radius: 2px; border: 1px solid var(--border-theme);" />
+                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill" style="font-size: 0.72rem;">NATO: "@prod.NatoReportingName"</span>
                                         }
-                                        <span class="fs-7 text-secondary-theme d-none d-lg-inline">@prod.Country</span>
                                     </div>
-                                }
 
-                                <div>
-                                    @if (prod.Status == "Active")
-                                    {
-                                        <span class="badge bg-success rounded-pill px-3 py-2" style="font-size: 0.76rem;">Aktif Kullanımda</span>
+                                    <!-- Sağ: Üstte Şık Bayrak, Altta Üretici Bilgisi (Üretici yoksa bile yüksekliği sabit kalır) -->
+                                    <div class="text-end d-flex flex-column align-items-end justify-content-center" style="min-width: 90px; min-height: 38px;">
+                                        @if (!string.IsNullOrEmpty(prod.Country) && !string.IsNullOrEmpty(CountryHelper.GetFlagUrl(prod.Country)))
+                                        {
+                                            <div class="mb-1" title="@prod.Country">
+                                                <img src="@CountryHelper.GetFlagUrl(prod.Country)" alt="@prod.Country" style="width: 28px; height: 18px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-theme);" />
+                                            </div>
+                                        }
+                                        <span class="fs-8 text-muted-theme text-truncate" style="max-width: 180px;" title="@(prod.Manufacturer ?? "")">
+                                            @(string.IsNullOrWhiteSpace(prod.Manufacturer) ? "\u00A0" : prod.Manufacturer)
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- 2. ALT KUTU: Kategoriye Özel Özellikler (Bordersız) -->
+                                <div class="bg-theme rounded-3 p-2.5 px-3 flex-grow-1 d-flex align-items-center overflow-hidden" style="min-height: 48px;">
+                                    @{
+                                        var validSpecs = prod.Specs?
+                                            .Where(s => !string.IsNullOrWhiteSpace(s.Value) 
+                                                     && s.Value != "true,false")
+                                            .Take(7)
+                                            .ToList();
+
+                                        // Soft Pastel Renk Paleti (Sırasıyla döner)
+                                        var pastelColorStyles = new[] {
+                                            "background-color: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.25); color: #2563eb;",  // Soft Blue
+                                            "background-color: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.28); color: #d97706;", // Soft Amber
+                                            "background-color: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); color: #059669;", // Soft Emerald
+                                            "background-color: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.25); color: #7c3aed;", // Soft Purple
+                                            "background-color: rgba(14, 165, 233, 0.1); border: 1px solid rgba(14, 165, 233, 0.28); color: #0284c7;", // Soft Cyan
+                                            "background-color: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.25); color: #e11d48;"    // Soft Rose
+                                        };
                                     }
-                                    else if (prod.Status == "In Development")
+                                    @if (validSpecs != null && validSpecs.Any())
                                     {
-                                        <span class="badge bg-info text-dark rounded-pill px-3 py-2" style="font-size: 0.76rem;">Geliştirme Aşamasında</span>
-                                    }
-                                    else if (prod.Status == "Prototype")
-                                    {
-                                        <span class="badge bg-warning text-dark rounded-pill px-3 py-2" style="font-size: 0.76rem;">Prototip</span>
+                                        <div class="d-flex align-items-center gap-2 flex-nowrap overflow-hidden w-100" style="font-size: 0.8rem;">
+                                            @for (int i = 0; i < validSpecs.Count; i++)
+                                            {
+                                                var spec = validSpecs[i];
+                                                var label = GetSpecLabel(spec.Key);
+                                                var badgeStyle = pastelColorStyles[i % pastelColorStyles.Length];
+                                                var displayVal = spec.Value switch {
+                                                    "true" or "True" => "Evet",
+                                                    "false" or "False" => "Hayır",
+                                                    _ => spec.Value
+                                                };
+
+                                                <div class="px-3 py-1.5 rounded-2 d-inline-flex align-items-center gap-2 text-nowrap font-outfit shadow-2xs" 
+                                                     style="@badgeStyle font-size: 0.8rem; border-radius: 6px;">
+                                                    <span class="opacity-75 font-outfit fw-medium">@label:</span>
+                                                    <strong class="fw-bold font-outfit" style="color: inherit;">@displayVal</strong>
+                                                </div>
+                                            }
+                                        </div>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-secondary rounded-pill px-3 py-2" style="font-size: 0.76rem;">@prod.Status</span>
+                                        <span class="fs-8 text-muted-theme italic opacity-50">Kategoriye özel ek detay belirtilmedi.</span>
                                     }
                                 </div>
 
-                                <a href="/Product/Detail/@(prod.Id)-@(prod.Slug)" class="btn btn-sm btn-outline-warning rounded-pill px-3 ms-1 d-none d-sm-inline-flex align-items-center gap-1">
-                                    <span>İncele</span>
-                                    <i class="bi bi-arrow-right-short fs-6"></i>
-                                </a>
                             </div>
 
-                        </div>
-                    }
-                </div>
-
-                <!-- Grid View (Izgara Görünümü - 1 Satırda 4 Ürün - Anında Client-Side Toggle) -->
-                <div id="productGridView" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3 @(ViewBag.CurrentViewMode == "list" ? "d-none" : "")">
-                    @foreach (var prod in Model)
-                    {
-                        var mainImage = prod.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? prod.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
-                        var thumbImage = toThumb(mainImage);
-                        
-                        <div class="col">
-                            <div class="card-premium h-100 d-flex flex-column" style="cursor: pointer;" onclick="handleProductClick(event, '/Product/Detail/@(prod.Id)-@(prod.Slug)')">
-                                <span class="category-badge">@prod.Category.Name</span>
-                                <div class="card-img-wrapper">
-                                    <img src="@thumbImage" alt="@prod.Name" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='@mainImage';" />
-                                </div>
-                                <div class="card-body d-flex flex-column flex-grow-1">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <h5 class="card-title text-truncate text-primary-theme m-0" style="max-width: 100%;" title="@prod.Name">@prod.Name</h5>
-                                    </div>
-                                    
-                                    @if (!string.IsNullOrEmpty(prod.NatoReportingName))
-                                    {
-                                        <div class="fs-7 text-secondary italic mb-2">NATO: "@prod.NatoReportingName"</div>
-                                    }
-
-                                    <div class="flex-grow-1"></div>
-                                    
-                                    <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top border-theme">
-                                        <span class="fs-8 text-muted-theme text-truncate" style="max-width: 65%;">Üretici: <strong class="text-secondary-theme">@prod.Manufacturer</strong></span>
-                                        @if (!string.IsNullOrEmpty(prod.Country))
-                                        {
-                                            @if (!string.IsNullOrEmpty(CountryHelper.GetFlagUrl(prod.Country)))
-                                            {
-                                                <img src="@CountryHelper.GetFlagUrl(prod.Country)" alt="@prod.Country" title="@prod.Country" style="width: 24px; height: auto; object-fit: contain; border-radius: 2px; border: 1px solid var(--border-light, #e2e8f0); box-shadow: 0 1px 3px rgba(0,0,0,0.08);" />
-                                            }
-                                        }
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     }
                 </div>
@@ -605,38 +614,4 @@
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        function switchViewMode(mode) {
-            const gridEl = document.getElementById('productGridView');
-            const listEl = document.getElementById('productListView');
-            const btnGrid = document.getElementById('btnGridView');
-            const btnList = document.getElementById('btnListView');
 
-            if (mode === 'list') {
-                if (gridEl) gridEl.classList.add('d-none');
-                if (listEl) listEl.classList.remove('d-none');
-                if (btnGrid) btnGrid.className = 'btn btn-sm rounded-pill px-3 text-secondary-theme';
-                if (btnList) btnList.className = 'btn btn-sm rounded-pill px-3 btn-warning text-dark fw-bold shadow-sm';
-            } else {
-                if (listEl) listEl.classList.add('d-none');
-                if (gridEl) gridEl.classList.remove('d-none');
-                if (btnList) btnList.className = 'btn btn-sm rounded-pill px-3 text-secondary-theme';
-                if (btnGrid) btnGrid.className = 'btn btn-sm rounded-pill px-3 btn-warning text-dark fw-bold shadow-sm';
-            }
-
-            try { localStorage.setItem('defenceDB_viewMode', mode); } catch(e){}
-
-            const url = new URL(window.location.href);
-            url.searchParams.set('viewMode', mode);
-            window.history.replaceState({}, '', url);
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const savedMode = localStorage.getItem('defenceDB_viewMode');
-            if (savedMode && (savedMode === 'grid' || savedMode === 'list')) {
-                switchViewMode(savedMode);
-            }
-        });
-    </script>
-}

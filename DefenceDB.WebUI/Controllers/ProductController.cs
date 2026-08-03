@@ -28,7 +28,7 @@ public class ProductController : Controller
             Status = status,
             Manufacturer = manufacturer,
             SortBy = sortBy,
-            ViewMode = viewMode ?? "grid",
+            ViewMode = viewMode ?? "list",
             Page = page,
             PageSize = 30
         };
@@ -66,7 +66,7 @@ public class ProductController : Controller
         if (!string.IsNullOrEmpty(status)) ViewBag.CurrentStatus = status;
         if (!string.IsNullOrEmpty(manufacturer)) ViewBag.CurrentManufacturer = manufacturer;
         if (!string.IsNullOrEmpty(sortBy)) ViewBag.CurrentSortBy = sortBy;
-        ViewBag.CurrentViewMode = viewMode ?? "grid";
+        ViewBag.CurrentViewMode = viewMode ?? "list";
 
         var (pagedProducts, totalItems) = await _productQueryService.GetFilteredProductsAsync(queryModel);
 
