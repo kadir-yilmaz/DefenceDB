@@ -191,7 +191,7 @@ namespace DefenceDB.DAL.Migrations
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("Articles");
+                    b.ToTable("Articles", (string)null);
                 });
 
             modelBuilder.Entity("DefenceDB.EL.Models.ArticleCategory", b =>
@@ -228,7 +228,7 @@ namespace DefenceDB.DAL.Migrations
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("ArticleCategories");
+                    b.ToTable("ArticleCategories", (string)null);
                 });
 
             modelBuilder.Entity("DefenceDB.EL.Models.Category", b =>
@@ -279,7 +279,7 @@ namespace DefenceDB.DAL.Migrations
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
 
                     b.HasData(
                         new
@@ -1010,7 +1010,7 @@ namespace DefenceDB.DAL.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductImages");
+                    b.ToTable("ProductImages", (string)null);
                 });
 
             modelBuilder.Entity("DefenceDB.EL.Models.ProductRelationship", b =>
@@ -1048,7 +1048,7 @@ namespace DefenceDB.DAL.Migrations
 
                     b.HasIndex("TargetProductId");
 
-                    b.ToTable("ProductRelationships");
+                    b.ToTable("ProductRelationships", (string)null);
                 });
 
             modelBuilder.Entity("DefenceDB.EL.Models.Visitor", b =>
@@ -1082,7 +1082,7 @@ namespace DefenceDB.DAL.Migrations
                     b.HasIndex("VisitorHash")
                         .IsUnique();
 
-                    b.ToTable("Visitors");
+                    b.ToTable("Visitors", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

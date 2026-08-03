@@ -184,18 +184,13 @@
         <div class="col-lg-9">
             
             <!-- Top Header & Comprehensive Filter Control Panel -->
-            <div class="mb-4">
-                <!-- Row 1: Category Title & View Mode Toggle -->
-                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+                <!-- Row 1: Category Title, Category Drawer Button & Sorting Dropdown -->
+                <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-3.5">
+                    <!-- Sol Taraf: Kategori Başlığı ve Sayısı -->
                     <div>
-                        <!-- Mobilde filtre paneli tetikleyici -->
-                        <button class="btn btn-warning d-lg-none mb-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileFilterPanel" aria-controls="mobileFilterPanel">
-                            <i class="bi bi-funnel-fill me-1"></i> Filtreler
-                        </button>
-                        
                         @if (currentCategory != null)
                         {
-                            <h3 class="text-primary-theme fw-bold mb-1 d-flex align-items-center gap-2">
+                            <h3 class="text-primary-theme fw-bold mb-0 d-flex align-items-center gap-2" style="font-size: 1.25rem;">
                                 @if (!string.IsNullOrEmpty(currentCategory.IconClass))
                                 {
                                     <i class="@currentCategory.IconClass text-warning"></i>
@@ -205,26 +200,32 @@
                                     <i class="bi bi-shield-fill text-warning"></i>
                                 }
                                 <span>@currentCategory.Name</span>
-                                <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme fs-7 ms-2 font-outfit">@Model.Count Ürün</span>
+                                <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme fs-7 ms-1 font-outfit">@Model.Count Ürün</span>
                             </h3>
-                            @if (!string.IsNullOrEmpty(currentCategory.Description))
-                            {
-                                <p class="text-secondary-theme fs-7 mb-0">@currentCategory.Description</p>
-                            }
                         }
                         else
                         {
-                            <h3 class="text-primary-theme fw-bold mb-1 d-flex align-items-center gap-2">
+                            <h3 class="text-primary-theme fw-bold mb-0 d-flex align-items-center gap-2" style="font-size: 1.25rem;">
                                 <i class="bi bi-shield-fill text-warning"></i> Tüm Savunma Ürünleri
-                                <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme fs-7 ms-2 font-outfit">@totalProductCount Ürün</span>
+                                <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme fs-7 ms-1 font-outfit">@totalProductCount Ürün</span>
                             </h3>
-                            <p class="text-secondary-theme fs-7 mb-0">Savunma sanayii envanterindeki tüm kara, hava, deniz ve füze sistemleri</p>
                         }
                     </div>
 
-                    <!-- Sort & View Mode Switcher (Üst Başlık Yanı) -->
-                    <div class="d-flex align-items-center gap-2 ms-md-auto align-self-start align-self-md-center flex-wrap">
-                        <!-- Sort Dropdown -->
+                    <!-- Sağ Taraf / Mobil Satır: [Kategoriler] (Sol) & [Sıralama] (Sağ) -->
+                    <div class="d-flex align-items-center justify-content-between justify-content-md-end gap-3 w-100 w-md-auto mt-2.5 mt-md-0">
+                        <!-- Mobil/Tablet Kategori Çekmecesi Tetikleyici -->
+                        <button class="btn btn-warning fw-bold text-dark rounded-pill px-3 py-2 d-lg-none d-inline-flex align-items-center gap-2 shadow-sm btn-category-pulse font-outfit" 
+                                type="button" 
+                                data-bs-toggle="offcanvas" 
+                                data-bs-target="#mobileFilterPanel" 
+                                aria-controls="mobileFilterPanel"
+                                style="font-size: 0.86rem;">
+                            <i class="bi bi-grid-fill text-dark me-0.5"></i>
+                            <span>Kategoriler</span>
+                        </button>
+
+                        <!-- Sıralama Dropdown -->
                         <div class="dropdown">
                             <button class="btn bg-theme-card border border-theme text-primary-theme dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.86rem;">
                                 <i class="bi bi-sort-down text-warning"></i>
@@ -285,7 +286,6 @@
                                     }
                                 }
                             </ul>
-                        </div>
                     </div>
                 </div>
 
@@ -301,7 +301,7 @@
                                                  !string.IsNullOrEmpty(Context.Request.Query[a.Name + "_min"]) || 
                                                  !string.IsNullOrEmpty(Context.Request.Query[a.Name + "_max"])));
                 }
-                <div class="top-filter-bar bg-theme-card border border-theme rounded-4 p-3 shadow-sm">
+                <div class="top-filter-bar bg-theme-card border border-theme rounded-4 p-3 shadow-sm mt-3">
                     <form method="get" action="@Url.Action("Index", "Product")" id="topFilterForm" class="d-flex flex-wrap align-items-center gap-2">
                         <input type="hidden" name="categorySlug" value="@(currentCategory?.Slug)" />
                         <input type="hidden" name="search" value="@ViewBag.CurrentSearch" />
@@ -463,15 +463,6 @@
                             }
                         }
 
-                        <!-- Filtreleri Temizle Butonu (Ülke Filtresi Hariç Tutularak Temizler) -->
-                        @if (isAnyFilterActive)
-                        {
-                            <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry })" 
-                               class="btn btn-sm btn-outline-danger rounded-pill px-3 ms-auto d-inline-flex align-items-center gap-1.5 shadow-2xs font-outfit" style="font-size: 0.82rem;" title="Ülke filtresi hariç tüm filtreleri sıfırlar">
-                                <i class="bi bi-x-circle-fill"></i>
-                                <span>Filtreleri Temizle</span>
-                            </a>
-                        }
                     </form>
 
                     <!-- Active Filters Bar (Herhangi bir filtre aktifse görünür) -->
@@ -530,6 +521,16 @@
                                     }
                                 }
                             }
+
+                            <!-- Filtreleri Temizle Butonu (Aktif Filtreler Çubuğunun Sağında) -->
+                            @if (isAnyFilterActive)
+                            {
+                                <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry })" 
+                                   class="btn btn-sm btn-outline-danger rounded-pill px-3 ms-auto d-inline-flex align-items-center gap-1.5 shadow-2xs font-outfit" style="font-size: 0.82rem;" title="Ülke filtresi hariç tüm filtreleri sıfırlar">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                    <span>Filtreleri Temizle</span>
+                                </a>
+                            }
                         </div>
                     }
                 </div>
@@ -554,22 +555,49 @@
                         var mainImage = prod.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? prod.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
                         var thumbImage = toThumb(mainImage);
                         
-                        <div class="product-list-item bg-theme-card border border-theme rounded-4 p-3 shadow-sm d-flex flex-column flex-md-row gap-3 align-items-stretch" 
+                        <div class="product-list-item bg-theme-card border border-theme rounded-4 p-2.5 p-md-3 shadow-sm d-flex flex-column flex-md-row gap-2 gap-md-3 align-items-stretch" 
                              style="cursor: pointer; transition: all 0.2s ease;" 
                              onclick="handleProductClick(event, '/Product/Detail/@(prod.Id)-@(prod.Slug)')">
                              
-                            <!-- SOL: Ürün Görseli (Kart Yüksekliği Boyunca) -->
-                            <div class="product-list-img-wrapper" style="width: 130px; flex-shrink: 0; min-height: 100px;">
+                            <!-- SOL: Ürün Görseli (Masaüstü Kolonu) -->
+                            <div class="product-list-img-wrapper d-none d-md-block" style="width: 130px; flex-shrink: 0; min-height: 100px;">
                                 <img src="@thumbImage" alt="@prod.Name" loading="lazy" decoding="async" 
                                      style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; border: 1px solid var(--border-theme);" 
                                      onerror="this.onerror=null; this.src='@mainImage';" />
                             </div>
 
-                            <!-- SAĞ: 2 Adet Yuvarlatılmış Kutulu Bölme -->
+                            <!-- MOBİL ÜST SATIR (Yalnızca Mobilde: Sol Resim, Sağ İsim & Bayrak/Üretici) -->
+                            <div class="d-flex d-md-none align-items-stretch gap-2.5 w-100">
+                                <div class="product-list-img-wrapper-mobile" style="width: 110px; height: 85px; flex-shrink: 0;">
+                                    <img src="@thumbImage" alt="@prod.Name" loading="lazy" decoding="async" 
+                                         style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px; border: 1px solid var(--border-theme);" 
+                                         onerror="this.onerror=null; this.src='@mainImage';" />
+                                </div>
+                                <div class="bg-theme rounded-3 p-2 px-2.5 flex-grow-1 d-flex flex-column justify-content-between overflow-hidden" style="min-height: 85px;">
+                                    <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                                        <h5 class="text-primary-theme fw-bold mb-0" style="font-size: 1rem;">@prod.Name</h5>
+                                        @if (!string.IsNullOrEmpty(prod.NatoReportingName))
+                                        {
+                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill" style="font-size: 0.68rem;">NATO: "@prod.NatoReportingName"</span>
+                                        }
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between gap-2 mt-1">
+                                        <span class="fs-8 text-muted-theme text-truncate" style="max-width: 130px;" title="@(prod.Manufacturer ?? "")">
+                                            @(string.IsNullOrWhiteSpace(prod.Manufacturer) ? "\u00A0" : prod.Manufacturer)
+                                        </span>
+                                        @if (!string.IsNullOrEmpty(prod.Country) && !string.IsNullOrEmpty(CountryHelper.GetFlagUrl(prod.Country)))
+                                        {
+                                            <img src="@CountryHelper.GetFlagUrl(prod.Country)" alt="@prod.Country" title="@prod.Country" style="width: 24px; height: 15px; object-fit: cover; border-radius: 3px; border: 1px solid var(--border-theme); flex-shrink: 0;" />
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SAĞ İÇERİK ALANI (Masaüstünde Resim Yanı, Mobilde Alt Kısım) -->
                             <div class="d-flex flex-column gap-2 flex-grow-1" style="min-width: 0;">
                                 
-                                <!-- 1. ÜST KUTU: Ürün Adı (Sol), Bayrak & Üretici (Sağ) - Bordersız & Sabit Yükseklikli -->
-                                <div class="bg-theme rounded-3 p-2.5 px-3 d-flex align-items-center justify-content-between gap-2 flex-wrap" style="min-height: 52px;">
+                                <!-- 1. ÜST KUTU: Ürün Adı (Sol), Bayrak & Üretici (Sağ) - Yalnızca Masaüstünde Görünür -->
+                                <div class="bg-theme rounded-3 p-2.5 px-3 d-none d-md-flex align-items-center justify-content-between gap-2 flex-wrap" style="min-height: 52px;">
                                     <!-- Sol: Ürün Adı ve NATO -->
                                     <div class="d-flex align-items-center gap-2">
                                         <h5 class="text-primary-theme fw-bold mb-0" style="font-size: 1.1rem;">@prod.Name</h5>
@@ -696,5 +724,21 @@
         </div>
     </div>
 </div>
+
+<style>
+    @@keyframes categoryHeartbeat {
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.6); }
+        50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+    }
+    .btn-category-pulse {
+        animation: categoryHeartbeat 2.2s infinite ease-in-out;
+        transition: all 0.2s ease;
+    }
+    .btn-category-pulse:hover {
+        animation: none;
+        transform: scale(1.06);
+    }
+</style>
 
 

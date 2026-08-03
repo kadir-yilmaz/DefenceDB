@@ -27,6 +27,11 @@ public static class CountryHelper
             "kanada" or "canada" or "ca" => "ca",
             "avustralya" or "australia" or "au" => "au",
             "azerbaycan" or "azerbaijan" or "az" => "az",
+            "avrupa" or "avrupa birligi" or "european union" or "eu" => "eu",
+            "israil" or "israel" or "il" => "il",
+            "hindistan" or "india" or "in" => "in",
+            "brezilya" or "brazil" or "br" => "br",
+            "guney afrika" or "south africa" or "za" => "za",
             _ => ""
         };
     }
@@ -64,7 +69,12 @@ public static class CountryHelper
             new() { Code = "es", Emoji = "🇪🇸", Name = "İspanya" },
             new() { Code = "ca", Emoji = "🇨🇦", Name = "Kanada" },
             new() { Code = "au", Emoji = "🇦🇺", Name = "Avustralya" },
-            new() { Code = "az", Emoji = "🇦🇿", Name = "Azerbaycan" }
+            new() { Code = "az", Emoji = "🇦🇿", Name = "Azerbaycan" },
+            new() { Code = "eu", Emoji = "🇪🇺", Name = "Avrupa" },
+            new() { Code = "il", Emoji = "🇮🇱", Name = "İsrail" },
+            new() { Code = "in", Emoji = "🇮🇳", Name = "Hindistan" },
+            new() { Code = "br", Emoji = "🇧🇷", Name = "Brezilya" },
+            new() { Code = "za", Emoji = "🇿🇦", Name = "Güney Afrika" }
         };
     }
 }
