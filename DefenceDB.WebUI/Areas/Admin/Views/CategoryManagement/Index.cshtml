@@ -145,15 +145,31 @@
                         <option value="">-- Hedef Kategori Seçiniz --</option>
                         @{
                             var allCats = ViewBag.AllCategories as List<Category> ?? new List<Category>();
-                            foreach (var rootCat in allCats.Where(c => c.ParentCategoryId == null))
+                            List<(Category Cat, int Level)> FlattenMigrateCategories(IEnumerable<Category> cats, int level = 1)
+                            {
+                                var res = new List<(Category Cat, int Level)>();
+                                if (cats == null) return res;
+                                foreach (var item in cats.OrderBy(x => x.Name))
+                                {
+                                    res.Add((item, level));
+                                    if (item.SubCategories != null && item.SubCategories.Any())
+                                    {
+                                        res.AddRange(FlattenMigrateCategories(item.SubCategories, level + 1));
+                                    }
+                                }
+                                return res;
+                            }
+
+                            foreach (var rootCat in allCats.Where(c => c.ParentCategoryId == null).OrderBy(c => c.Name))
                             {
                                 <optgroup label="@rootCat.Name">
                                     <option value="@rootCat.Id">@rootCat.Name (Ana Kategori)</option>
-                                    @if (rootCat.SubCategories != null)
+                                    @if (rootCat.SubCategories != null && rootCat.SubCategories.Any())
                                     {
-                                        foreach (var subCat in rootCat.SubCategories)
+                                        foreach (var (subCat, level) in FlattenMigrateCategories(rootCat.SubCategories, 1))
                                         {
-                                            <option value="@subCat.Id">&nbsp;&nbsp;↳ @subCat.Name</option>
+                                            var prefix = new string('\u00A0', level * 3) + "↳ ";
+                                            <option value="@subCat.Id">@prefix@subCat.Name</option>
                                         }
                                     }
                                 </optgroup>

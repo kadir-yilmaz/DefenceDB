@@ -1,14 +1,30 @@
 @model DefenceDB.EL.Models.DefenseProduct
 @{
-    ViewData["Title"] = "Ürün Ekle";
+    ViewData["Title"] = $"{Model.Name} Düzenle";
     var categoryAttributes = ViewBag.CategoryAttributes as List<DefenceDB.EL.Models.CategoryAttribute> ?? new List<DefenceDB.EL.Models.CategoryAttribute>();
+    var allCategories = ViewBag.Categories as List<Category> ?? new List<Category>();
+
+    List<(Category Cat, int Level)> FlattenCategories(IEnumerable<Category> cats, int level = 0)
+    {
+        var res = new List<(Category Cat, int Level)>();
+        if (cats == null) return res;
+        foreach (var item in cats.OrderBy(x => x.Name))
+        {
+            res.Add((item, level));
+            if (item.SubCategories != null && item.SubCategories.Any())
+            {
+                res.AddRange(FlattenCategories(item.SubCategories, level + 1));
+            }
+        }
+        return res;
+    }
+    var flattenedCategories = FlattenCategories(allCategories.Where(c => c.ParentCategoryId == null));
 }
 
 <div class="container mt-4">
-    <h2>@Model.Category?.Name Düzenle - @Model.Name</h2>
+    <h2>Düzenle: @Model.Name</h2>
     <form id="productForm" asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
         <input type="hidden" asp-for="Id" />
-        <input type="hidden" asp-for="CategoryId" />
         <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
 
         <div class="row">
@@ -18,8 +34,18 @@
                     <div class="card-header bg-warning text-dark fw-bold">Genel Bilgiler</div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label class="form-label">Ürün Adı</label>
+                            <label class="form-label fw-semibold">Ürün Adı</label>
                             <input type="text" asp-for="Name" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Kategori</label>
+                            <select asp-for="CategoryId" class="form-select admin-form-control py-2" required>
+                                @foreach (var (catItem, level) in flattenedCategories)
+                                {
+                                    var prefix = level > 0 ? new string('\u00A0', level * 3) + "↳ " : "";
+                                    <option value="@catItem.Id" selected="@(Model.CategoryId == catItem.Id)">@prefix@catItem.Name</option>
+                                }
+                            </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Üretici Ülke</label>
