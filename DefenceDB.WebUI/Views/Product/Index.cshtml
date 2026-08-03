@@ -96,18 +96,14 @@
 @* Mobile Offcanvas *@
     <div class="offcanvas offcanvas-start bg-theme" tabindex="-1" id="mobileFilterPanel" aria-labelledby="mobileFilterPanelLabel" style="width: 75%;">
         <div class="offcanvas-header border-bottom border-theme">
-            <h5 class="offcanvas-title text-primary-theme" id="mobileFilterPanelLabel">
-                <i class="bi bi-funnel-fill text-warning me-2"></i> Filtreler
+            <h5 class="offcanvas-title text-primary-theme fw-bold d-flex align-items-center gap-2" id="mobileFilterPanelLabel">
+                <i class="bi bi-grid-fill text-warning me-1"></i> Kategoriler
             </h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
             @* Kategori Listesi (Mobil) *@
             <div class="bg-theme-card border border-theme rounded-4 p-3 shadow-sm mb-4">
-                <h6 class="text-primary-theme mb-3 pb-2 border-bottom border-theme d-flex align-items-center gap-2">
-                    <i class="bi bi-grid-3x3-gap-fill text-warning"></i>
-                    <span>Tüm Kategoriler</span>
-                </h6>
                 <div class="category-list">
                     <a href="@Url.Action("Index", "Product", new { country = ViewBag.CurrentCountry })" class="sidebar-category-link @(currentCategory == null ? "active" : "") d-flex justify-content-between align-items-center">
                         <span><i class="bi bi-list-stars me-2"></i>Tüm Ürünler</span>
@@ -187,10 +183,10 @@
                 <!-- Row 1: Category Title, Category Drawer Button & Sorting Dropdown -->
                 <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-3.5">
                     <!-- Sol Taraf: Kategori Başlığı ve Sayısı -->
-                    <div>
+                    <div class="text-nowrap me-auto">
                         @if (currentCategory != null)
                         {
-                            <h3 class="text-primary-theme fw-bold mb-0 d-flex align-items-center gap-2" style="font-size: 1.25rem;">
+                            <h3 class="text-primary-theme fw-bold mb-0 d-flex align-items-center gap-2 text-nowrap" style="font-size: 1.25rem;">
                                 @if (!string.IsNullOrEmpty(currentCategory.IconClass))
                                 {
                                     <i class="@currentCategory.IconClass text-warning"></i>
@@ -199,15 +195,15 @@
                                 {
                                     <i class="bi bi-shield-fill text-warning"></i>
                                 }
-                                <span>@currentCategory.Name</span>
-                                <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme fs-7 ms-1 font-outfit">@Model.Count Ürün</span>
+                                <span class="text-nowrap">@currentCategory.Name</span>
+                                <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme fs-7 ms-1 font-outfit text-nowrap">@Model.Count Ürün</span>
                             </h3>
                         }
                         else
                         {
-                            <h3 class="text-primary-theme fw-bold mb-0 d-flex align-items-center gap-2" style="font-size: 1.25rem;">
-                                <i class="bi bi-shield-fill text-warning"></i> Tüm Savunma Ürünleri
-                                <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme fs-7 ms-1 font-outfit">@totalProductCount Ürün</span>
+                            <h3 class="text-primary-theme fw-bold mb-0 d-flex align-items-center gap-2 text-nowrap" style="font-size: 1.25rem;">
+                                <i class="bi bi-shield-fill text-warning"></i> <span class="text-nowrap">Tüm Savunma Ürünleri</span>
+                                <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme fs-7 ms-1 font-outfit text-nowrap">@totalProductCount Ürün</span>
                             </h3>
                         }
                     </div>
@@ -286,6 +282,7 @@
                                     }
                                 }
                             </ul>
+                        </div>
                     </div>
                 </div>
 
@@ -301,7 +298,7 @@
                                                  !string.IsNullOrEmpty(Context.Request.Query[a.Name + "_min"]) || 
                                                  !string.IsNullOrEmpty(Context.Request.Query[a.Name + "_max"])));
                 }
-                <div class="top-filter-bar bg-theme-card border border-theme rounded-4 p-3 shadow-sm mt-3">
+                <div class="top-filter-bar bg-theme-card border border-theme rounded-4 p-3 shadow-sm mt-3 mb-4">
                     <form method="get" action="@Url.Action("Index", "Product")" id="topFilterForm" class="d-flex flex-wrap align-items-center gap-2">
                         <input type="hidden" name="categorySlug" value="@(currentCategory?.Slug)" />
                         <input type="hidden" name="search" value="@ViewBag.CurrentSearch" />
@@ -534,7 +531,6 @@
                         </div>
                     }
                 </div>
-            </div>
 
             <!-- Products List / Grid -->
             @if (Model.Count == 0)
@@ -555,80 +551,50 @@
                         var mainImage = prod.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? prod.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
                         var thumbImage = toThumb(mainImage);
                         
-                        <div class="product-list-item bg-theme-card border border-theme rounded-4 p-2.5 p-md-3 shadow-sm d-flex flex-column flex-md-row gap-2 gap-md-3 align-items-stretch" 
+                        <div class="product-list-item bg-theme-card border border-theme rounded-4 p-2.5 p-md-3 shadow-sm product-grid" 
                              style="cursor: pointer; transition: all 0.2s ease;" 
                              onclick="handleProductClick(event, '/Product/Detail/@(prod.Id)-@(prod.Slug)')">
                              
-                            <!-- SOL: Ürün Görseli (Masaüstü Kolonu) -->
-                            <div class="product-list-img-wrapper d-none d-md-block" style="width: 130px; flex-shrink: 0; min-height: 100px;">
-                                <img src="@thumbImage" alt="@prod.Name" loading="lazy" decoding="async" 
+                            <!-- SOL: Ürün Görseli -->
+                            <div class="product-grid-image">
+                                <img src="@thumbImage" alt="@prod.Name" loading="lazy" decoding="async" class="product-list-img"
                                      style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; border: 1px solid var(--border-theme);" 
                                      onerror="this.onerror=null; this.src='@mainImage';" />
                             </div>
 
-                            <!-- MOBİL ÜST SATIR (Yalnızca Mobilde: Sol Resim, Sağ İsim & Bayrak/Üretici) -->
-                            <div class="d-flex d-md-none align-items-stretch gap-2.5 w-100">
-                                <div class="product-list-img-wrapper-mobile" style="width: 110px; height: 85px; flex-shrink: 0;">
-                                    <img src="@thumbImage" alt="@prod.Name" loading="lazy" decoding="async" 
-                                         style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px; border: 1px solid var(--border-theme);" 
-                                         onerror="this.onerror=null; this.src='@mainImage';" />
+                            <!-- ÜST KUTU: Ürün Adı, Bayrak & Üretici -->
+                            <div class="product-grid-header bg-theme rounded-3 p-2 px-2.5 p-md-2.5 px-md-3 d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2 flex-wrap" style="min-height: 52px;">
+                                <!-- Sol: Ürün Adı ve NATO -->
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <h5 class="text-primary-theme fw-bold mb-0" style="font-size: clamp(0.96rem, 2vw, 1.1rem);">@prod.Name</h5>
+                                    @if (!string.IsNullOrEmpty(prod.NatoReportingName))
+                                    {
+                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill" style="font-size: clamp(0.65rem, 1vw, 0.72rem);">NATO: "@prod.NatoReportingName"</span>
+                                    }
                                 </div>
-                                <div class="bg-theme rounded-3 p-2 px-2.5 flex-grow-1 d-flex flex-column justify-content-between overflow-hidden" style="min-height: 85px;">
-                                    <div class="d-flex align-items-center gap-1.5 flex-wrap">
-                                        <h5 class="text-primary-theme fw-bold mb-0" style="font-size: 1rem;">@prod.Name</h5>
-                                        @if (!string.IsNullOrEmpty(prod.NatoReportingName))
-                                        {
-                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill" style="font-size: 0.68rem;">NATO: "@prod.NatoReportingName"</span>
-                                        }
-                                    </div>
-                                    <div class="d-flex align-items-center justify-content-between gap-2 mt-1">
-                                        <span class="fs-8 text-muted-theme text-truncate" style="max-width: 130px;" title="@(prod.Manufacturer ?? "")">
-                                            @(string.IsNullOrWhiteSpace(prod.Manufacturer) ? "\u00A0" : prod.Manufacturer)
-                                        </span>
-                                        @if (!string.IsNullOrEmpty(prod.Country) && !string.IsNullOrEmpty(CountryHelper.GetFlagUrl(prod.Country)))
-                                        {
-                                            <img src="@CountryHelper.GetFlagUrl(prod.Country)" alt="@prod.Country" title="@prod.Country" style="width: 24px; height: 15px; object-fit: cover; border-radius: 3px; border: 1px solid var(--border-theme); flex-shrink: 0;" />
-                                        }
-                                    </div>
+
+                                <!-- Sağ: Üstte Şık Bayrak, Altta Üretici Bilgisi -->
+                                <div class="d-flex flex-row flex-sm-column align-items-center align-items-sm-end justify-content-between justify-content-sm-center gap-2 gap-sm-0 w-100 w-sm-auto mt-1 mt-sm-0" style="min-width: 90px; min-height: 38px;">
+                                    <span class="fs-8 text-muted-theme text-truncate order-1 order-sm-2" style="max-width: 180px;" title="@(prod.Manufacturer ?? "")">
+                                        @(string.IsNullOrWhiteSpace(prod.Manufacturer) ? "\u00A0" : prod.Manufacturer)
+                                    </span>
+                                    @if (!string.IsNullOrEmpty(prod.Country) && !string.IsNullOrEmpty(CountryHelper.GetFlagUrl(prod.Country)))
+                                    {
+                                        <div class="mb-sm-1 order-2 order-sm-1" title="@prod.Country">
+                                            <img src="@CountryHelper.GetFlagUrl(prod.Country)" alt="@prod.Country" style="width: 24px; height: 16px; object-fit: cover; border-radius: 3px; border: 1px solid var(--border-theme);" />
+                                        </div>
+                                    }
                                 </div>
                             </div>
 
-                            <!-- SAĞ İÇERİK ALANI (Masaüstünde Resim Yanı, Mobilde Alt Kısım) -->
-                            <div class="d-flex flex-column gap-2 flex-grow-1" style="min-width: 0;">
-                                
-                                <!-- 1. ÜST KUTU: Ürün Adı (Sol), Bayrak & Üretici (Sağ) - Yalnızca Masaüstünde Görünür -->
-                                <div class="bg-theme rounded-3 p-2.5 px-3 d-none d-md-flex align-items-center justify-content-between gap-2 flex-wrap" style="min-height: 52px;">
-                                    <!-- Sol: Ürün Adı ve NATO -->
-                                    <div class="d-flex align-items-center gap-2">
-                                        <h5 class="text-primary-theme fw-bold mb-0" style="font-size: 1.1rem;">@prod.Name</h5>
-                                        @if (!string.IsNullOrEmpty(prod.NatoReportingName))
-                                        {
-                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill" style="font-size: 0.72rem;">NATO: "@prod.NatoReportingName"</span>
-                                        }
-                                    </div>
-
-                                    <!-- Sağ: Üstte Şık Bayrak, Altta Üretici Bilgisi (Üretici yoksa bile yüksekliği sabit kalır) -->
-                                    <div class="text-end d-flex flex-column align-items-end justify-content-center" style="min-width: 90px; min-height: 38px;">
-                                        @if (!string.IsNullOrEmpty(prod.Country) && !string.IsNullOrEmpty(CountryHelper.GetFlagUrl(prod.Country)))
-                                        {
-                                            <div class="mb-1" title="@prod.Country">
-                                                <img src="@CountryHelper.GetFlagUrl(prod.Country)" alt="@prod.Country" style="width: 28px; height: 18px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-theme);" />
-                                            </div>
-                                        }
-                                        <span class="fs-8 text-muted-theme text-truncate" style="max-width: 180px;" title="@(prod.Manufacturer ?? "")">
-                                            @(string.IsNullOrWhiteSpace(prod.Manufacturer) ? "\u00A0" : prod.Manufacturer)
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <!-- 2. ALT KUTU: Kategoriye Özel Özellikler (Sığmadığında 2. Satıra Kayabilen Esnek Yapı) -->
-                                <div class="bg-theme rounded-3 p-2.5 px-3 flex-grow-1 d-flex align-items-center" style="min-height: 44px;">
-                                    @{
-                                        var validSpecs = prod.Specs?
-                                            .Where(s => !string.IsNullOrWhiteSpace(s.Value) 
-                                                     && s.Value != "true,false")
-                                            .Take(7)
-                                            .ToList();
+                            <!-- ALT KUTU: Kategoriye Özel Özellikler -->
+                            <div class="product-grid-specs bg-theme bg-md-theme rounded-3 p-2 p-md-2.5 px-2.5 px-md-3 d-flex align-items-center" style="min-height: 40px;">
+                                @{
+                                    var validSpecs = prod.Specs?
+                                        .Where(s => !string.IsNullOrWhiteSpace(s.Value) 
+                                                 && s.Value != "true,false")
+                                        .Take(7)
+                                        .ToList();
 
                                         // Soft Pastel Renk Paleti (Sırasıyla döner)
                                         var pastelColorStyles = new[] {
@@ -642,7 +608,7 @@
                                     }
                                     @if (validSpecs != null && validSpecs.Any())
                                     {
-                                        <div class="d-flex align-items-center gap-2 flex-wrap w-100" style="font-size: 0.8rem;">
+                                        <div class="d-flex align-items-center gap-2 flex-wrap w-100" style="font-size: 0.78rem;">
                                             @for (int i = 0; i < validSpecs.Count; i++)
                                             {
                                                 var spec = validSpecs[i];
@@ -654,9 +620,9 @@
                                                     _ => spec.Value
                                                 };
 
-                                                <div class="px-3 py-1.5 rounded-2 d-inline-flex align-items-center gap-2 text-nowrap font-outfit shadow-2xs" 
-                                                     style="@badgeStyle font-size: 0.8rem; border-radius: 6px;">
-                                                    <span class="opacity-75 font-outfit fw-medium">@label:</span>
+                                                <div class="px-2.5 py-1 px-md-3 py-md-1.5 rounded-pill d-inline-flex align-items-center gap-1.5 text-nowrap font-outfit shadow-2xs" 
+                                                     style="@badgeStyle font-size: 0.76rem; border-radius: 50rem;">
+                                                    <span class="opacity-75 font-outfit fw-medium me-0.5">@label:</span>
                                                     <strong class="fw-bold font-outfit" style="color: inherit;">@displayVal</strong>
                                                 </div>
                                             }
@@ -669,9 +635,7 @@
                                 </div>
 
                             </div>
-
-                        </div>
-                    }
+                        }
                 </div>
             }
 
@@ -738,6 +702,52 @@
     .btn-category-pulse:hover {
         animation: none;
         transform: scale(1.06);
+    }
+    
+    /* =========================================
+       ÜRÜN LİSTELEME GRID YAPISI
+    ========================================= */
+    .product-grid {
+        display: grid;
+        grid-template-columns: 100px 1fr;
+        grid-template-areas: 
+            "image header"
+            "specs specs";
+        gap: 0.75rem;
+    }
+    
+    .product-grid-image { 
+        grid-area: image; 
+    }
+    
+    .product-grid-header { 
+        grid-area: header; 
+    }
+    
+    .product-grid-specs { 
+        grid-area: specs; 
+    }
+
+    @@media (min-width: 768px) {
+        .product-grid {
+            grid-template-columns: 180px 1fr;
+            grid-template-areas: 
+                "image header"
+                "image specs";
+            gap: 1rem;
+        }
+    }
+    
+    /* GÖRSEL KISMI ESKİ WRAPPER İÇİN DEĞİL, DOĞRUDAN YENİ CSS GRID KULLANILACAK */
+    .product-grid-image {
+        width: 100%;
+        height: 110px;
+    }
+    @@media (min-width: 768px) {
+        .product-grid-image {
+            height: 100%;
+            min-height: 140px;
+        }
     }
 </style>
 
