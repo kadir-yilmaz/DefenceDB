@@ -37,7 +37,6 @@ builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<ICacheService, MemoryCacheService>();
 
 builder.Services.AddScoped<IImageProcessingService, ImageProcessingService>();
-builder.Services.AddScoped<IBackblazeMigrationService, BackblazeMigrationService>();
 builder.Services.AddScoped<IProductFormMapper, ProductFormMapper>();
 
 // Add DbContext

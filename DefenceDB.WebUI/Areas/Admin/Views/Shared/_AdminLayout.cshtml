@@ -49,16 +49,11 @@
             @if (User.IsInRole("Admin"))
             {
                 <div class="nav-section">
-                    <span class="nav-section-title">YÖNETİM & DEPOLAMA</span>
+                    <span class="nav-section-title">YÖNETİM</span>
                     <a href="@Url.Action("Index", "UserManagement", new { area = "Admin" })"
                        class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "UserManagement" ? "active" : "")">
                         <i class="bi bi-people-fill"></i>
                         <span>Kullanıcılar</span>
-                    </a>
-                    <a href="@Url.Action("Index", "StorageManagement", new { area = "Admin" })"
-                       class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "StorageManagement" ? "active" : "")">
-                        <i class="bi bi-cloud-arrow-up-fill"></i>
-                        <span>Backblaze Medya Göçü</span>
                     </a>
                 </div>
             }

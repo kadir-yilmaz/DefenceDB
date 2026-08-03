@@ -20,35 +20,15 @@ public class ImageProcessingService : IImageProcessingService
     private readonly string _publicUrl = "";
     private readonly ILogger<ImageProcessingService> _logger;
     private readonly IWebHostEnvironment _env;
-    private readonly bool _useLocalStorage;
+    private readonly bool _useLocalStorage = true;
 
     public ImageProcessingService(IConfiguration configuration, ILogger<ImageProcessingService> logger, IWebHostEnvironment env)
     {
         _logger = logger;
         _env = env;
 
-        var provider = configuration["Storage:Provider"] ?? "Backblaze";
-        _useLocalStorage = string.Equals(provider, "Local", StringComparison.OrdinalIgnoreCase);
-
-        if (!_useLocalStorage)
-        {
-            var serviceUrl = configuration["Backblaze:ServiceUrl"] ?? "https://s3.us-west-004.backblazeb2.com";
-            var keyId = configuration["Backblaze:KeyId"] ?? "";
-            var applicationKey = configuration["Backblaze:ApplicationKey"] ?? "";
-            _bucketName = configuration["Backblaze:BucketName"] ?? "defencedb";
-            _publicUrl = $"{serviceUrl.TrimEnd('/')}/{_bucketName}";
-
-            if (!string.IsNullOrWhiteSpace(keyId) && !string.IsNullOrWhiteSpace(applicationKey))
-            {
-                var config = new AmazonS3Config
-                {
-                    ServiceURL = serviceUrl,
-                    ForcePathStyle = true
-                };
-
-                _s3Client = new AmazonS3Client(keyId, applicationKey, config);
-            }
-        }
+        var provider = configuration["Storage:Provider"] ?? "Local";
+        _useLocalStorage = true;
     }
 
     public async Task<string> ProcessAndSaveImageAsync(IFormFile file, string slug)
