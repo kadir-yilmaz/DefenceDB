@@ -20,8 +20,8 @@ appsettings.Production.json
 DefenceDB.WebUI/wwwroot/images/products/*
 !DefenceDB.WebUI/wwwroot/images/products/.gitkeep
 
-DefenceDB.WebUI/wwwroot/thumbs/*
-!DefenceDB.WebUI/wwwroot/thumbs/.gitkeep
+DefenceDB.WebUI/wwwroot/images/thumbs/*
+!DefenceDB.WebUI/wwwroot/images/thumbs/.gitkeep
 
 # Security & Deploy Files
 DefenceDB.WebUI/App_Data/

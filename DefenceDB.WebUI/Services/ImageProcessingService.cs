@@ -82,8 +82,8 @@ public class ImageProcessingService : IImageProcessingService
                 Quality = 80
             });
 
-            // Thumbnail'i local'e kaydet (wwwroot/thumbs)
-            var thumbsFolder = Path.Combine(_env.WebRootPath, "thumbs");
+            // Thumbnail'i local'e kaydet (wwwroot/images/thumbs)
+            var thumbsFolder = Path.Combine(_env.WebRootPath, "images", "thumbs");
             if (!Directory.Exists(thumbsFolder))
             {
                 Directory.CreateDirectory(thumbsFolder);
@@ -269,7 +269,7 @@ public class ImageProcessingService : IImageProcessingService
                 if (string.IsNullOrEmpty(fileName)) return;
 
                 var uploadsFolder = Path.Combine(_env.WebRootPath, "images", "products");
-                var thumbsFolder = Path.Combine(_env.WebRootPath, "thumbs");
+                var thumbsFolder = Path.Combine(_env.WebRootPath, "images", "thumbs");
 
                 var mainFilePath = Path.Combine(uploadsFolder, fileName);
                 var thumbFilePath = Path.Combine(thumbsFolder, fileName);
