@@ -361,13 +361,54 @@
     }
 
 .mega-menu-count {
-    font-size: 1.05rem;
+    font-size: 0.9rem;
     color: var(--theme-color, #f59e0b);
     font-weight: 700;
     margin-left: auto;
     background-color: rgba(245, 158, 11, 0.1);
     padding: 2px 8px;
     border-radius: 6px;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+/* 3-Level Mega Menu Support */
+.mega-menu-column {
+    display: flex;
+    flex-direction: column;
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 10px 14px;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.mega-menu-column:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.mega-menu-header-item {
+    background-color: transparent !important;
+    padding: 6px 0 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 6px;
+}
+
+.mega-menu-header-item:hover {
+    transform: none !important;
+}
+
+.mega-menu-subitem {
+    color: #94a3b8 !important;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.mega-menu-subitem:hover {
+    color: #fbbf24 !important;
+    background-color: rgba(245, 158, 11, 0.1);
+    padding-left: 12px;
 }
 
 .mega-menu-empty {

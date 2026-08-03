@@ -358,4 +358,35 @@ public class ProductManagementController : Controller
 
         return Json(new { success = true, message = "Ürün vitrin durumu güncellendi." });
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> BulkMoveCategory([FromBody] BulkMoveModel model)
+    {
+        if (model == null || model.ProductIds == null || !model.ProductIds.Any() || model.TargetCategoryId <= 0)
+        {
+            return Json(new { success = false, message = "Geçersiz istek. Lütfen ürün(ler)i ve hedef kategoriyi seçin." });
+        }
+
+        try
+        {
+            await _productCommandService.BulkMoveProductsToCategoryAsync(model.ProductIds, model.TargetCategoryId);
+            var targetCategory = await _categoryQueryService.GetCategoryByIdAsync(model.TargetCategoryId);
+
+            return Json(new { 
+                success = true, 
+                message = $"{model.ProductIds.Count} adet ürün '{targetCategory?.Name ?? "Yeni Kategori"}' kategorisine başarıyla taşındı." 
+            });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = "Taşıma işlemi sırasında bir hata oluştu: " + ex.Message });
+        }
+    }
+}
+
+public class BulkMoveModel
+{
+    public List<int> ProductIds { get; set; } = new();
+    public int TargetCategoryId { get; set; }
 }

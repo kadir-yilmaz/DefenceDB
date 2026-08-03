@@ -12,4 +12,5 @@ public interface IProductCommandService
     Task DeleteProductImageAsync(ProductImage image);
     Task DeleteProductImagesAsync(IEnumerable<int> imageIds);
     Task SetMainImageAsync(int productId, int mainImageId);
+    Task BulkMoveProductsToCategoryAsync(IEnumerable<int> productIds, int targetCategoryId);
 }

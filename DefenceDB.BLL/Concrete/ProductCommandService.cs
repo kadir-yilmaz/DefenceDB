@@ -8,10 +8,12 @@ namespace DefenceDB.BLL.Concrete;
 public class ProductCommandService : IProductCommandService
 {
     private readonly AppDbContext _context;
+    private readonly ICacheService _cacheService;
 
-    public ProductCommandService(AppDbContext context)
+    public ProductCommandService(AppDbContext context, ICacheService cacheService)
     {
         _context = context;
+        _cacheService = cacheService;
     }
 
     public async Task AddProductAsync(DefenseProduct product)
@@ -119,5 +121,26 @@ public class ProductCommandService : IProductCommandService
         }
 
         await _context.SaveChangesAsync();
+    }
+
+    public async Task BulkMoveProductsToCategoryAsync(IEnumerable<int> productIds, int targetCategoryId)
+    {
+        var idList = productIds.Distinct().ToList();
+        if (!idList.Any()) return;
+
+        var targetCategoryExists = await _context.Categories.AnyAsync(c => c.Id == targetCategoryId);
+        if (!targetCategoryExists)
+            throw new InvalidOperationException("Hedef kategori bulunamadı.");
+
+        await _context.DefenseProducts
+            .Where(p => idList.Contains(p.Id))
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(p => p.CategoryId, targetCategoryId)
+                .SetProperty(p => p.UpdatedAt, DateTime.UtcNow));
+
+        // Cache temizliği
+        await _cacheService.RemoveAsync("products:all");
+        await _cacheService.RemoveByPrefixAsync("products:");
+        await _cacheService.RemoveByPrefixAsync("categories:");
     }
 }

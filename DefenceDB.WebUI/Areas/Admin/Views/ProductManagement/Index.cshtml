@@ -194,12 +194,37 @@
     </div>
 </div>
 
+@Html.AntiForgeryToken()
+
+<!-- Toplu İşlem Çubuğu (Floating Bulk Action Bar) -->
+<div id="bulkActionBar" class="mb-3 p-3 rounded-3 shadow-sm border border-warning" style="display: none; background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(8px); transition: all 0.3s ease;">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-3">
+            <span class="badge bg-warning text-dark fs-6 font-outfit" id="selectedCountBadge">0 Ürün Seçildi</span>
+            <span style="color: var(--admin-text-secondary); font-size: 0.85rem;">
+                <i class="bi bi-info-circle text-warning me-1"></i> Seçilen ürünleri yeni bir kategoriye aktarabilirsiniz.
+            </span>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-warning text-dark fw-bold btn-sm rounded-pill px-3" onclick="openBulkMoveModal()">
+                <i class="bi bi-folder-symlink-fill me-1"></i> Kategorisini Değiştir / Taşı
+            </button>
+            <button type="button" class="btn btn-outline-light btn-sm rounded-pill px-3" onclick="clearProductSelections()">
+                Seçimi Temizle
+            </button>
+        </div>
+    </div>
+</div>
+
 <div class="table-wrapper">
     <div class="table-body">
         <div class="table-responsive">
             <table class="admin-table">
                 <thead>
                     <tr>
+                        <th style="width: 40px;" class="text-center">
+                            <input type="checkbox" id="selectAllProducts" class="form-check-input" title="Tümünü Seç / Kaldır" style="cursor: pointer; width: 1.1em; height: 1.1em;" />
+                        </th>
                         <th style="width: 5%;">Görsel</th>
                         <th style="width: 25%;">Ürün Adı</th>
                         <th style="width: 15%;">Kategori</th>
@@ -213,6 +238,9 @@
                     @foreach (var prod in Model)
                     {
                         <tr>
+                            <td class="text-center align-middle">
+                                <input type="checkbox" class="form-check-input product-select-checkbox" value="@prod.Id" data-name="@prod.Name" style="cursor: pointer; width: 1.1em; height: 1.1em;" />
+                            </td>
                             <td>
                                 @{
                                     var mainImage = prod.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? prod.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
@@ -317,7 +345,165 @@
     </div>
 }
 
+<!-- Toplu Kategori Taşıma Modalı -->
+<div class="modal fade" id="bulkMoveModal" tabindex="-1" aria-labelledby="bulkMoveModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border border-secondary shadow-lg" style="background: #0f172a !important;">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title font-outfit" id="bulkMoveModalLabel">
+                    <i class="bi bi-folder-symlink-fill text-warning me-2"></i> Kategoriye Taşı / Aktar
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label text-warning fw-bold mb-1">Seçili Ürün Bilgisi:</label>
+                    <div class="fs-6 text-light" id="modalSelectedProductsSummary">0 ürün seçildi</div>
+                </div>
+                <div class="mb-3">
+                    <label for="targetCategorySelect" class="form-label fw-bold">Hedef Kategori Seçin <span class="text-danger">*</span></label>
+                    <select id="targetCategorySelect" class="form-select form-select-lg bg-dark text-white border-secondary" style="background-color: #1e293b !important; color: #fff !important;">
+                        <option value="">-- Hedef Kategori Seçiniz --</option>
+                        @{
+                            var categoriesForModal = ViewBag.Categories as List<Category> ?? new List<Category>();
+                            foreach (var rootCat in categoriesForModal)
+                            {
+                                <optgroup label="@rootCat.Name">
+                                    <option value="@rootCat.Id">@rootCat.Name (Ana Kategori)</option>
+                                    @if (rootCat.SubCategories != null)
+                                    {
+                                        foreach (var subCat in rootCat.SubCategories)
+                                        {
+                                            <option value="@subCat.Id">&nbsp;&nbsp;↳ @subCat.Name</option>
+                                        }
+                                    }
+                                </optgroup>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="alert alert-info py-2 px-3 fs-7 mb-0 border-0" style="background: rgba(14, 165, 233, 0.15); color: #38bdf8;">
+                    <i class="bi bi-shield-check me-1"></i> Taşıma sonrasında seçili tüm ürünler seçtiğiniz yeni kategoride listelenecektir.
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-light rounded-pill px-4" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-warning text-dark fw-bold rounded-pill px-4" onclick="submitBulkMove()">
+                    <i class="bi bi-check-circle-fill me-1"></i> Taşıma İşlemini Tamamla
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="~/js/admin-products.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectAll = document.getElementById('selectAllProducts');
+            const checkboxes = document.querySelectorAll('.product-select-checkbox');
+
+            if (selectAll) {
+                selectAll.addEventListener('change', function () {
+                    checkboxes.forEach(cb => cb.checked = selectAll.checked);
+                    updateBulkActionBar();
+                });
+            }
+
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', function () {
+                    updateBulkActionBar();
+                    if (!this.checked && selectAll) selectAll.checked = false;
+                });
+            });
+        });
+
+        function updateBulkActionBar() {
+            const checked = document.querySelectorAll('.product-select-checkbox:checked');
+            const bar = document.getElementById('bulkActionBar');
+            const badge = document.getElementById('selectedCountBadge');
+
+            if (checked.length > 0) {
+                if (bar) bar.style.display = 'block';
+                if (badge) badge.textContent = `${checked.length} Ürün Seçildi`;
+            } else {
+                if (bar) bar.style.display = 'none';
+            }
+        }
+
+        function clearProductSelections() {
+            document.querySelectorAll('.product-select-checkbox').forEach(cb => cb.checked = false);
+            const selectAll = document.getElementById('selectAllProducts');
+            if (selectAll) selectAll.checked = false;
+            updateBulkActionBar();
+        }
+
+        function openBulkMoveModal() {
+            const checked = document.querySelectorAll('.product-select-checkbox:checked');
+            if (checked.length === 0) {
+                Swal.fire('Uyarı', 'Lütfen taşınacak en az bir ürün seçin.', 'warning');
+                return;
+            }
+            document.getElementById('modalSelectedProductsSummary').textContent = `${checked.length} adet ürün seçildi.`;
+            const modalElem = document.getElementById('bulkMoveModal');
+            const modal = new bootstrap.Modal(modalElem);
+            modal.show();
+        }
+
+        function submitBulkMove() {
+            const checked = document.querySelectorAll('.product-select-checkbox:checked');
+            const targetCategoryId = document.getElementById('targetCategorySelect').value;
+
+            if (checked.length === 0) {
+                Swal.fire('Hata', 'Lütfen taşınacak ürünleri seçin.', 'error');
+                return;
+            }
+            if (!targetCategoryId) {
+                Swal.fire('Uyarı', 'Lütfen hedef kategoriyi seçin.', 'warning');
+                return;
+            }
+
+            const productIds = Array.from(checked).map(cb => parseInt(cb.value));
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+            Swal.fire({
+                title: 'Ürünler Taşınsın mı?',
+                text: `${productIds.length} adet ürün seçilen yeni kategoriye aktarılacak.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Evet, Taşı',
+                cancelButtonText: 'İptal',
+                confirmButtonColor: '#fbbf24',
+                cancelButtonColor: '#64748b'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/Admin/ProductManagement/BulkMoveCategory', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': token
+                        },
+                        body: JSON.stringify({
+                            productIds: productIds,
+                            targetCategoryId: parseInt(targetCategoryId)
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Başarılı!', data.message, 'success').then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire('Hata', data.message || 'İşlem gerçekleştirilemedi.', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        Swal.fire('Hata', 'Sunucu ile bağlantı kurulamadı.', 'error');
+                    });
+                }
+            });
+        }
+    </script>
 }

@@ -3,18 +3,75 @@
     var categories = ViewBag.Categories as List<Category> ?? new List<Category>();
     var currentCategory = ViewBag.CurrentCategory as Category;
     var productCounts = ViewBag.CategoryCounts as Dictionary<int, int> ?? new Dictionary<int, int>();
-    var totalProductCount = categories.Sum(cat => productCounts.GetValueOrDefault(cat.Id, 0) + (cat.SubCategories?.Sum(sc => productCounts.GetValueOrDefault(sc.Id, 0)) ?? 0));
+
     // Thumbnail helper: /images/products/x.webp -> /images/thumbs/x.webp
     Func<string, string> toThumb = path => {
         if (string.IsNullOrEmpty(path)) return "/images/default.jpg";
         var fileName = System.IO.Path.GetFileName(path);
         return $"/images/thumbs/{fileName}";
     };
+
+    // Özyinelemeli (Recursive) Kategori Ürün Sayısı Toplayıcı (Rollup Count)
+    int GetCategoryRollupCount(Category cat)
+    {
+        int direct = productCounts.GetValueOrDefault(cat.Id, 0);
+        int childrenSum = (cat.SubCategories != null && cat.SubCategories.Any()) 
+            ? cat.SubCategories.Sum(sc => GetCategoryRollupCount(sc)) 
+            : 0;
+        return direct + childrenSum;
+    }
+
+    var totalProductCount = categories.Sum(cat => GetCategoryRollupCount(cat));
+
+    // Aktif kategorinin bu dalda (branch) olup olmadığını kontrol eden fonksiyon
+    bool IsCategoryInBranch(Category cat, int? activeId)
+    {
+        if (activeId == null) return false;
+        if (cat.Id == activeId.Value) return true;
+        if (cat.SubCategories != null && cat.SubCategories.Any())
+        {
+            return cat.SubCategories.Any(sc => IsCategoryInBranch(sc, activeId));
+        }
+        return false;
+    }
+
+    // Sınırsız Derinlikte Kategori Ağacı Oluşturucu (N-Level Recursive Category Tree Renderer)
+    void RenderCategoryTree(IEnumerable<Category> subCats, int depth = 1)
+    {
+        if (subCats == null || !subCats.Any()) return;
+        
+        <div class="ps-2 border-start border-theme ms-2 mb-1 mt-1">
+            @foreach (var sub in subCats)
+            {
+                var subRollupCount = GetCategoryRollupCount(sub);
+                var isSubBranch = IsCategoryInBranch(sub, currentCategory?.Id);
+                var isSubActive = currentCategory?.Id == sub.Id;
+                
+                <a href="@Url.Action("Index", "Product", new { categorySlug = sub.Slug, country = ViewBag.CurrentCountry })" 
+                   class="sidebar-category-link @(isSubActive ? "active text-warning fw-bold" : (isSubBranch ? "text-primary-theme fw-semibold" : "text-secondary-theme")) d-flex justify-content-between align-items-center py-1 mt-1" 
+                   style="font-size: @(Math.Max(0.78, 0.88 - (depth * 0.02)))rem;">
+                    <span class="text-truncate" style="max-width: 80%;">
+                        @if (!string.IsNullOrEmpty(sub.IconClass))
+                        {
+                            <i class="@sub.IconClass me-1" style="font-size: 0.75rem;"></i>
+                        }
+                        @sub.Name
+                    </span>
+                    <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme ms-1" style="font-size: 0.7rem;">@subRollupCount</span>
+                </a>
+
+                if (isSubBranch && sub.SubCategories != null && sub.SubCategories.Any())
+                {
+                    RenderCategoryTree(sub.SubCategories, depth + 1);
+                }
+            }
+        </div>
+    }
 }
 
 <div class="container py-5">
 <link rel="stylesheet" href="~/css/product-list.css" asp-append-version="true" />
-@* amamamamam Mobile Offcanvas - Sadece telefonda gorunur amamamamam *@
+@* Mobile Offcanvas *@
     <div class="offcanvas offcanvas-start bg-theme" tabindex="-1" id="mobileFilterPanel" aria-labelledby="mobileFilterPanelLabel" style="width: 75%;">
         <div class="offcanvas-header border-bottom border-theme">
             <h5 class="offcanvas-title text-primary-theme" id="mobileFilterPanelLabel">
@@ -36,26 +93,16 @@
                     </a>
                     @foreach (var cat in categories)
                     {
-                        var mRootCount = productCounts.GetValueOrDefault(cat.Id, 0) + (cat.SubCategories?.Sum(sc => productCounts.GetValueOrDefault(sc.Id, 0)) ?? 0);
-                        var mIsRootActive = currentCategory?.Id == cat.Id || currentCategory?.ParentCategoryId == cat.Id;
+                        var mRootCount = GetCategoryRollupCount(cat);
+                        var mIsRootBranch = IsCategoryInBranch(cat, currentCategory?.Id);
                         <a href="@Url.Action("Index", "Product", new { categorySlug = cat.Slug, country = ViewBag.CurrentCountry })" 
-                           class="sidebar-category-link @(mIsRootActive ? "active fw-bold" : "") d-flex justify-content-between align-items-center">
+                           class="sidebar-category-link @(mIsRootBranch ? "active fw-bold" : "") d-flex justify-content-between align-items-center">
                             <span>@cat.Name</span>
                             <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme">@mRootCount</span>
                         </a>
-                        if (mIsRootActive && cat.SubCategories != null && cat.SubCategories.Any())
+                        if (mIsRootBranch && cat.SubCategories != null && cat.SubCategories.Any())
                         {
-                            <div class="ps-3 border-start border-theme ms-3 mb-2 mt-1">
-                                @foreach (var sub in cat.SubCategories)
-                                {
-                                    var mSubCount = productCounts.GetValueOrDefault(sub.Id, 0);
-                                    <a href="@Url.Action("Index", "Product", new { categorySlug = sub.Slug, country = ViewBag.CurrentCountry })" 
-                                       class="sidebar-category-link @(currentCategory?.Id == sub.Id ? "active text-warning" : "text-secondary-theme") d-flex justify-content-between align-items-center py-1 mt-1" style="font-size: 0.9rem;">
-                                        <span><i class="@sub.IconClass me-2"></i>@sub.Name</span>
-                                        <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme" style="font-size: 0.75rem;">@mSubCount</span>
-                                    </a>
-                                }
-                            </div>
+                            RenderCategoryTree(cat.SubCategories, 1);
                         }
                     }
                 </div>
@@ -76,7 +123,7 @@
     </div>
 
     <div class="row">
-        @* amamamamam PC Sidebar - d-none d-lg-block ile sadece masaustunde gorunur amamamamam *@
+        @* PC Sidebar *@
         <div class="col-lg-3 d-none d-lg-block mb-4 mb-lg-0 pe-lg-3">
             <div class="sidebar-sticky">
                 <!-- Categories block -->
@@ -93,28 +140,18 @@
                         
                         @foreach (var cat in categories)
                         {
-                            var rootCount = productCounts.GetValueOrDefault(cat.Id, 0) + (cat.SubCategories?.Sum(sc => productCounts.GetValueOrDefault(sc.Id, 0)) ?? 0);
-                            var isRootActive = currentCategory?.Id == cat.Id || currentCategory?.ParentCategoryId == cat.Id;
+                            var rootCount = GetCategoryRollupCount(cat);
+                            var isRootBranch = IsCategoryInBranch(cat, currentCategory?.Id);
                             
                             <a href="@Url.Action("Index", "Product", new { categorySlug = cat.Slug, country = ViewBag.CurrentCountry })" 
-                               class="sidebar-category-link @(isRootActive ? "active fw-bold" : "") d-flex justify-content-between align-items-center">
+                               class="sidebar-category-link @(isRootBranch ? "active fw-bold" : "") d-flex justify-content-between align-items-center">
                                 <span>@cat.Name</span>
                                 <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme">@rootCount</span>
                             </a>
 
-                            if (isRootActive && cat.SubCategories != null && cat.SubCategories.Any())
+                            if (isRootBranch && cat.SubCategories != null && cat.SubCategories.Any())
                             {
-                                <div class="ps-3 border-start border-theme ms-3 mb-2 mt-1">
-                                    @foreach (var sub in cat.SubCategories)
-                                    {
-                                        var subCount = productCounts.GetValueOrDefault(sub.Id, 0);
-                                        <a href="@Url.Action("Index", "Product", new { categorySlug = sub.Slug, country = ViewBag.CurrentCountry })" 
-                                           class="sidebar-category-link @(currentCategory?.Id == sub.Id ? "active text-warning" : "text-secondary-theme") d-flex justify-content-between align-items-center py-1 mt-1" style="font-size: 0.9rem;">
-                                            <span><i class="@sub.IconClass me-2"></i>@sub.Name</span>
-                                            <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme" style="font-size: 0.75rem;">@subCount</span>
-                                        </a>
-                                    }
-                                </div>
+                                RenderCategoryTree(cat.SubCategories, 1);
                             }
                         }
                     </div>

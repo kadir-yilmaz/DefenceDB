@@ -16,15 +16,18 @@ public class CategoryManagementController : Controller
 {
     private readonly ICategoryQueryService _categoryQueryService;
     private readonly ICategoryCommandService _categoryCommandService;
+    private readonly IProductCommandService _productCommandService;
     private readonly AppDbContext _context;
 
     public CategoryManagementController(
         ICategoryQueryService categoryQueryService,
         ICategoryCommandService categoryCommandService,
+        IProductCommandService productCommandService,
         AppDbContext context)
     {
         _categoryQueryService = categoryQueryService;
         _categoryCommandService = categoryCommandService;
+        _productCommandService = productCommandService;
         _context = context;
     }
 
@@ -54,10 +57,15 @@ public class CategoryManagementController : Controller
     // --- Category CRUD ---
 
     [HttpGet]
-    public async Task<IActionResult> Create()
+    public async Task<IActionResult> Create(int? parentId)
     {
         ViewBag.AllCategories = await _categoryQueryService.GetAllCategoriesAsync();
-        return View(new CategoryFormViewModel());
+        var model = new CategoryFormViewModel();
+        if (parentId.HasValue && parentId.Value > 0)
+        {
+            model.ParentCategoryId = parentId.Value;
+        }
+        return View(model);
     }
 
     [HttpPost]
@@ -296,5 +304,30 @@ public class CategoryManagementController : Controller
             isRequired = a.IsRequired,
             displayOrder = a.DisplayOrder
         }));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MigrateCategoryProducts(int sourceCategoryId, int targetCategoryId)
+    {
+        if (sourceCategoryId <= 0 || targetCategoryId <= 0 || sourceCategoryId == targetCategoryId)
+            return Json(new { success = false, message = "Geçersiz kaynak veya hedef kategori seçimi." });
+
+        var productIds = await _context.DefenseProducts
+            .AsNoTracking()
+            .Where(p => p.CategoryId == sourceCategoryId)
+            .Select(p => p.Id)
+            .ToListAsync();
+
+        if (!productIds.Any())
+            return Json(new { success = false, message = "Bu kategoride taşınacak ürün bulunamadı." });
+
+        await _productCommandService.BulkMoveProductsToCategoryAsync(productIds, targetCategoryId);
+
+        var targetCategory = await _categoryQueryService.GetCategoryByIdAsync(targetCategoryId);
+        return Json(new { 
+            success = true, 
+            message = $"{productIds.Count} adet ürün '{targetCategory?.Name ?? "Yeni Kategori"}' kategorisine başarıyla taşındı." 
+        });
     }
 }

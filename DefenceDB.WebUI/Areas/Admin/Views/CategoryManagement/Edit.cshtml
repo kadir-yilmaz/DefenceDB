@@ -63,11 +63,7 @@
                             {
                                 var indent = new string('-', item.Level * 2);
                                 var text = (item.Level > 0 ? indent + " " : "") + item.Category.Name;
-                                if (Model.ParentCategoryId == item.Category.Id) {
-                                    <!option value="@item.Category.Id" selected>@text</!option>
-                                } else {
-                                    <!option value="@item.Category.Id">@text</!option>
-                                }
+                                <option value="@item.Category.Id" selected="@(Model?.ParentCategoryId == item.Category.Id)">@text</option>
                             }
                         </select>
                         <div class="form-text text-muted small mt-1">Alt kategori eklemek için ana kategorisini seçin.</div>

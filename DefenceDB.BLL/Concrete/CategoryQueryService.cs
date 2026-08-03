@@ -28,14 +28,16 @@ public class CategoryQueryService : ICategoryQueryService
         if (cached != null)
             return cached;
 
-        var categories = await _context.Categories
+        var allCategories = await _context.Categories
             .AsNoTracking()
-            .Include(c => c.SubCategories)
             .OrderBy(c => c.SortOrder)
+            .ThenBy(c => c.Name)
             .ToListAsync();
 
-        await _cacheService.SetAsync(cacheKey, categories, DefaultCacheDuration);
-        return categories;
+        BuildMultiLevelCategoryTree(allCategories);
+
+        await _cacheService.SetAsync(cacheKey, allCategories, DefaultCacheDuration);
+        return allCategories;
     }
 
     public async Task<Category?> GetCategoryByIdAsync(int id)
@@ -79,15 +81,39 @@ public class CategoryQueryService : ICategoryQueryService
         if (cached != null)
             return cached;
 
-        var categories = await _context.Categories
+        var allCategories = await _context.Categories
             .AsNoTracking()
-            .Where(c => c.ParentCategoryId == null)
-            .Include(c => c.SubCategories.OrderBy(sc => sc.Name))
-            .OrderBy(c => c.Name)
+            .OrderBy(c => c.SortOrder)
+            .ThenBy(c => c.Name)
             .ToListAsync();
 
-        await _cacheService.SetAsync(cacheKey, categories, DefaultCacheDuration);
-        return categories;
+        var rootCategories = BuildMultiLevelCategoryTree(allCategories);
+
+        await _cacheService.SetAsync(cacheKey, rootCategories, DefaultCacheDuration);
+        return rootCategories;
+    }
+
+    private static List<Category> BuildMultiLevelCategoryTree(List<Category> allCategories)
+    {
+        var categoryMap = allCategories.ToDictionary(c => c.Id);
+        foreach (var cat in allCategories)
+        {
+            cat.SubCategories = new List<Category>();
+        }
+
+        var rootCategories = new List<Category>();
+        foreach (var cat in allCategories)
+        {
+            if (cat.ParentCategoryId.HasValue && categoryMap.TryGetValue(cat.ParentCategoryId.Value, out var parent))
+            {
+                parent.SubCategories.Add(cat);
+            }
+            else if (!cat.ParentCategoryId.HasValue)
+            {
+                rootCategories.Add(cat);
+            }
+        }
+        return rootCategories;
     }
 
     public async Task<Category?> GetCategoryWithSubCategoriesAsync(int id)

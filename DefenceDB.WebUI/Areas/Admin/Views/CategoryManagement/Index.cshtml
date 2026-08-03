@@ -46,6 +46,10 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @{
+                        var categoryCounts = ViewBag.CategoryCounts as Dictionary<int, int> ?? new Dictionary<int, int>();
+                        var allCategories = ViewBag.AllCategories as List<Category> ?? new List<Category>();
+                    }
                     @foreach (var item in flattenedCategories)
                     {
                         var cat = item.Category;
@@ -53,10 +57,11 @@
                         var padding = level * 30;
                         var icon = string.IsNullOrEmpty(cat.IconClass) ? "bi-tag-fill" : cat.IconClass;
                         var hasSub = cat.SubCategories != null && cat.SubCategories.Any();
+                        var productCount = categoryCounts.GetValueOrDefault(cat.Id, 0);
 
                         <tr>
                             <td style="padding-left: @(padding + 16)px;">
-                                <div class="d-flex align-items-center gap-2">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
                                     @if (level > 0)
                                     {
                                         <span style="color: var(--admin-border); margin-right: 4px;">|_</span>
@@ -65,7 +70,11 @@
                                     <span style="font-weight: @(level == 0 ? "700" : "500"); color: var(--admin-text);">@cat.Name</span>
                                     @if (hasSub)
                                     {
-                                        <span class="badge bg-secondary opacity-75 ms-2" style="font-size: 0.7rem;">@cat.SubCategories.Count alt</span>
+                                        <span class="badge bg-secondary opacity-75 ms-1" style="font-size: 0.7rem;">@cat.SubCategories.Count alt</span>
+                                    }
+                                    @if (productCount > 0)
+                                    {
+                                        <span class="badge bg-warning text-dark fw-bold ms-1" style="font-size: 0.7rem;" title="@productCount kayıtlı ürün var">@productCount ürün</span>
                                     }
                                 </div>
                             </td>
@@ -79,10 +88,19 @@
                                 </form>
                             </td>
                             <td class="text-center">
+                                <a href="@Url.Action("Create", new { parentId = cat.Id })" class="btn btn-sm btn-outline-success me-1" title="Bu Kategorinin Altına Alt Kategori Ekle">
+                                    <i class="bi bi-folder-plus"></i>
+                                </a>
+                                <a href="@Url.Action("Index", "ProductManagement", new { categoryId = cat.Id })" class="btn btn-sm btn-outline-info me-1" title="Kategori Ürünlerini Listele">
+                                    <i class="bi bi-box-seam"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-warning me-1" onclick="openCategoryMigrateModal(@cat.Id, '@cat.Name.Replace("'", "\\'")', @productCount)" title="Kategorideki Tüm Ürünleri Başka Kategoriye Taşı">
+                                    <i class="bi bi-folder-symlink-fill"></i>
+                                </button>
                                 <a href="@Url.Action("Edit", new { id = cat.Id })" class="btn btn-sm btn-outline-primary me-1" title="Düzenle">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
-                                <form asp-action="Delete" asp-route-id="@cat.Id" method="post" class="d-inline" onsubmit="return confirm('Bu kategoriyi silmek istediğinize emin misiniz? Alt kategorileri varsa önce onları silmeniz gerekebilir.');">
+                                <form asp-action="Delete" asp-route-id="@cat.Id" method="post" class="d-inline" onsubmit="return confirm('Bu kategoriyi silmek istediğinize emin misiniz?');">
                                     @Html.AntiForgeryToken()
                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Sil">
                                         <i class="bi bi-trash-fill"></i>
@@ -104,3 +122,133 @@
         </div>
     </div>
 </div>
+
+<!-- Kategori Ürünlerini Başka Kategoriye Taşıma Modalı -->
+<div class="modal fade" id="categoryMigrateModal" tabindex="-1" aria-labelledby="categoryMigrateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border border-secondary shadow-lg" style="background: #0f172a !important;">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title font-outfit" id="categoryMigrateModalLabel">
+                    <i class="bi bi-folder-symlink-fill text-warning me-2"></i> Tüm Ürünleri Başka Kategoriye Taşı
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="migrateSourceCategoryId" value="0" />
+                <div class="mb-3">
+                    <label class="form-label text-warning fw-bold mb-1">Kaynak Kategori:</label>
+                    <div class="fs-6 text-light" id="migrateSourceCategoryName">-</div>
+                </div>
+                <div class="mb-3">
+                    <label for="migrateTargetCategorySelect" class="form-label fw-bold">Hedef Kategori Seçin <span class="text-danger">*</span></label>
+                    <select id="migrateTargetCategorySelect" class="form-select form-select-lg bg-dark text-white border-secondary" style="background-color: #1e293b !important; color: #fff !important;">
+                        <option value="">-- Hedef Kategori Seçiniz --</option>
+                        @{
+                            var allCats = ViewBag.AllCategories as List<Category> ?? new List<Category>();
+                            foreach (var rootCat in allCats.Where(c => c.ParentCategoryId == null))
+                            {
+                                <optgroup label="@rootCat.Name">
+                                    <option value="@rootCat.Id">@rootCat.Name (Ana Kategori)</option>
+                                    @if (rootCat.SubCategories != null)
+                                    {
+                                        foreach (var subCat in rootCat.SubCategories)
+                                        {
+                                            <option value="@subCat.Id">&nbsp;&nbsp;↳ @subCat.Name</option>
+                                        }
+                                    }
+                                </optgroup>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="alert alert-info py-2 px-3 fs-7 mb-0 border-0" style="background: rgba(14, 165, 233, 0.15); color: #38bdf8;">
+                    <i class="bi bi-shield-check me-1"></i> Bu kategorideki tüm ürünler seçtiğiniz hedef yeni kategoriye aktarılacaktır.
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-light rounded-pill px-4" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-warning text-dark fw-bold rounded-pill px-4" onclick="submitCategoryMigrate()">
+                    <i class="bi bi-check-circle-fill me-1"></i> Tüm Ürünleri Taşı
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function openCategoryMigrateModal(sourceId, sourceName, productCount) {
+            if (productCount === 0) {
+                Swal.fire('Bilgi', `'${sourceName}' kategorisinde taşınacak ürün bulunmamaktadır.`, 'info');
+                return;
+            }
+
+            document.getElementById('migrateSourceCategoryId').value = sourceId;
+            document.getElementById('migrateSourceCategoryName').textContent = `'${sourceName}' (${productCount} adet ürün)`;
+
+            // Filter out source category from options
+            const select = document.getElementById('migrateTargetCategorySelect');
+            Array.from(select.options).forEach(opt => {
+                if (parseInt(opt.value) === sourceId) {
+                    opt.disabled = true;
+                } else {
+                    opt.disabled = false;
+                }
+            });
+
+            select.value = '';
+            const modal = new bootstrap.Modal(document.getElementById('categoryMigrateModal'));
+            modal.show();
+        }
+
+        function submitCategoryMigrate() {
+            const sourceId = parseInt(document.getElementById('migrateSourceCategoryId').value);
+            const targetId = parseInt(document.getElementById('migrateTargetCategorySelect').value);
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+            if (!targetId || targetId === sourceId) {
+                Swal.fire('Uyarı', 'Lütfen geçerli bir hedef kategori seçin.', 'warning');
+                return;
+            }
+
+            Swal.fire({
+                title: 'Ürünler Taşınsın mı?',
+                text: 'Seçili kategorideki tüm ürünler hedef kategoriye aktarılacaktır.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Evet, Taşı',
+                cancelButtonText: 'İptal',
+                confirmButtonColor: '#fbbf24',
+                cancelButtonColor: '#64748b'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/Admin/CategoryManagement/MigrateCategoryProducts', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'RequestVerificationToken': token
+                        },
+                        body: new URLSearchParams({
+                            sourceCategoryId: sourceId,
+                            targetCategoryId: targetId
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Başarılı!', data.message, 'success').then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire('Hata', data.message || 'İşlem gerçekleştirilemedi.', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        Swal.fire('Hata', 'Sunucu ile bağlantı kurulamadı.', 'error');
+                    });
+                }
+            });
+        }
+    </script>
+}

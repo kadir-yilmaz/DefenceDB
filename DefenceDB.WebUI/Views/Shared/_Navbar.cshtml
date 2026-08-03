@@ -2,6 +2,16 @@
 @{
     var rootCategories = await CategoryService.GetCategoriesWithChildrenAsync();
     var productCounts = await CategoryService.GetCategoryProductCountsAsync();
+
+    // Özyinelemeli (Recursive) Kategori Ürün Sayısı Toplayıcı (Rollup Count)
+    int GetNavRollupCount(DefenceDB.EL.Models.Category cat)
+    {
+        int direct = productCounts.GetValueOrDefault(cat.Id, 0);
+        int childrenSum = (cat.SubCategories != null && cat.SubCategories.Any()) 
+            ? cat.SubCategories.Sum(sc => GetNavRollupCount(sc)) 
+            : 0;
+        return direct + childrenSum;
+    }
 }
 
 <link rel="stylesheet" href="~/css/navbar.css" asp-append-version="true" />
@@ -48,16 +58,45 @@
                                 {
                                     <div class="mega-menu-content-panel" data-category-id="@rootCat.Id">
                                         <div class="mega-menu-grid">
-                                            @foreach (var child in rootCat.SubCategories)
+                                            @foreach (var child in rootCat.SubCategories.OrderBy(c => c.Name))
                                             {
-                                                <a href="@Url.Action("Index", "Product", new { categorySlug = child.Slug })" class="mega-menu-grid-item">
-                                                    @if (!string.IsNullOrEmpty(child.IconClass))
+                                                var childCount = GetNavRollupCount(child);
+                                                <div class="mega-menu-column">
+                                                    <!-- Level 1 Category Header -->
+                                                    <a href="@Url.Action("Index", "Product", new { categorySlug = child.Slug })" class="mega-menu-grid-item mega-menu-header-item">
+                                                        @if (!string.IsNullOrEmpty(child.IconClass))
+                                                        {
+                                                            <i class="@child.IconClass"></i>
+                                                        }
+                                                        else
+                                                        {
+                                                            <i class="bi bi-tag-fill text-warning"></i>
+                                                        }
+                                                        <span class="fw-bold">@child.Name</span>
+                                                        <span class="mega-menu-count">(@childCount)</span>
+                                                    </a>
+
+                                                    <!-- Level 2 Sub-subcategories -->
+                                                    @if (child.SubCategories != null && child.SubCategories.Any())
                                                     {
-                                                        <i class="@child.IconClass"></i>
+                                                        <div class="mega-menu-sublist ps-2 border-start border-secondary border-opacity-25 ms-1 my-2">
+                                                            @foreach (var subSub in child.SubCategories.OrderBy(c => c.Name))
+                                                            {
+                                                                var subSubCount = GetNavRollupCount(subSub);
+                                                                <a href="@Url.Action("Index", "Product", new { categorySlug = subSub.Slug })" class="mega-menu-subitem d-flex justify-content-between align-items-center py-1 text-decoration-none" style="font-size: 0.85rem; color: #94a3b8; transition: all 0.2s;">
+                                                                    <span>
+                                                                        @if (!string.IsNullOrEmpty(subSub.IconClass))
+                                                                        {
+                                                                            <i class="@subSub.IconClass me-1"></i>
+                                                                        }
+                                                                        @subSub.Name
+                                                                    </span>
+                                                                    <span class="mega-menu-count opacity-75" style="font-size: 0.75rem;">(@subSubCount)</span>
+                                                                </a>
+                                                            }
+                                                        </div>
                                                     }
-                                                    <span>@child.Name</span>
-                                                    <span class="mega-menu-count">(@productCounts.GetValueOrDefault(child.Id, 0))</span>
-                                                </a>
+                                                </div>
                                             }
                                         </div>
                                     </div>

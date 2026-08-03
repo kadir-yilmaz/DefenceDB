@@ -43,24 +43,23 @@ public class ProductQueryService : IProductQueryService
         if (queryModel.DynamicFilters != null && queryModel.DynamicFilters.ContainsKey("ParentCategorySlugs"))
         {
             var allowedSlugs = queryModel.DynamicFilters["ParentCategorySlugs"];
-            var allowedCategoryIds = await _context.Categories
+            var rootIds = await _context.Categories
                 .AsNoTracking()
                 .Where(c => allowedSlugs.Contains(c.Slug))
                 .Select(c => c.Id)
                 .ToListAsync();
 
-            query = query.Where(p => allowedCategoryIds.Contains(p.CategoryId));
+            var allCategoryIds = await GetAllDescendantCategoryIdsAsync(rootIds);
+            allCategoryIds.AddRange(rootIds);
+
+            query = query.Where(p => allCategoryIds.Contains(p.CategoryId));
         }
         else if (!string.IsNullOrEmpty(queryModel.CategorySlug))
         {
             var category = await _context.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.Slug == queryModel.CategorySlug);
             if (category != null)
             {
-                var categoryIds = await _context.Categories
-                    .AsNoTracking()
-                    .Where(c => c.ParentCategoryId == category.Id)
-                    .Select(c => c.Id)
-                    .ToListAsync();
+                var categoryIds = await GetAllDescendantCategoryIdsAsync(new[] { category.Id });
                 categoryIds.Insert(0, category.Id);
 
                 query = query.Where(p => categoryIds.Contains(p.CategoryId));
@@ -318,5 +317,28 @@ public class ProductQueryService : IProductQueryService
     public async Task<ProductImage?> GetProductImageByIdAsync(int imageId)
     {
         return await _context.ProductImages.FindAsync(imageId);
+    }
+
+    private async Task<List<int>> GetAllDescendantCategoryIdsAsync(IEnumerable<int> parentIds)
+    {
+        var allCategories = await _context.Categories.AsNoTracking().Select(c => new { c.Id, c.ParentCategoryId }).ToListAsync();
+        var descendants = new List<int>();
+
+        void AddChildren(IEnumerable<int> currentParentIds)
+        {
+            var children = allCategories
+                .Where(c => c.ParentCategoryId.HasValue && currentParentIds.Contains(c.ParentCategoryId.Value))
+                .Select(c => c.Id)
+                .ToList();
+
+            if (children.Any())
+            {
+                descendants.AddRange(children);
+                AddChildren(children);
+            }
+        }
+
+        AddChildren(parentIds);
+        return descendants.Distinct().ToList();
     }
 }
