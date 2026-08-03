@@ -443,10 +443,6 @@
                                     <i class="bi bi-x-lg ms-1" style="font-size: 0.65rem;"></i>
                                 </a>
                             }
-
-                            <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry })" class="text-danger fs-8 fw-semibold text-decoration-none ms-auto d-inline-flex align-items-center gap-1" title="Ülke filtresi korunur">
-                                <i class="bi bi-arrow-counterclockwise"></i> Filtreleri Temizle
-                            </a>
                         </div>
                     }
                 </div>
@@ -510,8 +506,8 @@
                                     </div>
                                 </div>
 
-                                <!-- 2. ALT KUTU: Kategoriye Özel Özellikler (Bordersız) -->
-                                <div class="bg-theme rounded-3 p-2.5 px-3 flex-grow-1 d-flex align-items-center overflow-hidden" style="min-height: 48px;">
+                                <!-- 2. ALT KUTU: Kategoriye Özel Özellikler (Sığmadığında 2. Satıra Kayabilen Esnek Yapı) -->
+                                <div class="bg-theme rounded-3 p-2.5 px-3 flex-grow-1 d-flex align-items-center" style="min-height: 44px;">
                                     @{
                                         var validSpecs = prod.Specs?
                                             .Where(s => !string.IsNullOrWhiteSpace(s.Value) 
@@ -531,7 +527,7 @@
                                     }
                                     @if (validSpecs != null && validSpecs.Any())
                                     {
-                                        <div class="d-flex align-items-center gap-2 flex-nowrap overflow-hidden w-100" style="font-size: 0.8rem;">
+                                        <div class="d-flex align-items-center gap-2 flex-wrap w-100" style="font-size: 0.8rem;">
                                             @for (int i = 0; i < validSpecs.Count; i++)
                                             {
                                                 var spec = validSpecs[i];
