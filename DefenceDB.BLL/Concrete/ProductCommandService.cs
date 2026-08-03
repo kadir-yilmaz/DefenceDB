@@ -16,11 +16,23 @@ public class ProductCommandService : IProductCommandService
         _cacheService = cacheService;
     }
 
+    private async Task ClearProductCachesAsync()
+    {
+        await _cacheService.RemoveAsync("products:all");
+        await _cacheService.RemoveAsync("categories:product-counts");
+        await _cacheService.RemoveAsync("categories:all");
+        await _cacheService.RemoveAsync("categories:root");
+        await _cacheService.RemoveAsync("categories:tree");
+        await _cacheService.RemoveByPrefixAsync("products:");
+        await _cacheService.RemoveByPrefixAsync("categories:");
+    }
+
     public async Task AddProductAsync(DefenseProduct product)
     {
         product.CreatedAt = DateTime.UtcNow;
         _context.DefenseProducts.Add(product);
         await _context.SaveChangesAsync();
+        await ClearProductCachesAsync();
     }
 
     public async Task UpdateProductAsync(DefenseProduct product)
@@ -56,6 +68,7 @@ public class ProductCommandService : IProductCommandService
             }
 
             await _context.SaveChangesAsync();
+            await ClearProductCachesAsync();
         }
     }
 
@@ -66,6 +79,7 @@ public class ProductCommandService : IProductCommandService
         {
             _context.DefenseProducts.Remove(product);
             await _context.SaveChangesAsync();
+            await ClearProductCachesAsync();
         }
     }
 
@@ -88,12 +102,14 @@ public class ProductCommandService : IProductCommandService
             });
         }
         await _context.SaveChangesAsync();
+        await ClearProductCachesAsync();
     }
 
     public async Task DeleteProductImageAsync(ProductImage image)
     {
         _context.ProductImages.Remove(image);
         await _context.SaveChangesAsync();
+        await ClearProductCachesAsync();
     }
 
     public async Task DeleteProductImagesAsync(IEnumerable<int> imageIds)
@@ -106,6 +122,7 @@ public class ProductCommandService : IProductCommandService
         {
             _context.ProductImages.RemoveRange(imagesToDelete);
             await _context.SaveChangesAsync();
+            await ClearProductCachesAsync();
         }
     }
 
@@ -121,6 +138,7 @@ public class ProductCommandService : IProductCommandService
         }
 
         await _context.SaveChangesAsync();
+        await ClearProductCachesAsync();
     }
 
     public async Task BulkMoveProductsToCategoryAsync(IEnumerable<int> productIds, int targetCategoryId)
@@ -138,9 +156,6 @@ public class ProductCommandService : IProductCommandService
                 .SetProperty(p => p.CategoryId, targetCategoryId)
                 .SetProperty(p => p.UpdatedAt, DateTime.UtcNow));
 
-        // Cache temizliği
-        await _cacheService.RemoveAsync("products:all");
-        await _cacheService.RemoveByPrefixAsync("products:");
-        await _cacheService.RemoveByPrefixAsync("categories:");
+        await ClearProductCachesAsync();
     }
 }

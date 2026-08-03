@@ -40,10 +40,22 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Kategori</label>
                             <select asp-for="CategoryId" class="form-select admin-form-control py-2" required>
-                                @foreach (var (catItem, level) in flattenedCategories)
-                                {
-                                    var prefix = level > 0 ? new string('\u00A0', level * 3) + "↳ " : "";
-                                    <option value="@catItem.Id" selected="@(Model.CategoryId == catItem.Id)">@prefix@catItem.Name</option>
+                                <option value="">-- Kategori Seçiniz --</option>
+                                @{
+                                    foreach (var root in allCategories.Where(c => c.ParentCategoryId == null).OrderBy(c => c.Name))
+                                    {
+                                        <optgroup label="@root.Name">
+                                            <option value="@root.Id" selected="@(Model.CategoryId == root.Id)">@root.Name (Ana Kategori)</option>
+                                            @if (root.SubCategories != null && root.SubCategories.Any())
+                                            {
+                                                foreach (var (sub, level) in FlattenCategories(root.SubCategories, 1))
+                                                {
+                                                    var prefix = new string('\u00A0', level * 3) + "↳ ";
+                                                    <option value="@sub.Id" selected="@(Model.CategoryId == sub.Id)">@prefix@sub.Name</option>
+                                                }
+                                            }
+                                        </optgroup>
+                                    }
                                 }
                             </select>
                         </div>

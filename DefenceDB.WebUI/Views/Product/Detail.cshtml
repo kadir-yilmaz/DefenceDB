@@ -163,7 +163,7 @@
                             var displayName = attr?.DisplayName ?? DefenceDB.EL.Helpers.LocalizationHelper.GetDisplayName(spec.Key, "tr");
                             var type = attr?.Type ?? DefenceDB.EL.Models.AttributeType.Text;
                             
-                            <li class="spec-item d-flex align-items-center">
+                            <li class="spec-item d-flex align-items-baseline">
                                 <div class="spec-label">@displayName</div>
                                 @if (type == DefenceDB.EL.Models.AttributeType.Boolean || spec.Value.Equals("true", StringComparison.OrdinalIgnoreCase) || spec.Value.Equals("false", StringComparison.OrdinalIgnoreCase))
                                 {

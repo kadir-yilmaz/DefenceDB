@@ -247,22 +247,29 @@ body {
 }
 .spec-item {
     display: flex;
-    padding: 0.75rem 1.5rem;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0.85rem 1.5rem;
     border-bottom: 1px solid var(--border-theme);
 }
 .spec-item:last-child {
     border-bottom: none;
 }
 .spec-label {
-    width: 40%;
+    flex: 1;
     color: var(--secondary-theme);
     font-weight: 500;
-    font-size: 0.9rem;
+    font-size: 0.92rem;
+    line-height: 1.4;
+    padding-right: 1.5rem;
 }
 .spec-value {
-    width: 60%;
     color: var(--primary-theme);
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 1rem;
+    line-height: 1.4;
+    text-align: right;
+    white-space: nowrap;
 }
 .rivals-rail {
     display: flex;
