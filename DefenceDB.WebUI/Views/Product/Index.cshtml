@@ -57,6 +57,23 @@
         return false;
     }
 
+    // Kategori Chips (Gezinme Çubukları) Mantığı
+    Category activeRootCategory = null;
+    IEnumerable<Category> activeSubCategories = null;
+    if (currentCategory != null)
+    {
+        if (currentCategory.ParentCategoryId.HasValue)
+        {
+            activeRootCategory = categories.FirstOrDefault(c => c.Id == currentCategory.ParentCategoryId);
+            activeSubCategories = activeRootCategory?.SubCategories;
+        }
+        else
+        {
+            activeRootCategory = currentCategory;
+            activeSubCategories = currentCategory.SubCategories;
+        }
+    }
+
     // Sınırsız Derinlikte Kategori Ağacı Oluşturucu (N-Level Recursive Category Tree Renderer)
     void RenderCategoryTree(IEnumerable<Category> subCats, int depth = 1)
     {
@@ -97,34 +114,13 @@
     <div class="offcanvas offcanvas-start bg-theme" tabindex="-1" id="mobileFilterPanel" aria-labelledby="mobileFilterPanelLabel" style="width: 75%;">
         <div class="offcanvas-header border-bottom border-theme">
             <h5 class="offcanvas-title text-primary-theme fw-bold d-flex align-items-center gap-2" id="mobileFilterPanelLabel">
-                <i class="bi bi-grid-fill text-warning me-1"></i> Kategoriler
+                <i class="bi bi-sliders text-warning me-1"></i> Filtreler
             </h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
-            @* Kategori Listesi (Mobil) *@
-            <div class="bg-theme-card border border-theme rounded-4 p-3 shadow-sm mb-4">
-                <div class="category-list">
-                    <a href="@Url.Action("Index", "Product", new { country = ViewBag.CurrentCountry })" class="sidebar-category-link @(currentCategory == null ? "active" : "") d-flex justify-content-between align-items-center">
-                        <span><i class="bi bi-list-stars me-2"></i>Tüm Ürünler</span>
-                        <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme">@totalProductCount</span>
-                    </a>
-                    @foreach (var cat in categories)
-                    {
-                        var mRootCount = GetCategoryRollupCount(cat);
-                        var mIsRootBranch = IsCategoryInBranch(cat, currentCategory?.Id);
-                        <a href="@Url.Action("Index", "Product", new { categorySlug = cat.Slug, country = ViewBag.CurrentCountry })" 
-                           class="sidebar-category-link @(mIsRootBranch ? "active fw-bold" : "") d-flex justify-content-between align-items-center">
-                            <span>@cat.Name</span>
-                            <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme">@mRootCount</span>
-                        </a>
-                        if (mIsRootBranch && cat.SubCategories != null && cat.SubCategories.Any())
-                        {
-                            RenderCategoryTree(cat.SubCategories, 1);
-                        }
-                    }
-                </div>
-            </div>
+            @* Kategori Listesi (Mobil - İptal Edildi, Sadece Filtreler Kalacak) *@
+            @* <div class="bg-theme-card border border-theme rounded-4 p-3 shadow-sm mb-4"> ... </div> *@
 
             @* Ozellik Filtreleri (Mobil) *@
             @if (ViewBag.FilterProperties != null && ((List<System.Reflection.PropertyInfo>)ViewBag.FilterProperties).Any())
@@ -180,47 +176,89 @@
         <div class="col-lg-9">
             
             <!-- Top Header & Comprehensive Filter Control Panel -->
+                
+                <!-- Kategori Navigasyon Çubuğu (Yatay Kaydırılabilir Chips - SADECE MOBİL İÇİN) -->
+                <div class="d-lg-none mb-4">
+                    <!-- Üst Satır: Ana Kategoriler -->
+                    <div class="category-chips-wrapper overflow-auto pb-2" style="white-space: nowrap; -webkit-overflow-scrolling: touch;">
+                        <div class="d-inline-flex gap-2 align-items-center">
+                            <a href="@Url.Action("Index", "Product", new { country = ViewBag.CurrentCountry })" 
+                               class="btn rounded-pill px-4 py-2 shadow-sm transition-all d-inline-flex align-items-center gap-1 
+                                      @(currentCategory == null ? "bg-warning text-dark fw-bold border-warning" : "bg-theme-card border border-theme text-secondary-theme hover-bg-theme")"
+                               style="font-size: 0.95rem;">
+                                Tümü
+                            </a>
+                            @foreach (var rootCat in categories)
+                            {
+                                var isRootActive = (activeRootCategory?.Id == rootCat.Id);
+                                var rootCount = GetCategoryRollupCount(rootCat);
+                                <a href="@Url.Action("Index", "Product", new { categorySlug = rootCat.Slug, country = ViewBag.CurrentCountry })" 
+                                   class="btn rounded-pill px-4 py-2 shadow-sm transition-all d-inline-flex align-items-center gap-1 
+                                          @(isRootActive ? "bg-warning text-dark fw-bold border-warning" : "bg-theme-card border border-theme text-secondary-theme hover-bg-theme")"
+                                   style="font-size: 0.95rem;">
+                                    @rootCat.Name <span class="opacity-75 ms-1" style="font-size: 0.8rem;">(@rootCount)</span>
+                                </a>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Alt Satır: Seçili Ana Kategorinin Alt Kategorileri -->
+                    @if (activeSubCategories != null && activeSubCategories.Any())
+                    {
+                        <div class="category-chips-wrapper overflow-auto mt-2 pb-2" style="white-space: nowrap; -webkit-overflow-scrolling: touch;">
+                            <div class="d-inline-flex gap-2 align-items-center">
+                                <a href="@Url.Action("Index", "Product", new { categorySlug = activeRootCategory.Slug, country = ViewBag.CurrentCountry })" 
+                                   class="btn rounded-pill px-4 py-1.5 shadow-sm transition-all d-inline-flex align-items-center gap-1 
+                                          @(currentCategory?.Id == activeRootCategory.Id ? "bg-primary text-white fw-bold border-primary" : "bg-theme-card border border-theme text-secondary-theme hover-bg-theme")"
+                                   style="font-size: 0.9rem;">
+                                    Tümü
+                                </a>
+                                @foreach (var subCat in activeSubCategories)
+                                {
+                                    var isSubActive = (currentCategory?.Id == subCat.Id);
+                                    var subCount = GetCategoryRollupCount(subCat);
+                                    <a href="@Url.Action("Index", "Product", new { categorySlug = subCat.Slug, country = ViewBag.CurrentCountry })" 
+                                       class="btn rounded-pill px-4 py-1.5 shadow-sm transition-all d-inline-flex align-items-center gap-1 
+                                              @(isSubActive ? "bg-primary text-white fw-bold border-primary" : "bg-theme-card border border-theme text-secondary-theme hover-bg-theme")"
+                                       style="font-size: 0.9rem;">
+                                        @subCat.Name <span class="opacity-75 ms-1" style="font-size: 0.8rem;">(@subCount)</span>
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+
                 <!-- Row 1: Category Title, Category Drawer Button & Sorting Dropdown -->
-                <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-3.5">
+                <div class="d-flex flex-row flex-wrap align-items-center justify-content-between gap-2 mb-3">
                     <!-- Sol Taraf: Kategori Başlığı ve Sayısı -->
-                    <div class="text-nowrap me-auto">
+                    <div class="text-truncate">
                         @if (currentCategory != null)
                         {
-                            <h3 class="text-primary-theme fw-bold mb-0 d-flex align-items-center gap-2 text-nowrap" style="font-size: 1.25rem;">
+                            <h3 class="text-primary-theme fw-bold mb-0 d-flex align-items-center gap-2 text-truncate" style="font-size: 1.15rem;">
                                 @if (!string.IsNullOrEmpty(currentCategory.IconClass))
                                 {
-                                    <i class="@currentCategory.IconClass text-warning"></i>
+                                    <i class="@currentCategory.IconClass text-warning flex-shrink-0"></i>
                                 }
                                 else
                                 {
-                                    <i class="bi bi-shield-fill text-warning"></i>
+                                    <i class="bi bi-shield-fill text-warning flex-shrink-0"></i>
                                 }
-                                <span class="text-nowrap">@currentCategory.Name</span>
-                                <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme fs-7 ms-1 font-outfit text-nowrap">@Model.Count Ürün</span>
+                                <span class="text-truncate">@currentCategory.Name</span>
+                                <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme fs-8 ms-1 font-outfit flex-shrink-0">@Model.Count Ürün</span>
                             </h3>
                         }
                         else
                         {
-                            <h3 class="text-primary-theme fw-bold mb-0 d-flex align-items-center gap-2 text-nowrap" style="font-size: 1.25rem;">
-                                <i class="bi bi-shield-fill text-warning"></i> <span class="text-nowrap">Tüm Savunma Ürünleri</span>
-                                <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme fs-7 ms-1 font-outfit text-nowrap">@totalProductCount Ürün</span>
+                            <h3 class="text-primary-theme fw-bold mb-0 d-flex align-items-center gap-2 text-truncate" style="font-size: 1.15rem;">
+                                <i class="bi bi-shield-fill text-warning flex-shrink-0"></i> <span class="text-truncate">Tüm Ürünler</span>
+                                <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme fs-8 ms-1 font-outfit flex-shrink-0">@totalProductCount Ürün</span>
                             </h3>
                         }
                     </div>
 
-                    <!-- Sağ Taraf / Mobil Satır: [Kategoriler] (Sol) & [Sıralama] (Sağ) -->
-                    <div class="d-flex align-items-center justify-content-between justify-content-md-end gap-3 w-100 w-md-auto mt-2.5 mt-md-0">
-                        <!-- Mobil/Tablet Kategori Çekmecesi Tetikleyici -->
-                        <button class="btn btn-warning fw-bold text-dark rounded-pill px-3 py-2 d-lg-none d-inline-flex align-items-center gap-2 shadow-sm btn-category-pulse font-outfit" 
-                                type="button" 
-                                data-bs-toggle="offcanvas" 
-                                data-bs-target="#mobileFilterPanel" 
-                                aria-controls="mobileFilterPanel"
-                                style="font-size: 0.86rem;">
-                            <i class="bi bi-grid-fill text-dark me-0.5"></i>
-                            <span>Kategoriler</span>
-                        </button>
-
+                    <!-- Sağ Taraf: Sadece Sıralama Dropdown -->
+                    <div class="d-flex align-items-center flex-shrink-0">
                         <!-- Sıralama Dropdown -->
                         <div class="dropdown">
                             <button class="btn bg-theme-card border border-theme text-primary-theme dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.86rem;">
@@ -285,6 +323,8 @@
                         </div>
                     </div>
                 </div>
+
+
 
                 <!-- Row 2: Comprehensive Top Filter Bar (Ülkeler, Durum, Ek Attribute'lar) -->
                 @{
@@ -736,6 +776,15 @@
                 "image specs";
             gap: 1rem;
         }
+    }
+    
+    /* YATAY KAYDIRILABİLİR KATEGORİ CHIPS STİLLERİ */
+    .category-chips-wrapper::-webkit-scrollbar {
+        display: none;
+    }
+    .category-chips-wrapper {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
     }
     
     /* GÖRSEL KISMI ESKİ WRAPPER İÇİN DEĞİL, DOĞRUDAN YENİ CSS GRID KULLANILACAK */
