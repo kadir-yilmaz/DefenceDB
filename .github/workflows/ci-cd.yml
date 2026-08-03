@@ -82,5 +82,7 @@ jobs:
             /p:UserName=$username `
             /p:Password=$password `
             /p:AllowUntrustedCertificate=true `
-            /p:EnableMsDeployAppOffline=true `
+            /p:EnableMSDeployAppOffline=true `
+            /p:RetryAttempts=10 `
+            /p:RetryInterval=2000 `
             /p:SkipExtraFilesOnServer=true
