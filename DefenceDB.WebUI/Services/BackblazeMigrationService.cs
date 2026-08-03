@@ -69,12 +69,19 @@ public class BackblazeMigrationService : IBackblazeMigrationService
 
         try
         {
+            keyId = keyId?.Trim() ?? "";
+            applicationKey = applicationKey?.Trim() ?? "";
+            bucketName = bucketName?.Trim() ?? "";
+            serviceUrl = serviceUrl?.Trim() ?? "";
+
             var fileInfo = new FileInfo(fullPath);
             log.FileSizeBytes = fileInfo.Length;
 
+            var region = ExtractRegion(serviceUrl);
             var config = new AmazonS3Config
             {
                 ServiceURL = serviceUrl,
+                AuthenticationRegion = region,
                 ForcePathStyle = true
             };
             using var s3Client = new AmazonS3Client(keyId, applicationKey, config);
@@ -152,5 +159,17 @@ public class BackblazeMigrationService : IBackblazeMigrationService
             ".pdf" => "application/pdf",
             _ => "application/octet-stream"
         };
+    }
+
+    private static string ExtractRegion(string serviceUrl)
+    {
+        if (string.IsNullOrWhiteSpace(serviceUrl)) return "us-west-004";
+        var clean = serviceUrl.Replace("https://", "").Replace("http://", "").TrimEnd('/');
+        var parts = clean.Split('.');
+        if (parts.Length >= 2 && parts[0].Equals("s3", StringComparison.OrdinalIgnoreCase))
+        {
+            return parts[1]; // e.g. "us-west-004"
+        }
+        return "us-west-004";
     }
 }

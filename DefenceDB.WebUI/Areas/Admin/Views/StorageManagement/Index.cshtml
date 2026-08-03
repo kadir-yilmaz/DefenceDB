@@ -250,6 +250,9 @@
                     failedCount++;
                 }
 
+                // 50ms throttle to prevent API rate-limits
+                await new Promise(resolve => setTimeout(resolve, 50));
+
                 // Update Progress UI
                 const percent = Math.round(((i + 1) / total) * 100);
                 progressBar.style.width = percent + '%';

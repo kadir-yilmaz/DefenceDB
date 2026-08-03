@@ -33,11 +33,16 @@ public class MediaProxyController : Controller
         var keyId = configuration["Backblaze:KeyId"] ?? "";
         var applicationKey = configuration["Backblaze:ApplicationKey"] ?? "";
 
+        keyId = keyId.Trim();
+        applicationKey = applicationKey.Trim();
+
         if (_isBackblazeEnabled && !string.IsNullOrWhiteSpace(keyId) && !string.IsNullOrWhiteSpace(applicationKey))
         {
+            var region = ExtractRegion(serviceUrl);
             var config = new AmazonS3Config
             {
                 ServiceURL = serviceUrl,
+                AuthenticationRegion = region,
                 ForcePathStyle = true
             };
             _s3Client = new AmazonS3Client(keyId, applicationKey, config);
@@ -119,5 +124,17 @@ public class MediaProxyController : Controller
             ".pdf" => "application/pdf",
             _ => "application/octet-stream"
         };
+    }
+
+    private static string ExtractRegion(string serviceUrl)
+    {
+        if (string.IsNullOrWhiteSpace(serviceUrl)) return "us-west-004";
+        var clean = serviceUrl.Replace("https://", "").Replace("http://", "").TrimEnd('/');
+        var parts = clean.Split('.');
+        if (parts.Length >= 2 && parts[0].Equals("s3", StringComparison.OrdinalIgnoreCase))
+        {
+            return parts[1]; // e.g. "us-west-004"
+        }
+        return "us-west-004";
     }
 }
