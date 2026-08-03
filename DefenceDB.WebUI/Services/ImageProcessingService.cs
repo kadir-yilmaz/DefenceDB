@@ -131,17 +131,16 @@ public class ImageProcessingService : IImageProcessingService
             });
             mainStream.Position = 0;
 
-            string mainKey = $"products/{uniqueFileName}";
+            string mainKey = $"images/products/{uniqueFileName}";
             await _s3Client!.PutObjectAsync(new PutObjectRequest
             {
                 BucketName = _bucketName,
                 Key = mainKey,
                 InputStream = mainStream,
-                ContentType = "image/webp",
-                CannedACL = S3CannedACL.PublicRead
+                ContentType = "image/webp"
             });
 
-            // Thumbnail oluştur ve MinIO'ya yükle
+            // Thumbnail oluştur ve Backblaze B2'ye yükle
             using var thumb = image.Clone(x => x.Resize(new ResizeOptions
             {
                 Size = new Size(360, 260),
@@ -155,17 +154,16 @@ public class ImageProcessingService : IImageProcessingService
             });
             thumbStream.Position = 0;
 
-            string thumbKey = $"products/thumbs/{uniqueFileName}";
+            string thumbKey = $"images/thumbs/{uniqueFileName}";
             await _s3Client.PutObjectAsync(new PutObjectRequest
             {
                 BucketName = _bucketName,
                 Key = thumbKey,
                 InputStream = thumbStream,
-                ContentType = "image/webp",
-                CannedACL = S3CannedACL.PublicRead
+                ContentType = "image/webp"
             });
 
-            _logger.LogInformation("Uploaded image to MinIO: {Key}", mainKey);
+            _logger.LogInformation("Uploaded image to Backblaze: {Key}", mainKey);
         }
 
         return uniqueFileName;
