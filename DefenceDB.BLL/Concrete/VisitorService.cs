@@ -101,19 +101,16 @@ public class VisitorService : IVisitorService
         {
             var cutoffDate = DateTime.UtcNow.AddDays(-daysToKeep);
             
-            var oldVisitors = await _context.Visitors
+            var deletedCount = await _context.Visitors
                 .Where(v => v.FirstVisitDate < cutoffDate)
-                .ToListAsync();
+                .ExecuteDeleteAsync();
 
-            if (oldVisitors.Any())
+            if (deletedCount > 0)
             {
-                _context.Visitors.RemoveRange(oldVisitors);
-                await _context.SaveChangesAsync();
-                
                 // Cache'i temizle
                 await _cacheService.RemoveAsync(CACHE_KEY);
                 
-                _logger.LogInformation("Cleaned up {Count} old visitor records", oldVisitors.Count);
+                _logger.LogInformation("Cleaned up {Count} old visitor records via ExecuteDeleteAsync", deletedCount);
             }
         }
         catch (Exception ex)

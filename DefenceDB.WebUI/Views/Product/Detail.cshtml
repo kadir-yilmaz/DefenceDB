@@ -15,7 +15,11 @@
     var mainImage = Model.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? Model.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
     var galleryImages = Model.Images?.Where(i => i.ImagePath != mainImage).ToList() ?? new List<DefenceDB.EL.Models.ProductImage>();
     var rivalProducts = ViewBag.RivalProducts as List<DefenceDB.EL.Models.DefenseProduct> ?? new List<DefenceDB.EL.Models.DefenseProduct>();
-    Func<string, string> thumbPath = path => path;
+    Func<string, string> thumbPath = path => {
+        if (string.IsNullOrEmpty(path)) return "/images/default.jpg";
+        var fileName = System.IO.Path.GetFileName(path);
+        return $"/images/thumbs/{fileName}";
+    };
     var galleryImagePaths = new[] { mainImage }.Concat(galleryImages.Select(i => i.ImagePath)).ToList();
 }
 
@@ -353,7 +357,7 @@
                         <div class="card-premium rival-card" style="cursor: pointer;" onclick="handleProductClick(event, '/Product/Detail/@(rival.Id)-@(rival.Slug)')">
                             <span class="category-badge">@rival.Category?.Name</span>
                             <div class="card-img-wrapper">
-                                <img src="@rivalImage" alt="@rival.Name" loading="lazy" decoding="async" onerror="handleImageError(this, '@rival.Name.Replace("'", "\\'")')" />
+                                <img src="@thumbPath(rivalImage)" alt="@rival.Name" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='@rivalImage';" />
                             </div>
                             <div class="card-body p-3">
                                 <h6 class="card-title text-primary-theme text-truncate mb-1" title="@rival.Name">@rival.Name</h6>

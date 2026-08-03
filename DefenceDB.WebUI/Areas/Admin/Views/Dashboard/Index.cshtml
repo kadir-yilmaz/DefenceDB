@@ -69,9 +69,10 @@
                             <td>
                                 @{
                                     var mainImage = product.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? product.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
+                                    var thumbImage = "/images/thumbs/" + System.IO.Path.GetFileName(mainImage);
                                 }
-                                <img src="@mainImage" alt="@product.Name" class="product-thumb"
-                                     onerror="this.onerror=null; this.src='/images/default.jpg';" />
+                                <img src="@thumbImage" alt="@product.Name" class="product-thumb"
+                                     onerror="this.onerror=null; this.src='@mainImage';" />
                             </td>
                             <td>
                                 <div style="font-weight: 600;">@product.Name</div>
@@ -142,9 +143,10 @@
                             <td>
                                 @{
                                     var mainImage = product.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? product.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
+                                    var thumbImage = "/images/thumbs/" + System.IO.Path.GetFileName(mainImage);
                                 }
-                                <img src="@mainImage" alt="@product.Name" class="product-thumb"
-                                     onerror="this.onerror=null; this.src='/images/default.jpg';" />
+                                <img src="@thumbImage" alt="@product.Name" class="product-thumb"
+                                     onerror="this.onerror=null; this.src='@mainImage';" />
                             </td>
                             <td>
                                 <div style="font-weight: 600;">@product.Name</div>

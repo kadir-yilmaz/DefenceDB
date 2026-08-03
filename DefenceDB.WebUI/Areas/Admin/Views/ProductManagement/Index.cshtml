@@ -216,9 +216,10 @@
                             <td>
                                 @{
                                     var mainImage = prod.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? prod.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
+                                    var thumbImage = "/images/thumbs/" + System.IO.Path.GetFileName(mainImage);
                                 }
-                                <img src="@mainImage" alt="@prod.Name" class="product-thumb"
-                                     onerror="this.onerror=null; this.src='/images/default.jpg';" />
+                                <img src="@thumbImage" alt="@prod.Name" class="product-thumb"
+                                     onerror="this.onerror=null; this.src='@mainImage';" />
                             </td>
                             <td>
                                 <div style="font-weight: 600;">@prod.Name</div>

@@ -149,7 +149,14 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        // Statik dosyalar (css, js, images) için 7 gün tarayıcı cache
+        ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=604800,immutable");
+    }
+});
 app.UseNToastNotify();
 
 // Visitor Tracking Middleware

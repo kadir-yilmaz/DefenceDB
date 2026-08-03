@@ -169,7 +169,13 @@ public class ProductQueryService : IProductQueryService
 
     public async Task<List<DefenseProduct>> GetAllProductsAsync()
     {
+        var cacheKey = "products:all";
+        var cached = await _cacheService.GetAsync<List<DefenseProduct>>(cacheKey);
+        if (cached != null)
+            return cached;
+
         var result = await GetFilteredProductsAsync(new ProductFilterQueryModel { Page = 1, PageSize = 1000 });
+        await _cacheService.SetAsync(cacheKey, result.Products, DefaultCacheDuration);
         return result.Products;
     }
 

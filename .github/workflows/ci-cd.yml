@@ -34,6 +34,14 @@ jobs:
               exit 1
           }
 
+      - name: Inject COMMIT_SHA into appsettings.json
+        shell: pwsh
+        run: |
+          $json = Get-Content -Path "DefenceDB.WebUI/appsettings.json" -Raw | ConvertFrom-Json
+          $json | Add-Member -NotePropertyName "COMMIT_SHA" -NotePropertyValue "${{ github.sha }}" -Force
+          $json | ConvertTo-Json -Depth 10 | Out-File -FilePath "DefenceDB.WebUI/appsettings.json" -Encoding utf8
+          Write-Host "Injected COMMIT_SHA (${{ github.sha }}) into appsettings.json"
+
       - name: Deploy WebUI via WebDeploy
         shell: pwsh
         run: |
@@ -66,6 +74,7 @@ jobs:
           Write-Host "Publishing and Deploying DefenceDB to $site..."
 
           dotnet publish DefenceDB.WebUI -c Release `
+            /p:SourceRevisionId=${{ github.sha }} `
             /p:WebPublishMethod=MSDeploy `
             /p:MSDeployPublishMethod=WMSVC `
             /p:MsDeployServiceUrl=$server `

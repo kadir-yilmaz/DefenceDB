@@ -3,6 +3,12 @@
     var recentProducts = ViewBag.RecentProducts as List<DefenseProduct> ?? new List<DefenseProduct>();
     var showcaseArticles = ViewBag.ShowcaseArticles as List<Article> ?? new List<Article>();
     ViewData["IsHome"] = true;
+    // Thumbnail helper: /images/products/x.webp -> /images/thumbs/x.webp
+    Func<string, string> toThumb = path => {
+        if (string.IsNullOrEmpty(path)) return "/images/default.jpg";
+        var fileName = System.IO.Path.GetFileName(path);
+        return $"/images/thumbs/{fileName}";
+    };
 }
 
 <link rel="stylesheet" href="~/css/home.css" asp-append-version="true" />
@@ -85,6 +91,7 @@
             @foreach (var prod in showcaseProducts)
             {
                 var mainImage = prod.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? prod.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
+                var thumbImage = toThumb(mainImage);
                 var categoryName = prod.Category?.Name;
                 <div class="col-md-6 col-lg-3 reveal-card" style="--delay: @(showIndex * 45)ms;">
                     <div class="card-premium h-100 d-flex flex-column" style="cursor: pointer; border-color: rgba(251, 191, 36, 0.25) !important; box-shadow: 0 4px 25px rgba(251, 191, 36, 0.05);" onclick="handleProductClick(event, '/Product/Detail/@(prod.Id)-@(prod.Slug)')">
@@ -94,7 +101,7 @@
                             <span class="category-badge bg-warning text-dark border-0 fw-bold">@categoryName</span>
                         }
                         <div class="card-img-wrapper" style="position: relative;">
-                            <img src="@mainImage" alt="@prod.Name" onerror="handleImageError(this, '@prod.Name')" />
+                            <img src="@thumbImage" alt="@prod.Name" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='@mainImage';" />
                         </div>
                         <div class="card-body d-flex flex-column flex-grow-1">
                             <div class="d-flex justify-content-between align-items-start mb-2">
@@ -225,6 +232,7 @@
         @foreach (var prod in recentProducts)
         {
             var mainImage = prod.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? prod.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
+            var thumbImage = toThumb(mainImage);
             var categoryName = prod.Category?.Name;
             <div class="reveal-card" style="--delay: @(prodIndex * 35)ms;">
                 <div class="card-premium card-compact h-100 d-flex flex-column" style="cursor: pointer;" onclick="handleProductClick(event, '/Product/Detail/@(prod.Id)-@(prod.Slug)')">
@@ -233,7 +241,7 @@
                         <span class="category-badge">@categoryName</span>
                     }
                     <div class="card-img-wrapper">
-                        <img src="@mainImage" alt="@prod.Name" onerror="handleImageError(this, '@prod.Name')" />
+                        <img src="@thumbImage" alt="@prod.Name" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='@mainImage';" />
                     </div>
                     <div class="card-body p-0 d-flex flex-column flex-grow-1">
                         <div class="d-flex justify-content-between align-items-start mb-1">

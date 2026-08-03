@@ -136,30 +136,38 @@ public class CategoryQueryService : ICategoryQueryService
     /// </summary>
     public async Task<List<CategoryAttribute>> GetInheritedAttributesAsync(int categoryId)
     {
-        var allAttributes = new List<CategoryAttribute>();
+        // 1. Sorgu: Tüm kategorilerin Id ve ParentCategoryId haritasını al
+        var categoryMap = await _context.Categories
+            .AsNoTracking()
+            .Select(c => new { c.Id, c.ParentCategoryId })
+            .ToDictionaryAsync(c => c.Id, c => c.ParentCategoryId);
+
+        var targetCategoryIds = new List<int>();
         var visitedIds = new HashSet<int>();
         int? currentId = categoryId;
 
         while (currentId.HasValue && !visitedIds.Contains(currentId.Value))
         {
             visitedIds.Add(currentId.Value);
-
-            var attrs = await _context.CategoryAttributes
-                .AsNoTracking()
-                .Where(a => a.CategoryId == currentId.Value)
-                .OrderBy(a => a.DisplayOrder)
-                .ToListAsync();
-            allAttributes.AddRange(attrs);
-
-            var category = await _context.Categories
-                .AsNoTracking()
-                .Where(c => c.Id == currentId.Value)
-                .Select(c => c.ParentCategoryId)
-                .FirstOrDefaultAsync();
-            currentId = category;
+            targetCategoryIds.Add(currentId.Value);
+            currentId = categoryMap.TryGetValue(currentId.Value, out var parentId) ? parentId : null;
         }
 
-        // Üst kategorilerden gelenler sonda, kendi attribute'ları başta
-        return allAttributes;
+        if (!targetCategoryIds.Any())
+            return new List<CategoryAttribute>();
+
+        // 2. Sorgu: Tüm hiyerarşideki attribute'ları tek seferde çek
+        var attributes = await _context.CategoryAttributes
+            .AsNoTracking()
+            .Where(a => targetCategoryIds.Contains(a.CategoryId))
+            .OrderBy(a => a.DisplayOrder)
+            .ToListAsync();
+
+        // Kendi attribute'ları başta, üst kategorilerinki sonda olacak şekilde sırala
+        var orderDict = targetCategoryIds.Select((id, index) => new { id, index }).ToDictionary(x => x.id, x => x.index);
+        return attributes
+            .OrderBy(a => orderDict.GetValueOrDefault(a.CategoryId, 999))
+            .ThenBy(a => a.DisplayOrder)
+            .ToList();
     }
 }

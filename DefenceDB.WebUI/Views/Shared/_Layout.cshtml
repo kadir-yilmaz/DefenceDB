@@ -88,7 +88,20 @@
         @{
             var commitSha = Configuration["COMMIT_SHA"];
             if (string.IsNullOrWhiteSpace(commitSha))
-                commitSha = "test";
+            {
+                var asmVer = System.Reflection.CustomAttributeExtensions.GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>(System.Reflection.Assembly.GetExecutingAssembly())?.InformationalVersion;
+                if (!string.IsNullOrWhiteSpace(asmVer))
+                {
+                    var plusIdx = asmVer.IndexOf('+');
+                    if (plusIdx >= 0 && plusIdx < asmVer.Length - 1)
+                        commitSha = asmVer.Substring(plusIdx + 1);
+                    else if (asmVer != "1.0.0.0" && asmVer != "1.0.0")
+                        commitSha = asmVer;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(commitSha))
+                commitSha = "dev";
             else if (commitSha.Length > 7)
                 commitSha = commitSha.Substring(0, 7);
             
