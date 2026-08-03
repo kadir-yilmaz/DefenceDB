@@ -18,13 +18,17 @@ public class ProductController : Controller
         _memoryCache = memoryCache;
     }
 
-    public async Task<IActionResult> Index(string? categorySlug, string? country, string? search, int page = 1)
+    public async Task<IActionResult> Index(string? categorySlug, string? country, string? search, string? status, string? manufacturer, string? sortBy, string? viewMode, int page = 1)
     {
         var queryModel = new ProductFilterQueryModel
         {
             CategorySlug = categorySlug,
             Country = country,
             Search = search,
+            Status = status,
+            Manufacturer = manufacturer,
+            SortBy = sortBy,
+            ViewMode = viewMode ?? "grid",
             Page = page,
             PageSize = 30
         };
@@ -40,7 +44,7 @@ public class ProductController : Controller
                 // URL'den gelen dinamik Specs filtrelerini yakala
                 foreach (var key in Request.Query.Keys)
                 {
-                    if (key == "categorySlug" || key == "country" || key == "search" || key == "page") continue;
+                    if (key == "categorySlug" || key == "country" || key == "search" || key == "status" || key == "manufacturer" || key == "sortBy" || key == "viewMode" || key == "page") continue;
 
                     var values = Request.Query[key].ToArray().Select(v => v.ToLower()).ToList();
 
@@ -59,6 +63,10 @@ public class ProductController : Controller
 
         if (!string.IsNullOrEmpty(search)) ViewBag.CurrentSearch = search;
         if (!string.IsNullOrEmpty(country)) ViewBag.CurrentCountry = country;
+        if (!string.IsNullOrEmpty(status)) ViewBag.CurrentStatus = status;
+        if (!string.IsNullOrEmpty(manufacturer)) ViewBag.CurrentManufacturer = manufacturer;
+        if (!string.IsNullOrEmpty(sortBy)) ViewBag.CurrentSortBy = sortBy;
+        ViewBag.CurrentViewMode = viewMode ?? "grid";
 
         var (pagedProducts, totalItems) = await _productQueryService.GetFilteredProductsAsync(queryModel);
 

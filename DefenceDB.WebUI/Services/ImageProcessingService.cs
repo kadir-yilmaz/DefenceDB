@@ -27,24 +27,27 @@ public class ImageProcessingService : IImageProcessingService
         _logger = logger;
         _env = env;
 
-        var provider = configuration["Storage:Provider"] ?? "Local";
+        var provider = configuration["Storage:Provider"] ?? "Backblaze";
         _useLocalStorage = string.Equals(provider, "Local", StringComparison.OrdinalIgnoreCase);
 
         if (!_useLocalStorage)
         {
-            var endpoint = configuration["Minio:Endpoint"] ?? "https://minio.kadiryilmaz.online";
-            var accessKey = configuration["Minio:AccessKey"] ?? "admin";
-            var secretKey = configuration["Minio:SecretKey"] ?? "kadir12345";
-            _bucketName = configuration["Minio:BucketName"] ?? "defencedb-images";
-            _publicUrl = configuration["Minio:PublicUrl"] ?? $"{endpoint}/{_bucketName}";
+            var serviceUrl = configuration["Backblaze:ServiceUrl"] ?? "https://s3.us-west-004.backblazeb2.com";
+            var keyId = configuration["Backblaze:KeyId"] ?? "";
+            var applicationKey = configuration["Backblaze:ApplicationKey"] ?? "";
+            _bucketName = configuration["Backblaze:BucketName"] ?? "defencedb";
+            _publicUrl = $"{serviceUrl.TrimEnd('/')}/{_bucketName}";
 
-            var config = new AmazonS3Config
+            if (!string.IsNullOrWhiteSpace(keyId) && !string.IsNullOrWhiteSpace(applicationKey))
             {
-                ServiceURL = endpoint,
-                ForcePathStyle = true
-            };
+                var config = new AmazonS3Config
+                {
+                    ServiceURL = serviceUrl,
+                    ForcePathStyle = true
+                };
 
-            _s3Client = new AmazonS3Client(accessKey, secretKey, config);
+                _s3Client = new AmazonS3Client(keyId, applicationKey, config);
+            }
         }
     }
 

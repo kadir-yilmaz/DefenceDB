@@ -94,3 +94,14 @@
     height: 100%;
     padding-bottom: 4px;
 }
+
+/* Product List View Item Hover & Styling */
+.product-list-item {
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.product-list-item:hover {
+    border-color: var(--accent, #f59e0b) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25) !important;
+}

@@ -123,17 +123,16 @@
     </div>
 
     <div class="row">
-        @* PC Sidebar *@
+        <!-- PC Sidebar (SADECE KATEGORİLER) -->
         <div class="col-lg-3 d-none d-lg-block mb-4 mb-lg-0 pe-lg-3">
             <div class="sidebar-sticky">
-                <!-- Categories block -->
-                <div class="bg-theme-card border border-theme rounded-4 p-4 shadow-sm mb-4">
+                <div class="bg-theme-card border border-theme rounded-4 p-4 shadow-sm">
                     <h5 class="text-primary-theme mb-4 pb-2 border-bottom border-theme d-flex align-items-center gap-2">
                         <i class="bi bi-grid-3x3-gap-fill text-warning"></i>
                         <span>Tüm Kategoriler</span>
                     </h5>
                     <div class="category-list">
-                        <a href="@Url.Action("Index", "Product", new { country = ViewBag.CurrentCountry })" class="sidebar-category-link @(currentCategory == null ? "active" : "") d-flex justify-content-between align-items-center">
+                        <a href="@Url.Action("Index", "Product", new { country = ViewBag.CurrentCountry })" class="sidebar-category-link @(currentCategory == null ? "active" : "") d-flex justify-content-between align-items-center mb-2">
                             <span><i class="bi bi-list-stars me-2"></i>Tüm Ürünler</span>
                             <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme">@totalProductCount</span>
                         </a>
@@ -156,106 +155,372 @@
                         }
                     </div>
                 </div>
-
-                <!-- Dynamic Properties Filter -->
-                @if (ViewBag.FilterProperties != null && ((List<System.Reflection.PropertyInfo>)ViewBag.FilterProperties).Any())
-                {
-                    <div class="bg-theme-card border border-theme rounded-4 p-4 shadow-sm">
-                        <h5 class="text-primary-theme mb-4 pb-2 border-bottom border-theme d-flex align-items-center gap-2">
-                            <i class="bi bi-sliders text-warning"></i>
-                            <span>Özellik Filtreleri</span>
-                        </h5>
-                        @await Html.PartialAsync("_FilterForm")
-                    </div>
-                }
             </div>
         </div>
 
-        <!-- Main Product Grid -->
+        <!-- Main Content (Top Filters & Products List/Grid) -->
         <div class="col-lg-9">
             
-            <!-- Top Action Bar -->
-            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-theme">
-                <div class="d-flex align-items-center gap-2 gap-md-3">
-                    <!-- Mobilde filtre butonu -->
-                    <button class="btn btn-warning d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileFilterPanel" aria-controls="mobileFilterPanel">
-                        <i class="bi bi-funnel-fill"></i>
-                    </button>
+            <!-- Top Header & Comprehensive Filter Control Panel -->
+            <div class="mb-4">
+                <!-- Row 1: Category Title & View Mode Toggle -->
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
                     <div>
+                        <!-- Mobilde filtre paneli tetikleyici -->
+                        <button class="btn btn-warning d-lg-none mb-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileFilterPanel" aria-controls="mobileFilterPanel">
+                            <i class="bi bi-funnel-fill me-1"></i> Filtreler
+                        </button>
+                        
                         @if (currentCategory != null)
                         {
-                            <h4 class="text-primary-theme fw-bold mb-0 d-flex align-items-center gap-2">
-                                @currentCategory.Name
-                            </h4>
+                            <h3 class="text-primary-theme fw-bold mb-1 d-flex align-items-center gap-2">
+                                @if (!string.IsNullOrEmpty(currentCategory.IconClass))
+                                {
+                                    <i class="@currentCategory.IconClass text-warning"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-shield-fill text-warning"></i>
+                                }
+                                <span>@currentCategory.Name</span>
+                                <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme fs-7 ms-2 font-outfit">@Model.Count Ürün</span>
+                            </h3>
                             @if (!string.IsNullOrEmpty(currentCategory.Description))
                             {
-                                <p class="text-secondary-theme fs-7 mb-0 d-none d-md-block">@currentCategory.Description</p>
+                                <p class="text-secondary-theme fs-7 mb-0">@currentCategory.Description</p>
                             }
                         }
                         else
                         {
-                            <h4 class="text-primary-theme fw-bold mb-0 d-flex align-items-center gap-2">
+                            <h3 class="text-primary-theme fw-bold mb-1 d-flex align-items-center gap-2">
                                 <i class="bi bi-shield-fill text-warning"></i> Tüm Savunma Ürünleri
-                            </h4>
+                                <span class="badge bg-theme text-secondary-theme rounded-pill border border-theme fs-7 ms-2 font-outfit">@totalProductCount Ürün</span>
+                            </h3>
+                            <p class="text-secondary-theme fs-7 mb-0">Savunma sanayii envanterindeki tüm kara, hava, deniz ve füze sistemleri</p>
                         }
                     </div>
+
+                    <!-- Sort & View Mode Switcher (Üst Başlık Yanı) -->
+                    <div class="d-flex align-items-center gap-2 ms-md-auto align-self-start align-self-md-center flex-wrap">
+                        <!-- Sort Dropdown -->
+                        <div class="dropdown">
+                            <button class="btn bg-theme-card border border-theme text-primary-theme dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.86rem;">
+                                <i class="bi bi-sort-down text-warning"></i>
+                                <span class="fw-semibold font-outfit">
+                                    @{
+                                        var sortLabel = "Sıralama (En Yeni)";
+                                        if (!string.IsNullOrEmpty(ViewBag.CurrentSortBy))
+                                        {
+                                            if (ViewBag.CurrentSortBy == "name_asc") sortLabel = "İsim (A-Z)";
+                                            else if (ViewBag.CurrentSortBy == "name_desc") sortLabel = "İsim (Z-A)";
+                                            else if (ViewBag.CurrentSortBy == "date_asc") sortLabel = "En Eski";
+                                            else if (ViewBag.CurrentSortBy == "country_asc") sortLabel = "Ülke (A-Z)";
+                                            else if (ViewBag.CurrentSortBy == "manufacturer_asc") sortLabel = "Üretici (A-Z)";
+                                            else if (ViewBag.CurrentSortBy.StartsWith("spec_desc:")) sortLabel = ViewBag.CurrentSortBy.Substring(10) + " (Azalan)";
+                                            else if (ViewBag.CurrentSortBy.StartsWith("spec_asc:")) sortLabel = ViewBag.CurrentSortBy.Substring(9) + " (Artan)";
+                                        }
+                                    }
+                                    @sortLabel
+                                </span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end bg-theme-card border-theme shadow-lg" style="font-size: 0.86rem; max-height: 400px; overflow-y: auto;">
+                                <li><a class="dropdown-item text-primary-theme @(string.IsNullOrEmpty(ViewBag.CurrentSortBy) || ViewBag.CurrentSortBy == "date_desc" ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, viewMode = ViewBag.CurrentViewMode, sortBy = "date_desc" })"><i class="bi bi-calendar-check me-2"></i>En Yeni</a></li>
+                                <li><a class="dropdown-item text-primary-theme @(ViewBag.CurrentSortBy == "date_asc" ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, viewMode = ViewBag.CurrentViewMode, sortBy = "date_asc" })"><i class="bi bi-calendar me-2"></i>En Eski</a></li>
+                                <li><hr class="dropdown-divider border-theme"></li>
+                                <li><a class="dropdown-item text-primary-theme @(ViewBag.CurrentSortBy == "name_asc" ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, viewMode = ViewBag.CurrentViewMode, sortBy = "name_asc" })"><i class="bi bi-sort-alpha-down me-2"></i>İsim (A-Z)</a></li>
+                                <li><a class="dropdown-item text-primary-theme @(ViewBag.CurrentSortBy == "name_desc" ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, viewMode = ViewBag.CurrentViewMode, sortBy = "name_desc" })"><i class="bi bi-sort-alpha-down-alt me-2"></i>İsim (Z-A)</a></li>
+                                <li><hr class="dropdown-divider border-theme"></li>
+                                <li><a class="dropdown-item text-primary-theme @(ViewBag.CurrentSortBy == "country_asc" ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, viewMode = ViewBag.CurrentViewMode, sortBy = "country_asc" })"><i class="bi bi-globe me-2"></i>Ülke (A-Z)</a></li>
+                                <li><a class="dropdown-item text-primary-theme @(ViewBag.CurrentSortBy == "manufacturer_asc" ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, viewMode = ViewBag.CurrentViewMode, sortBy = "manufacturer_asc" })"><i class="bi bi-building me-2"></i>Üretici (A-Z)</a></li>
+                                
+                                @{
+                                    var allCategoryAttrs = ViewBag.FilterAttributes as List<DefenceDB.EL.Models.CategoryAttribute>;
+                                }
+                                @if (allCategoryAttrs != null && allCategoryAttrs.Any())
+                                {
+                                    var sortableAttrs = allCategoryAttrs.Where(a => a.Type == DefenceDB.EL.Models.AttributeType.Number || a.DisplayName.Contains("(kg)") || a.DisplayName.Contains("(km)") || a.DisplayName.Contains("Mach") || a.DisplayName.Contains("Hız") || a.DisplayName.Contains("Menzil") || a.DisplayName.Contains("Ağırlık") || a.DisplayName.Contains("Başlığı")).ToList();
+                                    if (!sortableAttrs.Any()) sortableAttrs = allCategoryAttrs.Take(5).ToList();
+
+                                    if (sortableAttrs.Any())
+                                    {
+                                        <li><hr class="dropdown-divider border-theme"></li>
+                                        <li class="dropdown-header text-secondary-theme fs-8 text-uppercase fw-bold px-3 py-1">Ek Özellik Sıralamaları</li>
+                                        @foreach (var numAttr in sortableAttrs)
+                                        {
+                                            var keyDesc = $"spec_desc:{numAttr.Name}";
+                                            var keyAsc = $"spec_asc:{numAttr.Name}";
+                                            <li>
+                                                <a class="dropdown-item text-primary-theme @(ViewBag.CurrentSortBy == keyDesc ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, viewMode = ViewBag.CurrentViewMode, sortBy = keyDesc })">
+                                                    <i class="bi bi-sort-numeric-down-alt me-2 text-warning"></i>@numAttr.DisplayName (Azalan)
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item text-primary-theme @(ViewBag.CurrentSortBy == keyAsc ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, viewMode = ViewBag.CurrentViewMode, sortBy = keyAsc })">
+                                                    <i class="bi bi-sort-numeric-down me-2 text-warning"></i>@numAttr.DisplayName (Artan)
+                                                </a>
+                                            </li>
+                                        }
+                                    }
+                                }
+                            </ul>
+                        </div>
+
+                        <!-- View Mode Switcher (Sayfa Yenilemesiz Anında Geçiş) -->
+                        <div class="btn-group border border-theme rounded-pill p-1 bg-theme-card shadow-sm" role="group" aria-label="Görünüm Seçeneği">
+                            <button type="button" id="btnGridView" onclick="switchViewMode('grid')" 
+                                    class="btn btn-sm rounded-pill px-3 @(ViewBag.CurrentViewMode != "list" ? "btn-warning text-dark fw-bold shadow-sm" : "text-secondary-theme")" title="Kart Görünümü">
+                                <i class="bi bi-grid-3x3-gap-fill me-1"></i> Kart
+                            </button>
+                            <button type="button" id="btnListView" onclick="switchViewMode('list')" 
+                                    class="btn btn-sm rounded-pill px-3 @(ViewBag.CurrentViewMode == "list" ? "btn-warning text-dark fw-bold shadow-sm" : "text-secondary-theme")" title="Liste Görünümü">
+                                <i class="bi bi-list-ul me-1"></i> Liste
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="dropdown">
-                    <button class="btn bg-theme-card border border-theme text-primary-theme dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        @if(!string.IsNullOrEmpty(ViewBag.CurrentCountry))
-                        {
-                            var flagUrlBtn = "https://flagcdn.com/w20/" + ((List<DefenceDB.WebUI.Models.CountryHelper.CountryItem>)ViewBag.CountriesList).FirstOrDefault(c => c.Name == ViewBag.CurrentCountry)?.Code + ".png";
-                            <img src="@flagUrlBtn" alt="@ViewBag.CurrentCountry" style="width:16px; height:auto; border-radius: 2px;" onerror="this.style.display='none';" />
-                            <span class="fw-bold">@ViewBag.CurrentCountry</span>
+
+                <!-- Row 2: Comprehensive Top Filter Bar (Ülkeler, Durum, Ek Attribute'lar) -->
+                <div class="top-filter-bar bg-theme-card border border-theme rounded-4 p-3 shadow-sm">
+                    <form method="get" action="@Url.Action("Index", "Product")" id="topFilterForm" class="d-flex flex-wrap align-items-center gap-2">
+                        <input type="hidden" name="categorySlug" value="@(currentCategory?.Slug)" />
+                        <input type="hidden" name="search" value="@ViewBag.CurrentSearch" />
+                        <input type="hidden" name="viewMode" value="@ViewBag.CurrentViewMode" />
+                        <input type="hidden" name="sortBy" value="@ViewBag.CurrentSortBy" />
+
+                        <!-- 1. Ülke Filtresi Dropdown -->
+                        <div class="dropdown">
+                            <button class="btn bg-theme border border-theme text-primary-theme dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.86rem;">
+                                @if(!string.IsNullOrEmpty(ViewBag.CurrentCountry))
+                                {
+                                    var flagUrlBtn = "https://flagcdn.com/w20/" + ((List<DefenceDB.WebUI.Models.CountryHelper.CountryItem>)ViewBag.CountriesList).FirstOrDefault(c => c.Name == ViewBag.CurrentCountry)?.Code + ".png";
+                                    <img src="@flagUrlBtn" alt="@ViewBag.CurrentCountry" style="width:16px; height:auto; border-radius: 2px;" onerror="this.style.display='none';" />
+                                    <span class="fw-bold">@ViewBag.CurrentCountry</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-globe text-warning"></i>
+                                    <span>Tüm Ülkeler</span>
+                                }
+                            </button>
+                            <ul class="dropdown-menu bg-theme-card border-theme shadow-lg" style="max-height: 350px; overflow-y: auto; font-size: 0.86rem;">
+                                <li>
+                                    <a class="dropdown-item text-primary-theme d-flex align-items-center gap-2 @(string.IsNullOrEmpty(ViewBag.CurrentCountry) ? "active bg-warning text-dark" : "")" 
+                                       href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, sortBy = ViewBag.CurrentSortBy, viewMode = ViewBag.CurrentViewMode, status = ViewBag.CurrentStatus })">
+                                        <i class="bi bi-globe text-muted"></i> Tüm Ülkeler
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider border-theme"></li>
+                                @foreach (var c in ViewBag.CountriesList as List<DefenceDB.WebUI.Models.CountryHelper.CountryItem> ?? new List<DefenceDB.WebUI.Models.CountryHelper.CountryItem>())
+                                {
+                                    var flagUrl = "https://flagcdn.com/w20/" + c.Code + ".png";
+                                    <li>
+                                        <a class="dropdown-item text-primary-theme d-flex align-items-center gap-2 @(string.Equals(ViewBag.CurrentCountry, c.Name, StringComparison.OrdinalIgnoreCase) ? "active bg-warning text-dark" : "bg-theme-hover")" 
+                                           href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = c.Name, sortBy = ViewBag.CurrentSortBy, viewMode = ViewBag.CurrentViewMode, status = ViewBag.CurrentStatus })">
+                                            <img src="@flagUrl" alt="@c.Name" style="width: 16px; height: auto; border-radius: 2px;" />
+                                            @c.Name
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+
+                        <!-- 2. Envanter Durumu Dropdown -->
+                        <div class="dropdown">
+                            <button class="btn bg-theme border border-theme text-primary-theme dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.86rem;">
+                                <i class="bi bi-patch-check-fill text-warning"></i>
+                                <span>
+                                    @(ViewBag.CurrentStatus switch {
+                                        "Active" => "Aktif Kullanımda",
+                                        "In Development" => "Geliştirme Aşamasında",
+                                        "Prototype" => "Prototip",
+                                        _ => "Tüm Durumlar"
+                                    })
+                                </span>
+                            </button>
+                            <ul class="dropdown-menu bg-theme-card border-theme shadow-lg" style="font-size: 0.86rem;">
+                                <li><a class="dropdown-item text-primary-theme @(string.IsNullOrEmpty(ViewBag.CurrentStatus) ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, sortBy = ViewBag.CurrentSortBy, viewMode = ViewBag.CurrentViewMode })">Tüm Durumlar</a></li>
+                                <li><hr class="dropdown-divider border-theme"></li>
+                                <li><a class="dropdown-item text-primary-theme @(ViewBag.CurrentStatus == "Active" ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, sortBy = ViewBag.CurrentSortBy, viewMode = ViewBag.CurrentViewMode, status = "Active" })"><span class="badge bg-success me-2">●</span>Aktif Kullanımda</a></li>
+                                <li><a class="dropdown-item text-primary-theme @(ViewBag.CurrentStatus == "In Development" ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, sortBy = ViewBag.CurrentSortBy, viewMode = ViewBag.CurrentViewMode, status = "In Development" })"><span class="badge bg-info text-dark me-2">●</span>Geliştirme Aşamasında</a></li>
+                                <li><a class="dropdown-item text-primary-theme @(ViewBag.CurrentStatus == "Prototype" ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, sortBy = ViewBag.CurrentSortBy, viewMode = ViewBag.CurrentViewMode, status = "Prototype" })"><span class="badge bg-warning text-dark me-2">●</span>Prototip</a></li>
+                            </ul>
+                        </div>
+
+                        <!-- 3. Dynamic Category Attributes (Ek Özellik Filtreleri) -->
+                        @{
+                            var filterAttrs = ViewBag.FilterAttributes as List<DefenceDB.EL.Models.CategoryAttribute>;
                         }
-                        else
+                        @if (filterAttrs != null && filterAttrs.Any())
                         {
-                            <span class="fw-bold">Tüm Ülkeler</span>
+                            foreach (var attr in filterAttrs)
+                            {
+                                var currentAttrVal = Context.Request.Query[attr.Name].ToString();
+                                var hasVal = !string.IsNullOrEmpty(currentAttrVal);
+
+                                <div class="dropdown">
+                                    <button class="btn bg-theme border @(hasVal ? "border-warning text-warning fw-bold" : "border-theme text-primary-theme") dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.86rem;">
+                                        <i class="bi bi-sliders text-warning"></i>
+                                        <span>@(hasVal ? $"{attr.DisplayName}: {currentAttrVal}" : attr.DisplayName)</span>
+                                    </button>
+                                    <div class="dropdown-menu p-3 bg-theme-card border-theme shadow-lg" style="min-width: 220px; font-size: 0.86rem;">
+                                        <label class="form-label text-secondary-theme fw-bold mb-2">@attr.DisplayName</label>
+                                        
+                                        @if (attr.Type == DefenceDB.EL.Models.AttributeType.Boolean)
+                                        {
+                                            var baseUrl = Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy, viewMode = ViewBag.CurrentViewMode });
+                                            <div class="d-flex flex-column gap-1">
+                                                <a class="dropdown-item rounded-2 @(string.IsNullOrEmpty(currentAttrVal) ? "active bg-warning text-dark" : "text-primary-theme")" href="@baseUrl">Tümü</a>
+                                                <a class="dropdown-item rounded-2 @(currentAttrVal == "true" ? "active bg-warning text-dark" : "text-primary-theme")" href="@(baseUrl + $"&{attr.Name}=true")">Evet</a>
+                                                <a class="dropdown-item rounded-2 @(currentAttrVal == "false" ? "active bg-warning text-dark" : "text-primary-theme")" href="@(baseUrl + $"&{attr.Name}=false")">Hayır</a>
+                                            </div>
+                                        }
+                                        else if (attr.Type == DefenceDB.EL.Models.AttributeType.Dropdown && attr.Options != null && attr.Options.Any())
+                                        {
+                                            var baseUrl = Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy, viewMode = ViewBag.CurrentViewMode });
+                                            <div class="d-flex flex-column gap-1" style="max-height: 200px; overflow-y: auto;">
+                                                <a class="dropdown-item rounded-2 @(string.IsNullOrEmpty(currentAttrVal) ? "active bg-warning text-dark" : "text-primary-theme")" href="@baseUrl">Tümü</a>
+                                                @foreach (var opt in attr.Options)
+                                                {
+                                                    <a class="dropdown-item rounded-2 @(currentAttrVal == opt ? "active bg-warning text-dark" : "text-primary-theme")" href="@(baseUrl + $"&{attr.Name}={System.Web.HttpUtility.UrlEncode(opt)}")">@opt</a>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="d-flex gap-2">
+                                                <input type="text" name="@attr.Name" class="form-control form-control-sm bg-theme text-primary-theme border-theme" placeholder="Aranacak..." value="@currentAttrVal" />
+                                                <button type="submit" class="btn btn-sm btn-warning">Ara</button>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
                         }
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end bg-theme-card border-theme shadow-lg" style="max-height: 350px; overflow-y: auto;">
-                        <li>
-                            <a class="dropdown-item text-primary-theme d-flex align-items-center gap-2 @(string.IsNullOrEmpty(ViewBag.CurrentCountry) ? "active bg-warning text-dark" : "")" 
-                               href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug })">
-                                <i class="bi bi-globe text-muted"></i> Tüm Ülkeler
-                            </a>
-                        </li>
-                        <li><hr class="dropdown-divider border-theme"></li>
-                        @foreach (var c in ViewBag.CountriesList as List<DefenceDB.WebUI.Models.CountryHelper.CountryItem> ?? new List<DefenceDB.WebUI.Models.CountryHelper.CountryItem>())
-                        {
-                            var flagUrl = "https://flagcdn.com/w20/" + c.Code + ".png";
-                            <li>
-                                <a class="dropdown-item text-primary-theme d-flex align-items-center gap-2 @(string.Equals(ViewBag.CurrentCountry, c.Name, StringComparison.OrdinalIgnoreCase) ? "active bg-warning text-dark" : "bg-theme-hover")" 
-                                   href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = c.Name })">
-                                    <img src="@flagUrl" alt="@c.Name" style="width: 16px; height: auto; border-radius: 2px;" />
-                                    @c.Name
+                    </form>
+
+                    <!-- Active Filters Bar (Herhangi bir filtre aktifse görünür) -->
+                    @if (!string.IsNullOrEmpty(ViewBag.CurrentCountry) || !string.IsNullOrEmpty(ViewBag.CurrentStatus) || !string.IsNullOrEmpty(ViewBag.CurrentSearch))
+                    {
+                        <div class="d-flex align-items-center flex-wrap gap-2 pt-2 mt-2 border-top border-theme">
+                            <span class="fs-8 text-secondary-theme fw-semibold me-1"><i class="bi bi-funnel-fill text-warning me-1"></i>Aktif Filtreler:</span>
+                            
+                            @if (!string.IsNullOrEmpty(ViewBag.CurrentCountry))
+                            {
+                                <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy, viewMode = ViewBag.CurrentViewMode })" class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-1 text-decoration-none d-inline-flex align-items-center gap-1 fs-8">
+                                    <span>Ülke: @ViewBag.CurrentCountry</span>
+                                    <i class="bi bi-x-lg ms-1" style="font-size: 0.65rem;"></i>
                                 </a>
-                            </li>
-                        }
-                    </ul>
+                            }
+
+                            @if (!string.IsNullOrEmpty(ViewBag.CurrentStatus))
+                            {
+                                <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, sortBy = ViewBag.CurrentSortBy, viewMode = ViewBag.CurrentViewMode })" class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-1 text-decoration-none d-inline-flex align-items-center gap-1 fs-8">
+                                    <span>Durum: @ViewBag.CurrentStatus</span>
+                                    <i class="bi bi-x-lg ms-1" style="font-size: 0.65rem;"></i>
+                                </a>
+                            }
+
+                            <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, viewMode = ViewBag.CurrentViewMode })" class="text-secondary-theme fs-8 text-decoration-underline ms-auto">
+                                Tümünü Temizle
+                            </a>
+                        </div>
+                    }
                 </div>
             </div>
 
-            <!-- Products List -->
+            <!-- Products List / Grid -->
             @if (Model.Count == 0)
             {
                 <div class="text-center py-5 bg-theme-card border border-theme rounded-4">
                     <i class="bi bi-shield-slash text-warning fs-1"></i>
                     <h4 class="mt-3 text-primary-theme">Kayıt Bulunamadı</h4>
-                    <p class="text-secondary-theme">Bu kategoriye ait henüz veri girişi yapılmamıştır.</p>
+                    <p class="text-secondary-theme">Seçilen kriterlere uygun henüz ürün verisi bulunmamaktadır.</p>
                     <a href="/Product" class="btn btn-warning text-dark btn-sm rounded-pill px-4 mt-2">Tüm Ürünlere Dön</a>
                 </div>
             }
             else
             {
-                <div class="row g-4">
+                <!-- List View (Liste Görünümü - Anında Client-Side Toggle) -->
+                <div id="productListView" class="product-list-view d-flex flex-column gap-3 @(ViewBag.CurrentViewMode == "list" ? "" : "d-none")">
                     @foreach (var prod in Model)
                     {
                         var mainImage = prod.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? prod.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
                         var thumbImage = toThumb(mainImage);
                         
-                        <div class="col-lg-4 col-md-6 col-sm-12">
+                        <div class="product-list-item bg-theme-card border border-theme rounded-4 p-3 shadow-sm d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3" 
+                             style="cursor: pointer; transition: all 0.2s ease;" 
+                             onclick="handleProductClick(event, '/Product/Detail/@(prod.Id)-@(prod.Slug)')">
+                            
+                            <div class="d-flex align-items-center gap-3">
+                                <img src="@thumbImage" alt="@prod.Name" loading="lazy" decoding="async" 
+                                     style="width: 90px; height: 65px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border-theme);" 
+                                     onerror="this.onerror=null; this.src='@mainImage';" />
+                                
+                                <div>
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <h5 class="text-primary-theme fw-bold mb-0" style="font-size: 1.05rem;">@prod.Name</h5>
+                                        @if (!string.IsNullOrEmpty(prod.NatoReportingName))
+                                        {
+                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill" style="font-size: 0.75rem;">NATO: "@prod.NatoReportingName"</span>
+                                        }
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2 gap-md-3 text-secondary-theme fs-7 flex-wrap">
+                                        <span><i class="bi bi-folder2 text-warning me-1"></i> @prod.Category?.Name</span>
+                                        <span class="d-none d-sm-inline">•</span>
+                                        <span><i class="bi bi-building me-1"></i> @prod.Manufacturer</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-center justify-content-between justify-content-md-end gap-3 ms-md-auto">
+                                @if (!string.IsNullOrEmpty(prod.Country))
+                                {
+                                    <div class="d-flex align-items-center gap-2">
+                                        @if (!string.IsNullOrEmpty(CountryHelper.GetFlagUrl(prod.Country)))
+                                        {
+                                            <img src="@CountryHelper.GetFlagUrl(prod.Country)" alt="@prod.Country" title="@prod.Country" style="width: 22px; height: 15px; object-fit: cover; border-radius: 2px; border: 1px solid var(--border-theme);" />
+                                        }
+                                        <span class="fs-7 text-secondary-theme d-none d-lg-inline">@prod.Country</span>
+                                    </div>
+                                }
+
+                                <div>
+                                    @if (prod.Status == "Active")
+                                    {
+                                        <span class="badge bg-success rounded-pill px-3 py-2" style="font-size: 0.76rem;">Aktif Kullanımda</span>
+                                    }
+                                    else if (prod.Status == "In Development")
+                                    {
+                                        <span class="badge bg-info text-dark rounded-pill px-3 py-2" style="font-size: 0.76rem;">Geliştirme Aşamasında</span>
+                                    }
+                                    else if (prod.Status == "Prototype")
+                                    {
+                                        <span class="badge bg-warning text-dark rounded-pill px-3 py-2" style="font-size: 0.76rem;">Prototip</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary rounded-pill px-3 py-2" style="font-size: 0.76rem;">@prod.Status</span>
+                                    }
+                                </div>
+
+                                <a href="/Product/Detail/@(prod.Id)-@(prod.Slug)" class="btn btn-sm btn-outline-warning rounded-pill px-3 ms-1 d-none d-sm-inline-flex align-items-center gap-1">
+                                    <span>İncele</span>
+                                    <i class="bi bi-arrow-right-short fs-6"></i>
+                                </a>
+                            </div>
+
+                        </div>
+                    }
+                </div>
+
+                <!-- Grid View (Izgara Görünümü - 1 Satırda 4 Ürün - Anında Client-Side Toggle) -->
+                <div id="productGridView" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3 @(ViewBag.CurrentViewMode == "list" ? "d-none" : "")">
+                    @foreach (var prod in Model)
+                    {
+                        var mainImage = prod.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? prod.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
+                        var thumbImage = toThumb(mainImage);
+                        
+                        <div class="col">
                             <div class="card-premium h-100 d-flex flex-column" style="cursor: pointer;" onclick="handleProductClick(event, '/Product/Detail/@(prod.Id)-@(prod.Slug)')">
                                 <span class="category-badge">@prod.Category.Name</span>
                                 <div class="card-img-wrapper">
@@ -297,12 +562,15 @@
                 var currentCategorySlug = ViewBag.CurrentCategory?.Slug;
                 var currentCountry = ViewBag.CurrentCountry;
                 var currentSearch = ViewBag.CurrentSearch;
+                var currentStatus = ViewBag.CurrentStatus;
+                var currentSortBy = ViewBag.CurrentSortBy;
+                var currentViewMode = ViewBag.CurrentViewMode;
 
                 <div class="admin-pagination-wrapper mt-5">
                     <ul class="admin-pagination">
                         <li class="@(currentPage == 1 ? "disabled" : "")">
-                            <a href="@(currentPage > 1 ? Url.Action("Index", new { categorySlug = currentCategorySlug, country = currentCountry, search = currentSearch, page = currentPage - 1 }) : "#")" class="page-link-custom page-link-text">
-                                <i class="bi bi-chevron-left me-1" style="font-size: 0.8rem;"></i> Back
+                            <a href="@(currentPage > 1 ? Url.Action("Index", new { categorySlug = currentCategorySlug, country = currentCountry, search = currentSearch, status = currentStatus, sortBy = currentSortBy, viewMode = currentViewMode, page = currentPage - 1 }) : "#")" class="page-link-custom page-link-text">
+                                <i class="bi bi-chevron-left me-1" style="font-size: 0.8rem;"></i> Önceki
                             </a>
                         </li>
 
@@ -311,7 +579,7 @@
                             if (i == 1 || i == totalPages || (i >= currentPage - 1 && i <= currentPage + 1))
                             {
                                 <li class="@(i == currentPage ? "active" : "")">
-                                    <a href="@Url.Action("Index", new { categorySlug = currentCategorySlug, country = currentCountry, search = currentSearch, page = i })" class="page-link-custom">@i</a>
+                                    <a href="@Url.Action("Index", new { categorySlug = currentCategorySlug, country = currentCountry, search = currentSearch, status = currentStatus, sortBy = currentSortBy, viewMode = currentViewMode, page = i })" class="page-link-custom">@i</a>
                                 </li>
                             }
                             else if (i == 2 && currentPage > 3)
@@ -325,8 +593,8 @@
                         }
 
                         <li class="@(currentPage == totalPages ? "disabled" : "")">
-                            <a href="@(currentPage < totalPages ? Url.Action("Index", new { categorySlug = currentCategorySlug, country = currentCountry, search = currentSearch, page = currentPage + 1 }) : "#")" class="page-link-custom page-link-text">
-                                Next <i class="bi bi-chevron-right ms-1" style="font-size: 0.8rem;"></i>
+                            <a href="@(currentPage < totalPages ? Url.Action("Index", new { categorySlug = currentCategorySlug, country = currentCountry, search = currentSearch, status = currentStatus, sortBy = currentSortBy, viewMode = currentViewMode, page = currentPage + 1 }) : "#")" class="page-link-custom page-link-text">
+                                Sonraki <i class="bi bi-chevron-right ms-1" style="font-size: 0.8rem;"></i>
                             </a>
                         </li>
                     </ul>
@@ -336,3 +604,39 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function switchViewMode(mode) {
+            const gridEl = document.getElementById('productGridView');
+            const listEl = document.getElementById('productListView');
+            const btnGrid = document.getElementById('btnGridView');
+            const btnList = document.getElementById('btnListView');
+
+            if (mode === 'list') {
+                if (gridEl) gridEl.classList.add('d-none');
+                if (listEl) listEl.classList.remove('d-none');
+                if (btnGrid) btnGrid.className = 'btn btn-sm rounded-pill px-3 text-secondary-theme';
+                if (btnList) btnList.className = 'btn btn-sm rounded-pill px-3 btn-warning text-dark fw-bold shadow-sm';
+            } else {
+                if (listEl) listEl.classList.add('d-none');
+                if (gridEl) gridEl.classList.remove('d-none');
+                if (btnList) btnList.className = 'btn btn-sm rounded-pill px-3 text-secondary-theme';
+                if (btnGrid) btnGrid.className = 'btn btn-sm rounded-pill px-3 btn-warning text-dark fw-bold shadow-sm';
+            }
+
+            try { localStorage.setItem('defenceDB_viewMode', mode); } catch(e){}
+
+            const url = new URL(window.location.href);
+            url.searchParams.set('viewMode', mode);
+            window.history.replaceState({}, '', url);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedMode = localStorage.getItem('defenceDB_viewMode');
+            if (savedMode && (savedMode === 'grid' || savedMode === 'list')) {
+                switchViewMode(savedMode);
+            }
+        });
+    </script>
+}

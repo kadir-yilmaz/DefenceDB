@@ -72,11 +72,41 @@ public class ProductQueryService : IProductQueryService
             query = query.Where(p => p.Country != null && p.Country.ToLower() == country);
         }
 
-        // Dynamic (Specs-based) filters — require in-memory filtering
+        if (!string.IsNullOrWhiteSpace(queryModel.Status))
+        {
+            query = query.Where(p => p.Status == queryModel.Status);
+        }
+
+        if (!string.IsNullOrWhiteSpace(queryModel.Manufacturer))
+        {
+            var mfg = queryModel.Manufacturer.ToLower();
+            query = query.Where(p => p.Manufacturer != null && p.Manufacturer.ToLower().Contains(mfg));
+        }
+
+        // Check for Dynamic Spec Sorting (e.g. spec_desc:Menzil (km) or spec_asc:Payload (kg))
+        var isSpecSort = !string.IsNullOrEmpty(queryModel.SortBy) && 
+            (queryModel.SortBy.StartsWith("spec_desc:") || queryModel.SortBy.StartsWith("spec_asc:"));
+
+        if (!isSpecSort)
+        {
+            // Standard Sorting
+            query = queryModel.SortBy switch
+            {
+                "name_asc" => query.OrderBy(p => p.Name),
+                "name_desc" => query.OrderByDescending(p => p.Name),
+                "date_asc" => query.OrderBy(p => p.CreatedAt),
+                "country_asc" => query.OrderBy(p => p.Country),
+                "manufacturer_asc" => query.OrderBy(p => p.Manufacturer),
+                "status_asc" => query.OrderBy(p => p.Status),
+                _ => query.OrderByDescending(p => p.CreatedAt)
+            };
+        }
+
+        // Dynamic (Specs-based) filters or Spec Sorting — require in-memory processing
         var hasDynamicFilters = queryModel.DynamicFilters != null &&
             queryModel.DynamicFilters.Any(f => f.Key != "ParentCategorySlugs");
 
-        if (!hasDynamicFilters)
+        if (!hasDynamicFilters && !isSpecSort)
         {
             // SQL-level pagination (fast path)
             var totalItems = await query.CountAsync();
@@ -84,7 +114,6 @@ public class ProductQueryService : IProductQueryService
             int validPage = Math.Max(1, Math.Min(queryModel.Page, totalPages > 0 ? totalPages : 1));
 
             var pagedProducts = await query
-                .OrderByDescending(p => p.CreatedAt)
                 .Skip((validPage - 1) * queryModel.PageSize)
                 .Take(queryModel.PageSize)
                 .ToListAsync();
@@ -92,26 +121,50 @@ public class ProductQueryService : IProductQueryService
             return (pagedProducts, totalItems);
         }
 
-        // In-memory dynamic filtering (slower path, already category-filtered)
-        var allProducts = await query
-            .OrderByDescending(p => p.CreatedAt)
-            .ToListAsync();
+        // In-memory processing path
+        var allProducts = await query.ToListAsync();
 
-        foreach (var filter in queryModel.DynamicFilters!)
+        if (hasDynamicFilters)
         {
-            var key = filter.Key;
-            if (key == "ParentCategorySlugs") continue;
+            foreach (var filter in queryModel.DynamicFilters!)
+            {
+                var key = filter.Key;
+                if (key == "ParentCategorySlugs") continue;
 
-            var filterValues = filter.Value.Where(v => !string.IsNullOrWhiteSpace(v)).Select(v => v.Trim()).ToList();
-            if (!filterValues.Any()) continue;
+                var filterValues = filter.Value.Where(v => !string.IsNullOrWhiteSpace(v)).Select(v => v.Trim()).ToList();
+                if (!filterValues.Any()) continue;
 
-            allProducts = allProducts.Where(p => {
-                if (!p.Specs.TryGetValue(key, out var specValue))
-                    return false;
-                if (string.IsNullOrWhiteSpace(specValue))
-                    return false;
-                return filterValues.Any(fv => specValue.Contains(fv, StringComparison.OrdinalIgnoreCase));
-            }).ToList();
+                allProducts = allProducts.Where(p => {
+                    if (!p.Specs.TryGetValue(key, out var specValue))
+                        return false;
+                    if (string.IsNullOrWhiteSpace(specValue))
+                        return false;
+                    return filterValues.Any(fv => specValue.Contains(fv, StringComparison.OrdinalIgnoreCase));
+                }).ToList();
+            }
+        }
+
+        if (isSpecSort)
+        {
+            var isDesc = queryModel.SortBy!.StartsWith("spec_desc:");
+            var specKey = queryModel.SortBy.Substring(isDesc ? 10 : 9);
+
+            double ParseSpecNum(DefenseProduct p)
+            {
+                if (p.Specs != null && p.Specs.TryGetValue(specKey, out var rawVal) && !string.IsNullOrWhiteSpace(rawVal))
+                {
+                    var match = System.Text.RegularExpressions.Regex.Match(rawVal, @"[\d\.]+");
+                    if (match.Success && double.TryParse(match.Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double num))
+                    {
+                        return num;
+                    }
+                }
+                return isDesc ? double.MinValue : double.MaxValue;
+            }
+
+            allProducts = isDesc 
+                ? allProducts.OrderByDescending(ParseSpecNum).ThenBy(p => p.Name).ToList()
+                : allProducts.OrderBy(ParseSpecNum).ThenBy(p => p.Name).ToList();
         }
 
         int totalFiltered = allProducts.Count;
