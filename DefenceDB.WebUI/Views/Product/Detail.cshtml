@@ -21,6 +21,20 @@
         return $"/images/thumbs/{fileName}";
     };
     var galleryImagePaths = new[] { mainImage }.Concat(galleryImages.Select(i => i.ImagePath)).ToList();
+
+    string GetFullCategoryPath(Category? cat)
+    {
+        if (cat == null) return "Genel";
+        var list = new List<string>();
+        var curr = cat;
+        while (curr != null)
+        {
+            list.Insert(0, curr.Name);
+            curr = curr.ParentCategory;
+        }
+        return string.Join(" / ", list);
+    }
+    var fullCategoryPath = GetFullCategoryPath(Model.Category);
 }
 
 <!-- Custom Styles for Detail Page -->
@@ -48,19 +62,6 @@
                 <div class="me-auto"></div>
             }
 
-            <div class="d-flex align-items-center gap-2 mt-2 mt-sm-0">
-                <span class="detail-hero-badge category" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;"><i class="@Model.Category?.IconClass"></i> @Model.Category?.Name</span>
-                @if (!string.IsNullOrEmpty(Model.Country))
-                {
-                    <span class="detail-hero-badge country" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; background: var(--bg-theme-card); border: 1px solid var(--border-theme); color: var(--primary-theme);">
-                        @if (!string.IsNullOrEmpty(DefenceDB.WebUI.Models.CountryHelper.GetFlagUrl(Model.Country)))
-                        {
-                            <img src="@DefenceDB.WebUI.Models.CountryHelper.GetFlagUrl(Model.Country)" alt="@Model.Country" style="width: 14px;" />
-                        }
-                        @Model.Country
-                    </span>
-                }
-            </div>
         </div>
     </div>
 </div>
@@ -114,11 +115,17 @@
                 <ul class="spec-list">
                     <li class="spec-item">
                         <div class="spec-label">Kategori</div>
-                        <div class="spec-value">@Model.Category?.Name</div>
+                        <div class="spec-value">@fullCategoryPath</div>
                     </li>
                     <li class="spec-item">
                         <div class="spec-label">Üretici Ülke</div>
-                        <div class="spec-value">@Model.Country</div>
+                        <div class="spec-value d-flex align-items-center justify-content-end gap-2">
+                            @if (!string.IsNullOrEmpty(Model.Country) && !string.IsNullOrEmpty(DefenceDB.WebUI.Models.CountryHelper.GetFlagUrl(Model.Country)))
+                            {
+                                <img src="@DefenceDB.WebUI.Models.CountryHelper.GetFlagUrl(Model.Country)" alt="@Model.Country" style="width: 20px; height: 14px; object-fit: cover; border-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.15);" />
+                            }
+                            <span>@Model.Country</span>
+                        </div>
                     </li>
                     <li class="spec-item">
                         <div class="spec-label">Üretici Firma</div>
@@ -208,7 +215,7 @@
                     <span class="fw-bold font-outfit text-white">Tarihçe ve Gelişim</span>
                 </div>
                 <div class="p-4 p-md-5 d-flex justify-content-center">
-                    <div class="spec-value font-inter markdown-content" style="font-weight: 400; line-height: 1.75; color: var(--secondary-theme); font-size: 1.05rem; letter-spacing: -0.01em; max-width: 80ch; width: 100%;">
+                    <div class="description-content font-inter markdown-content" style="font-weight: 400; line-height: 1.75; color: var(--secondary-theme); font-size: 1.05rem; max-width: 850px; width: 100%; text-align: left;">
                         @if (!string.IsNullOrEmpty(Model.Description))
                         {
                             @Html.Raw(Model.Description.ToHtmlFormat())

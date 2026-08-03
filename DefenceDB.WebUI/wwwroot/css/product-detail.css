@@ -271,6 +271,11 @@ body {
     text-align: right;
     white-space: nowrap;
 }
+.description-content {
+    text-align: left !important;
+    white-space: normal !important;
+    color: var(--secondary-theme);
+}
 .rivals-rail {
     display: flex;
     gap: 16px;
@@ -491,47 +496,65 @@ body {
 }
 .markdown-content ul, .markdown-content ol {
     margin-bottom: 1.5rem;
-    padding-left: 2rem;
+    padding-left: 1.75rem;
+    text-align: left !important;
 }
 .markdown-content li {
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+    text-align: left !important;
 }
 
 .markdown-content table {
     width: 100%;
-    border-collapse: collapse;
-    margin: 1.5rem 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 1.75rem 0;
     font-size: 0.95rem;
-    border: 1px solid var(--border-theme, #e2e8f0);
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--border-theme);
+    border-radius: 12px;
+    overflow: hidden;
 }
 .markdown-content thead {
-    background: rgba(128, 128, 128, 0.05);
+    background: #0b0f19;
 }
 .markdown-content th {
-    text-align: left;
-    padding: 0.75rem 1rem;
+    text-align: left !important;
+    padding: 0.85rem 1.2rem;
     font-weight: 700;
-    color: var(--primary-theme, inherit);
-    border: 1px solid var(--border-theme, #e2e8f0);
-    border-bottom-width: 2px;
+    color: #fbbf24;
+    border-bottom: 2px solid var(--border-theme);
+    border-right: 1px solid var(--border-theme);
+}
+.markdown-content th:last-child {
+    border-right: none;
 }
 .markdown-content td {
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--border-theme, #e2e8f0);
-    vertical-align: top;
-    color: var(--secondary-theme, inherit);
+    padding: 0.85rem 1.2rem;
+    border-bottom: 1px solid var(--border-theme);
+    border-right: 1px solid var(--border-theme);
+    vertical-align: middle;
+    color: var(--primary-theme);
+    text-align: left !important;
+}
+.markdown-content td:last-child {
+    border-right: none;
+}
+.markdown-content tr:last-child td {
+    border-bottom: none;
 }
 .markdown-content tbody tr:nth-child(even) {
-    background: rgba(128, 128, 128, 0.02);
+    background: rgba(128, 128, 128, 0.05);
+}
+.markdown-content tbody tr:nth-child(odd) {
+    background: transparent;
 }
 .markdown-content tbody tr:hover {
-    background: rgba(128, 128, 128, 0.04);
+    background: rgba(251, 191, 36, 0.08);
 }
 .markdown-content p {
-    margin-bottom: 1.2rem;
+    margin-bottom: 1.25rem;
+    text-align: left !important;
 }
 .markdown-content p:last-child {
     margin-bottom: 0;

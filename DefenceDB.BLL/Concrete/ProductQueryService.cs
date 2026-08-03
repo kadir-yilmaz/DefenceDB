@@ -208,6 +208,8 @@ public class ProductQueryService : IProductQueryService
         var product = await _context.DefenseProducts
             .AsNoTracking()
             .Include(p => p.Category)
+                .ThenInclude(c => c.ParentCategory)
+                    .ThenInclude(p => p.ParentCategory)
             .FirstOrDefaultAsync(p => p.Id == id);
 
         if (product is null)
