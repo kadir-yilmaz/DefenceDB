@@ -118,11 +118,11 @@
                                         </div>
                                         <div class="col-md-3">
                                             <label class="form-label text-muted fw-semibold mb-1" style="font-size: 0.75rem;">Veri Tipi</label>
-                                            <select name="Attributes[@i].Type" class="form-select form-select-sm border-0 bg-white text-dark" style="border: 1px solid #cbd5e1 !important; border-radius: 6px;">
-                                                <!option value="Text" @(attr.Type == AttributeType.Text ? "selected" : "")>Metin (String)</!option>
-                                                <!option value="Number" @(attr.Type == AttributeType.Number ? "selected" : "")>Sayı (Number)</!option>
-                                                <!option value="Dropdown" @(attr.Type == AttributeType.Dropdown ? "selected" : "")>Açılır Liste</!option>
-                                                <!option value="Boolean" @(attr.Type == AttributeType.Boolean ? "selected" : "")>Evet/Hayır</!option>
+                                            <select name="Attributes[@i].Type" class="form-select form-select-sm border-0 bg-white text-dark attr-type-select" style="border: 1px solid #cbd5e1 !important; border-radius: 6px;">
+                                                @if (attr.Type == AttributeType.Text) { <option value="Text" selected>Metin (String)</option> } else { <option value="Text">Metin (String)</option> }
+                                                @if (attr.Type == AttributeType.Number) { <option value="Number" selected>Sayı (Number)</option> } else { <option value="Number">Sayı (Number)</option> }
+                                                @if (attr.Type == AttributeType.Dropdown) { <option value="Dropdown" selected>Açılır Liste</option> } else { <option value="Dropdown">Açılır Liste</option> }
+                                                @if (attr.Type == AttributeType.Boolean) { <option value="Boolean" selected>Evet/Hayır</option> } else { <option value="Boolean">Evet/Hayır</option> }
                                             </select>
                                         </div>
                                         <div class="col-md-2">
@@ -130,6 +130,13 @@
                                                 <i class="bi bi-trash-fill"></i> Sil
                                             </button>
                                         </div>
+                                    </div>
+
+                                    <!-- Açılır Liste Seçenekleri Alanı -->
+                                    <div class="options-container mt-2 pt-2 border-top" style="display: @(attr.Type == AttributeType.Dropdown ? "block" : "none");">
+                                        <label class="form-label text-muted fw-semibold mb-1" style="font-size: 0.75rem;">Seçenekler (Virgül ile ayırarak yazın)</label>
+                                        <input type="text" name="Attributes[@i].OptionsJson" value="@attr.OptionsJson" class="form-control form-control-sm border-0 bg-white text-dark" style="border: 1px solid #cbd5e1 !important; border-radius: 6px;" placeholder="Örn: ALBM, SLBM, ICBM, Hypersonic">
+                                        <small class="text-muted d-block mt-1" style="font-size: 0.72rem;">Ürün ekleme/düzenleme formunda ve filtrelerde bu seçenekler listelenir.</small>
                                     </div>
                                 </div>
                             </div>
@@ -177,8 +184,6 @@
             });
         }
 
-        let attrIndex = @(Model.Attributes?.Count ?? 0);
-
         document.getElementById('addAttrBtn').addEventListener('click', function() {
             document.getElementById('emptyAttrMsg').style.display = 'none';
             const container = document.getElementById('attributesContainer');
@@ -199,7 +204,7 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label text-muted fw-semibold mb-1" style="font-size: 0.75rem;">Veri Tipi</label>
-                                <select name="Attributes[${currentIndex}].Type" class="form-select form-select-sm border-0 bg-white text-dark" style="border: 1px solid #cbd5e1 !important; border-radius: 6px;">
+                                <select name="Attributes[${currentIndex}].Type" class="form-select form-select-sm border-0 bg-white text-dark attr-type-select" style="border: 1px solid #cbd5e1 !important; border-radius: 6px;">
                                     <option value="Text">Metin (String)</option>
                                     <option value="Number">Sayı (Number)</option>
                                     <option value="Dropdown">Açılır Liste</option>
@@ -212,11 +217,28 @@
                                 </button>
                             </div>
                         </div>
+
+                        <!-- Açılır Liste Seçenekleri Alanı -->
+                        <div class="options-container mt-2 pt-2 border-top" style="display: none;">
+                            <label class="form-label text-muted fw-semibold mb-1" style="font-size: 0.75rem;">Seçenekler (Virgül ile ayırarak yazın)</label>
+                            <input type="text" name="Attributes[${currentIndex}].OptionsJson" class="form-control form-control-sm border-0 bg-white text-dark" style="border: 1px solid #cbd5e1 !important; border-radius: 6px;" placeholder="Örn: ALBM, SLBM, ICBM, Hypersonic">
+                            <small class="text-muted d-block mt-1" style="font-size: 0.72rem;">Ürün ekleme/düzenleme formunda ve filtrelerde bu seçenekler listelenir.</small>
+                        </div>
                     </div>
                 </div>
             `;
             container.insertAdjacentHTML('beforeend', html);
             reindexAttributes();
+        });
+
+        document.getElementById('attributesContainer').addEventListener('change', function(e) {
+            if (e.target && e.target.classList.contains('attr-type-select')) {
+                const row = e.target.closest('.attr-row');
+                const optionsDiv = row.querySelector('.options-container');
+                if (optionsDiv) {
+                    optionsDiv.style.display = e.target.value === 'Dropdown' ? 'block' : 'none';
+                }
+            }
         });
 
         document.getElementById('attributesContainer').addEventListener('click', function(e) {

@@ -296,7 +296,10 @@
                                              !string.IsNullOrEmpty(ViewBag.CurrentSearch) || 
                                              !string.IsNullOrEmpty(ViewBag.CurrentManufacturer) || 
                                              !string.IsNullOrEmpty(ViewBag.CurrentSortBy) ||
-                                             (filterAttrs != null && filterAttrs.Any(a => !string.IsNullOrEmpty(Context.Request.Query[a.Name])));
+                                             (filterAttrs != null && filterAttrs.Any(a => 
+                                                 !string.IsNullOrEmpty(Context.Request.Query[a.Name]) || 
+                                                 !string.IsNullOrEmpty(Context.Request.Query[a.Name + "_min"]) || 
+                                                 !string.IsNullOrEmpty(Context.Request.Query[a.Name + "_max"])));
                 }
                 <div class="top-filter-bar bg-theme-card border border-theme rounded-4 p-3 shadow-sm">
                     <form method="get" action="@Url.Action("Index", "Product")" id="topFilterForm" class="d-flex flex-wrap align-items-center gap-2">
@@ -368,46 +371,95 @@
                         {
                             foreach (var attr in filterAttrs)
                             {
-                                var currentAttrVal = Context.Request.Query[attr.Name].ToString();
-                                var hasVal = !string.IsNullOrEmpty(currentAttrVal);
+                                if (attr.Type == DefenceDB.EL.Models.AttributeType.Number)
+                                {
+                                    var minKey = attr.Name + "_min";
+                                    var maxKey = attr.Name + "_max";
+                                    var currentMinVal = Context.Request.Query[minKey].ToString();
+                                    var currentMaxVal = Context.Request.Query[maxKey].ToString();
+                                    var hasNumberVal = !string.IsNullOrEmpty(currentMinVal) || !string.IsNullOrEmpty(currentMaxVal);
 
-                                <div class="dropdown">
-                                    <button class="btn bg-theme border @(hasVal ? "border-warning text-warning fw-bold" : "border-theme text-primary-theme") dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.86rem;">
-                                        <i class="bi bi-sliders text-warning"></i>
-                                        <span>@(hasVal ? $"{attr.DisplayName}: {currentAttrVal}" : attr.DisplayName)</span>
-                                    </button>
-                                    <div class="dropdown-menu p-3 bg-theme-card border-theme shadow-lg" style="min-width: 220px; font-size: 0.86rem;">
-                                        <label class="form-label text-secondary-theme fw-bold mb-2">@attr.DisplayName</label>
-                                        
-                                        @if (attr.Type == DefenceDB.EL.Models.AttributeType.Boolean)
-                                        {
-                                            var baseUrl = Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy });
-                                            <div class="d-flex flex-column gap-1">
-                                                <a class="dropdown-item rounded-2 @(string.IsNullOrEmpty(currentAttrVal) ? "active bg-warning text-dark" : "text-primary-theme")" href="@baseUrl">Tümü</a>
-                                                <a class="dropdown-item rounded-2 @(currentAttrVal == "true" ? "active bg-warning text-dark" : "text-primary-theme")" href="@(baseUrl + $"&{attr.Name}=true")">Evet</a>
-                                                <a class="dropdown-item rounded-2 @(currentAttrVal == "false" ? "active bg-warning text-dark" : "text-primary-theme")" href="@(baseUrl + $"&{attr.Name}=false")">Hayır</a>
-                                            </div>
-                                        }
-                                        else if (attr.Type == DefenceDB.EL.Models.AttributeType.Dropdown && attr.Options != null && attr.Options.Any())
-                                        {
-                                            var baseUrl = Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy });
-                                            <div class="d-flex flex-column gap-1" style="max-height: 200px; overflow-y: auto;">
-                                                <a class="dropdown-item rounded-2 @(string.IsNullOrEmpty(currentAttrVal) ? "active bg-warning text-dark" : "text-primary-theme")" href="@baseUrl">Tümü</a>
-                                                @foreach (var opt in attr.Options)
+                                    <div class="dropdown">
+                                        <button class="btn bg-theme border @(hasNumberVal ? "border-warning text-warning fw-bold" : "border-theme text-primary-theme") dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.86rem;">
+                                            <i class="bi bi-hash text-warning"></i>
+                                            <span>
+                                                @if (hasNumberVal)
                                                 {
-                                                    <a class="dropdown-item rounded-2 @(currentAttrVal == opt ? "active bg-warning text-dark" : "text-primary-theme")" href="@(baseUrl + $"&{attr.Name}={System.Web.HttpUtility.UrlEncode(opt)}")">@opt</a>
+                                                    if (!string.IsNullOrEmpty(currentMinVal) && !string.IsNullOrEmpty(currentMaxVal))
+                                                    {
+                                                        @($"{attr.DisplayName}: {currentMinVal} - {currentMaxVal}")
+                                                    }
+                                                    else if (!string.IsNullOrEmpty(currentMinVal))
+                                                    {
+                                                        @($"{attr.DisplayName}: ≥ {currentMinVal}")
+                                                    }
+                                                    else
+                                                    {
+                                                        @($"{attr.DisplayName}: ≤ {currentMaxVal}")
+                                                    }
                                                 }
+                                                else
+                                                {
+                                                    @attr.DisplayName
+                                                }
+                                            </span>
+                                        </button>
+                                        <div class="dropdown-menu p-3 bg-theme-card border-theme shadow-lg" style="min-width: 250px; font-size: 0.86rem;">
+                                            <label class="form-label text-secondary-theme fw-bold mb-2">@attr.DisplayName (Min - Max)</label>
+                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                <input type="number" step="any" name="@minKey" class="form-control form-control-sm bg-theme text-primary-theme border-theme" placeholder="Min" value="@currentMinVal" />
+                                                <span class="text-secondary-theme font-mono fw-bold">-</span>
+                                                <input type="number" step="any" name="@maxKey" class="form-control form-control-sm bg-theme text-primary-theme border-theme" placeholder="Max" value="@currentMaxVal" />
                                             </div>
-                                        }
-                                        else
-                                        {
-                                            <div class="d-flex gap-2">
-                                                <input type="text" name="@attr.Name" class="form-control form-control-sm bg-theme text-primary-theme border-theme" placeholder="Aranacak..." value="@currentAttrVal" />
-                                                <button type="submit" class="btn btn-sm btn-warning">Ara</button>
+                                            <div class="d-flex justify-content-end">
+                                                <button type="submit" class="btn btn-sm btn-warning fw-bold px-3">Uygula</button>
                                             </div>
-                                        }
+                                        </div>
                                     </div>
-                                </div>
+                                }
+                                else
+                                {
+                                    var currentAttrVal = Context.Request.Query[attr.Name].ToString();
+                                    var hasVal = !string.IsNullOrEmpty(currentAttrVal);
+
+                                    <div class="dropdown">
+                                        <button class="btn bg-theme border @(hasVal ? "border-warning text-warning fw-bold" : "border-theme text-primary-theme") dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.86rem;">
+                                            <i class="bi bi-sliders text-warning"></i>
+                                            <span>@(hasVal ? $"{attr.DisplayName}: {currentAttrVal}" : attr.DisplayName)</span>
+                                        </button>
+                                        <div class="dropdown-menu p-3 bg-theme-card border-theme shadow-lg" style="min-width: 220px; font-size: 0.86rem;">
+                                            <label class="form-label text-secondary-theme fw-bold mb-2">@attr.DisplayName</label>
+                                            
+                                            @if (attr.Type == DefenceDB.EL.Models.AttributeType.Boolean)
+                                            {
+                                                var baseUrl = Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy });
+                                                <div class="d-flex flex-column gap-1">
+                                                    <a class="dropdown-item rounded-2 @(string.IsNullOrEmpty(currentAttrVal) ? "active bg-warning text-dark" : "text-primary-theme")" href="@baseUrl">Tümü</a>
+                                                    <a class="dropdown-item rounded-2 @(currentAttrVal == "true" ? "active bg-warning text-dark" : "text-primary-theme")" href="@(baseUrl + $"&{attr.Name}=true")">Evet</a>
+                                                    <a class="dropdown-item rounded-2 @(currentAttrVal == "false" ? "active bg-warning text-dark" : "text-primary-theme")" href="@(baseUrl + $"&{attr.Name}=false")">Hayır</a>
+                                                </div>
+                                            }
+                                            else if (attr.Type == DefenceDB.EL.Models.AttributeType.Dropdown && attr.Options != null && attr.Options.Any())
+                                            {
+                                                var baseUrl = Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy });
+                                                <div class="d-flex flex-column gap-1" style="max-height: 200px; overflow-y: auto;">
+                                                    <a class="dropdown-item rounded-2 @(string.IsNullOrEmpty(currentAttrVal) ? "active bg-warning text-dark" : "text-primary-theme")" href="@baseUrl">Tümü</a>
+                                                    @foreach (var opt in attr.Options)
+                                                    {
+                                                        <a class="dropdown-item rounded-2 @(currentAttrVal == opt ? "active bg-warning text-dark" : "text-primary-theme")" href="@(baseUrl + $"&{attr.Name}={System.Web.HttpUtility.UrlEncode(opt)}")">@opt</a>
+                                                    }
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="d-flex gap-2">
+                                                    <input type="text" name="@attr.Name" class="form-control form-control-sm bg-theme text-primary-theme border-theme" placeholder="Aranacak..." value="@currentAttrVal" />
+                                                    <button type="submit" class="btn btn-sm btn-warning">Ara</button>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
                             }
                         }
 
@@ -442,6 +494,41 @@
                                     <span>Durum: @ViewBag.CurrentStatus</span>
                                     <i class="bi bi-x-lg ms-1" style="font-size: 0.65rem;"></i>
                                 </a>
+                            }
+
+                            @if (filterAttrs != null)
+                            {
+                                foreach (var attr in filterAttrs)
+                                {
+                                    if (attr.Type == DefenceDB.EL.Models.AttributeType.Number)
+                                    {
+                                        var minVal = Context.Request.Query[attr.Name + "_min"].ToString();
+                                        var maxVal = Context.Request.Query[attr.Name + "_max"].ToString();
+                                        if (!string.IsNullOrEmpty(minVal) || !string.IsNullOrEmpty(maxVal))
+                                        {
+                                            var labelText = !string.IsNullOrEmpty(minVal) && !string.IsNullOrEmpty(maxVal) 
+                                                ? $"{attr.DisplayName}: {minVal} - {maxVal}" 
+                                                : (!string.IsNullOrEmpty(minVal) ? $"{attr.DisplayName}: ≥ {minVal}" : $"{attr.DisplayName}: ≤ {maxVal}");
+                                            
+                                            <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy })" class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-1 text-decoration-none d-inline-flex align-items-center gap-1 fs-8">
+                                                <span>@labelText</span>
+                                                <i class="bi bi-x-lg ms-1" style="font-size: 0.65rem;"></i>
+                                            </a>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        var val = Context.Request.Query[attr.Name].ToString();
+                                        if (!string.IsNullOrEmpty(val))
+                                        {
+                                            var displayVal = val switch { "true" => "Evet", "false" => "Hayır", _ => val };
+                                            <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy })" class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-1 text-decoration-none d-inline-flex align-items-center gap-1 fs-8">
+                                                <span>@attr.DisplayName: @displayVal</span>
+                                                <i class="bi bi-x-lg ms-1" style="font-size: 0.65rem;"></i>
+                                            </a>
+                                        }
+                                    }
+                                }
                             }
                         </div>
                     }

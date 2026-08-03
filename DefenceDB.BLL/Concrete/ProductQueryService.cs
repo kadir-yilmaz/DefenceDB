@@ -124,6 +124,18 @@ public class ProductQueryService : IProductQueryService
         // In-memory processing path
         var allProducts = await query.ToListAsync();
 
+        double? ExtractNumber(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return null;
+            var cleaned = input.Replace(",", "").Replace(" ", "");
+            var match = System.Text.RegularExpressions.Regex.Match(cleaned, @"\d+(\.\d+)?");
+            if (match.Success && double.TryParse(match.Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double num))
+            {
+                return num;
+            }
+            return null;
+        }
+
         if (hasDynamicFilters)
         {
             foreach (var filter in queryModel.DynamicFilters!)
@@ -134,13 +146,40 @@ public class ProductQueryService : IProductQueryService
                 var filterValues = filter.Value.Where(v => !string.IsNullOrWhiteSpace(v)).Select(v => v.Trim()).ToList();
                 if (!filterValues.Any()) continue;
 
-                allProducts = allProducts.Where(p => {
-                    if (!p.Specs.TryGetValue(key, out var specValue))
-                        return false;
-                    if (string.IsNullOrWhiteSpace(specValue))
-                        return false;
-                    return filterValues.Any(fv => specValue.Contains(fv, StringComparison.OrdinalIgnoreCase));
-                }).ToList();
+                if (key.EndsWith("_min", StringComparison.OrdinalIgnoreCase))
+                {
+                    var baseKey = key.Substring(0, key.Length - 4);
+                    if (double.TryParse(filterValues.FirstOrDefault()?.Replace(",", "."), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double minVal))
+                    {
+                        allProducts = allProducts.Where(p => {
+                            if (p.Specs == null || !p.Specs.TryGetValue(baseKey, out var specVal)) return false;
+                            var num = ExtractNumber(specVal);
+                            return num.HasValue && num.Value >= minVal;
+                        }).ToList();
+                    }
+                }
+                else if (key.EndsWith("_max", StringComparison.OrdinalIgnoreCase))
+                {
+                    var baseKey = key.Substring(0, key.Length - 4);
+                    if (double.TryParse(filterValues.FirstOrDefault()?.Replace(",", "."), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double maxVal))
+                    {
+                        allProducts = allProducts.Where(p => {
+                            if (p.Specs == null || !p.Specs.TryGetValue(baseKey, out var specVal)) return false;
+                            var num = ExtractNumber(specVal);
+                            return num.HasValue && num.Value <= maxVal;
+                        }).ToList();
+                    }
+                }
+                else
+                {
+                    allProducts = allProducts.Where(p => {
+                        if (p.Specs == null || !p.Specs.TryGetValue(key, out var specValue))
+                            return false;
+                        if (string.IsNullOrWhiteSpace(specValue))
+                            return false;
+                        return filterValues.Any(fv => specValue.Contains(fv, StringComparison.OrdinalIgnoreCase));
+                    }).ToList();
+                }
             }
         }
 

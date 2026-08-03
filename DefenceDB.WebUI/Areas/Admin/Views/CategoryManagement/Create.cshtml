@@ -156,7 +156,7 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label text-muted fw-semibold mb-1" style="font-size: 0.75rem;">Veri Tipi</label>
-                                <select name="Attributes[${currentIndex}].Type" class="form-select form-select-sm border-0 bg-white text-dark" style="border: 1px solid #cbd5e1 !important; border-radius: 6px;">
+                                <select name="Attributes[${currentIndex}].Type" class="form-select form-select-sm border-0 bg-white text-dark attr-type-select" style="border: 1px solid #cbd5e1 !important; border-radius: 6px;">
                                     <option value="Text">Metin (String)</option>
                                     <option value="Number">Sayı (Number)</option>
                                     <option value="Dropdown">Açılır Liste</option>
@@ -169,11 +169,28 @@
                                 </button>
                             </div>
                         </div>
+
+                        <!-- Açılır Liste Seçenekleri Alanı -->
+                        <div class="options-container mt-2 pt-2 border-top" style="display: none;">
+                            <label class="form-label text-muted fw-semibold mb-1" style="font-size: 0.75rem;">Seçenekler (Virgül ile ayırarak yazın)</label>
+                            <input type="text" name="Attributes[${currentIndex}].OptionsJson" class="form-control form-control-sm border-0 bg-white text-dark" style="border: 1px solid #cbd5e1 !important; border-radius: 6px;" placeholder="Örn: ALBM, SLBM, ICBM, Hypersonic">
+                            <small class="text-muted d-block mt-1" style="font-size: 0.72rem;">Ürün ekleme/düzenleme formunda ve filtrelerde bu seçenekler listelenir.</small>
+                        </div>
                     </div>
                 </div>
             `;
             container.insertAdjacentHTML('beforeend', html);
             reindexAttributes();
+        });
+
+        document.getElementById('attributesContainer').addEventListener('change', function(e) {
+            if (e.target && e.target.classList.contains('attr-type-select')) {
+                const row = e.target.closest('.attr-row');
+                const optionsDiv = row.querySelector('.options-container');
+                if (optionsDiv) {
+                    optionsDiv.style.display = e.target.value === 'Dropdown' ? 'block' : 'none';
+                }
+            }
         });
 
         document.getElementById('attributesContainer').addEventListener('click', function(e) {

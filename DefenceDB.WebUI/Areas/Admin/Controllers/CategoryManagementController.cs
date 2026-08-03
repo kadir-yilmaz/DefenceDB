@@ -95,11 +95,18 @@ public class CategoryManagementController : Controller
             List<string>? options = null;
             if (attr.Type == AttributeType.Dropdown && !string.IsNullOrWhiteSpace(attr.OptionsJson))
             {
-                try
+                var raw = attr.OptionsJson.Trim();
+                if (raw.StartsWith("["))
                 {
-                    options = System.Text.Json.JsonSerializer.Deserialize<List<string>>(attr.OptionsJson);
+                    try { options = System.Text.Json.JsonSerializer.Deserialize<List<string>>(raw); } catch { }
                 }
-                catch { }
+                if (options == null || !options.Any())
+                {
+                    options = raw.Split(new[] { ',', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                                 .Select(o => o.Trim())
+                                 .Where(o => !string.IsNullOrEmpty(o))
+                                 .ToList();
+                }
             }
 
             var newAttr = new CategoryAttribute
@@ -178,7 +185,7 @@ public class CategoryManagementController : Controller
                 Name = attr.Name,
                 DisplayName = attr.DisplayName,
                 Type = attr.Type,
-                OptionsJson = attr.Options != null ? System.Text.Json.JsonSerializer.Serialize(attr.Options) : ""
+                OptionsJson = attr.Options != null ? string.Join(", ", attr.Options) : ""
             });
         }
 
@@ -243,11 +250,18 @@ public class CategoryManagementController : Controller
             List<string>? options = null;
             if (attr.Type == AttributeType.Dropdown && !string.IsNullOrWhiteSpace(attr.OptionsJson))
             {
-                try
+                var raw = attr.OptionsJson.Trim();
+                if (raw.StartsWith("["))
                 {
-                    options = System.Text.Json.JsonSerializer.Deserialize<List<string>>(attr.OptionsJson);
+                    try { options = System.Text.Json.JsonSerializer.Deserialize<List<string>>(raw); } catch { }
                 }
-                catch { }
+                if (options == null || !options.Any())
+                {
+                    options = raw.Split(new[] { ',', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                                 .Select(o => o.Trim())
+                                 .Where(o => !string.IsNullOrEmpty(o))
+                                 .ToList();
+                }
             }
 
             var catAttr = new CategoryAttribute
