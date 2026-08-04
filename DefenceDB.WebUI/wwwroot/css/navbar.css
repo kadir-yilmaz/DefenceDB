@@ -144,18 +144,28 @@
 
 
 
-/* Level 2 Bar */
+/* Level 2 Bar (with 0.3s closing delay) */
 .categories-level2-bar {
-    animation: fadeInSlideDown 0.2s ease forwards;
-}
-
-.cat-item-level1:hover .categories-level2-bar {
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: opacity 0.2s ease 0.3s, transform 0.2s ease 0.3s, visibility 0s linear 0.5s;
     display: block !important;
 }
 
+.cat-item-level1:hover > .categories-level2-bar {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.2s ease 0s, transform 0.2s ease 0s, visibility 0s linear 0s;
+}
+
 @media (max-width: 991.98px) {
-    .cat-item-level1.mobile-active .categories-level2-bar {
-        display: block !important;
+    .cat-item-level1.mobile-active > .categories-level2-bar {
+        visibility: visible;
+        opacity: 1;
+        transform: translateY(0);
+        transition: opacity 0.2s ease 0s, transform 0.2s ease 0s, visibility 0s linear 0s;
     }
     .mobile-active-text {
         color: #ffc107 !important;
@@ -200,20 +210,6 @@
     color: #ffc107 !important; /* Yellow on hover */
 }
 
-/* Level 3 Bar */
-.categories-level3-bar {
-    animation: fadeInSlideDown 0.2s ease forwards;
-}
-
-.cat-item-level2:hover .categories-level3-bar {
-    display: block !important;
-}
-
-@media (max-width: 991.98px) {
-    .cat-item-level2.mobile-active .categories-level3-bar {
-        display: block !important;
-    }
-}
 
 .cat-link-level3 {
     color: #cbd5e1;
@@ -260,16 +256,14 @@
         white-space: nowrap;
     }
     
-    .categories-level2-bar ul,
-    .categories-level3-bar ul {
+    .categories-level2-bar ul {
         flex-wrap: nowrap !important;
         overflow-x: auto;
         overflow-y: hidden;
         justify-content: flex-start !important;
         scrollbar-width: none;
     }
-    .categories-level2-bar ul::-webkit-scrollbar,
-    .categories-level3-bar ul::-webkit-scrollbar {
+    .categories-level2-bar ul::-webkit-scrollbar {
         display: none;
     }
     .cat-link-level2 {
@@ -277,6 +271,91 @@
     }
     
     /* Make pointer invisible on mobile scrolling if necessary, or keep it */
+}
+
+/* ==========================================================================
+   LEVEL 3 CATEGORY CONTAINER (Hybrid Responsive Layout)
+   ========================================================================== */
+
+/* Desktop: Vertical Dropdown */
+@media (min-width: 992px) {
+    .cat-item-level2 {
+        position: relative !important;
+    }
+    
+    .categories-level3-container {
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translate(-50%, -5px) !important;
+        background-color: #1e293b;
+        min-width: 180px;
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        z-index: 1045;
+        
+        /* 0.3s closing delay */
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 0.2s ease 0.3s, transform 0.2s ease 0.3s, visibility 0s linear 0.5s;
+    }
+    
+    .cat-item-level2:hover > .categories-level3-container {
+        visibility: visible;
+        opacity: 1;
+        transform: translate(-50%, 0) !important;
+        transition: opacity 0.2s ease 0s, transform 0.2s ease 0s, visibility 0s linear 0s;
+    }
+
+    .categories-level3-container ul {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+}
+
+/* Mobile: Horizontal Full-Width Scrolling Bar */
+@media (max-width: 991.98px) {
+    .cat-item-level2 {
+        position: static !important;
+    }
+
+    .categories-level3-container {
+        position: absolute;
+        left: 0;
+        right: 0;
+        width: 100%;
+        top: 100%;
+        background-color: #0b0f19;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        z-index: 1045;
+        
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 0.2s ease 0s, visibility 0s linear 0s;
+    }
+    
+    .cat-item-level2.mobile-active > .categories-level3-container {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    .categories-level3-container ul {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap !important;
+        overflow-x: auto;
+        overflow-y: hidden;
+        justify-content: flex-start !important;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        padding: 0;
+        gap: 1rem;
+    }
+    .categories-level3-container ul::-webkit-scrollbar {
+        display: none;
+    }
 }
 
 /* ==========================================================================
