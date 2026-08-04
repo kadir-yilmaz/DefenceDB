@@ -160,6 +160,11 @@
     transition: opacity 0.2s ease 0s, transform 0.2s ease 0s, visibility 0s linear 0s;
 }
 
+/* Remove delay when moving between items (only apply delay when leaving the entire navbar area) */
+.categories-level1:hover .categories-level2-bar {
+    transition-delay: 0s !important;
+}
+
 @media (max-width: 991.98px) {
     .cat-item-level1.mobile-active > .categories-level2-bar {
         visibility: visible;
@@ -306,6 +311,11 @@
         opacity: 1;
         transform: translate(-50%, 0) !important;
         transition: opacity 0.2s ease 0s, transform 0.2s ease 0s, visibility 0s linear 0s;
+    }
+
+    /* Remove delay when moving between items (only apply delay when leaving the entire navbar area) */
+    .categories-level2-bar ul:hover .categories-level3-container {
+        transition-delay: 0s !important;
     }
 
     .categories-level3-container ul {
