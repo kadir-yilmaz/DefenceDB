@@ -200,16 +200,18 @@
     color: #ffc107 !important; /* Yellow on hover */
 }
 
-/* Level 3 Dropdown */
-.cat-item-level2:hover .categories-level3-dropdown {
+/* Level 3 Bar */
+.categories-level3-bar {
+    animation: fadeInSlideDown 0.2s ease forwards;
+}
+
+.cat-item-level2:hover .categories-level3-bar {
     display: block !important;
-    animation: fadeIn 0.15s ease forwards;
 }
 
 @media (max-width: 991.98px) {
-    .cat-item-level2.mobile-active .categories-level3-dropdown {
+    .cat-item-level2.mobile-active .categories-level3-bar {
         display: block !important;
-        animation: fadeIn 0.15s ease forwards;
     }
 }
 
@@ -258,14 +260,16 @@
         white-space: nowrap;
     }
     
-    .categories-level2-bar ul {
+    .categories-level2-bar ul,
+    .categories-level3-bar ul {
         flex-wrap: nowrap !important;
         overflow-x: auto;
         overflow-y: hidden;
         justify-content: flex-start !important;
         scrollbar-width: none;
     }
-    .categories-level2-bar ul::-webkit-scrollbar {
+    .categories-level2-bar ul::-webkit-scrollbar,
+    .categories-level3-bar ul::-webkit-scrollbar {
         display: none;
     }
     .cat-link-level2 {

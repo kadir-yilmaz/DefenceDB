@@ -77,24 +77,26 @@
                                     @foreach (var child in rootCat.SubCategories.OrderBy(c => c.Name))
                                     {
                                         var isChildActive = IsCategoryActive(child);
-                                        <li class="cat-item-level2 position-relative @(isChildActive ? "mobile-active" : "")">
+                                        <li class="cat-item-level2 position-static @(isChildActive ? "mobile-active" : "")">
                                             <a href="@Url.Action("Index", "Product", new { categorySlug = child.Slug })" class="cat-link-level2 text-decoration-none d-block py-1 @(isChildActive ? "mobile-active-text fw-bold" : "")">
                                                 @child.Name
                                             </a>
 
                                             @if (child.SubCategories != null && child.SubCategories.Any())
                                             {
-                                                <ul class="categories-level3-dropdown position-absolute list-unstyled p-2 rounded shadow-lg" style="background-color: #1e293b; top: 100%; left: 50%; transform: translateX(-50%); min-width: 160px; display: none; z-index: 1045; border: 1px solid rgba(255,255,255,0.1);">
-                                                    @foreach (var subSub in child.SubCategories.OrderBy(c => c.Name))
-                                                    {
-                                                        var isSubSubActive = IsCategoryActive(subSub);
-                                                        <li>
-                                                            <a href="@Url.Action("Index", "Product", new { categorySlug = subSub.Slug })" class="cat-link-level3 text-decoration-none d-block py-2 px-3 text-nowrap rounded @(isSubSubActive ? "mobile-active-text fw-bold" : "")">
-                                                                @subSub.Name
-                                                            </a>
-                                                        </li>
-                                                    }
-                                                </ul>
+                                                <div class="categories-level3-bar position-absolute start-0 end-0 w-100 shadow-lg" style="background-color: #1e293b; top: 100%; display: none; z-index: 1045; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                                    <ul class="d-flex align-items-center justify-content-center list-unstyled mb-0 m-0 p-2 flex-wrap gap-4">
+                                                        @foreach (var subSub in child.SubCategories.OrderBy(c => c.Name))
+                                                        {
+                                                            var isSubSubActive = IsCategoryActive(subSub);
+                                                            <li>
+                                                                <a href="@Url.Action("Index", "Product", new { categorySlug = subSub.Slug })" class="cat-link-level3 text-decoration-none d-block py-1 @(isSubSubActive ? "mobile-active-text fw-bold" : "")">
+                                                                    @subSub.Name
+                                                                </a>
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                </div>
                                             }
                                         </li>
                                     }
