@@ -81,8 +81,8 @@
     <section class="container mb-5">
         <div class="row mb-4 align-items-center">
             <div class="col-md-12">
-                <h2 class="text-primary-theme"><i class="bi bi-star-fill text-warning me-2"></i> Öne Çıkanlar</h2>
-                <p class="text-secondary-theme mb-0">Sizin için seçtiklerimiz</p>
+                <h2 class="text-primary-theme"><i class="bi bi-star-fill text-warning me-2"></i> Sizin İçin Seçtiklerimiz</h2>
+                <p class="text-secondary-theme mb-0">Geleceğin Türk Hava Kuvvetleri</p>
             </div>
         </div>
 
@@ -95,7 +95,6 @@
                 var categoryName = prod.Category?.Name;
                 <div class="col-md-6 col-lg-3 reveal-card" style="--delay: @(showIndex * 45)ms;">
                     <div class="card-premium h-100 d-flex flex-column" style="cursor: pointer; border-color: rgba(251, 191, 36, 0.25) !important; box-shadow: 0 4px 25px rgba(251, 191, 36, 0.05);" onclick="handleProductClick(event, '/Product/Detail/@(prod.Id)-@(prod.Slug)')">
-                        <span class="showcase-star" aria-label="Öne çıkan"><i class="bi bi-star-fill text-warning" style="font-size: 0.9rem;"></i></span>
                         @if (!string.IsNullOrWhiteSpace(categoryName))
                         {
                             <span class="category-badge bg-warning text-dark border-0 fw-bold">@categoryName</span>

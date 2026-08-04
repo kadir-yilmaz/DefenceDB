@@ -177,57 +177,7 @@
             
             <!-- Top Header & Comprehensive Filter Control Panel -->
                 
-                <!-- Kategori Navigasyon Çubuğu (Yatay Kaydırılabilir Chips - SADECE MOBİL İÇİN) -->
-                <div class="d-lg-none mb-4">
-                    <!-- Üst Satır: Ana Kategoriler -->
-                    <div class="category-chips-wrapper overflow-auto pb-2" style="white-space: nowrap; -webkit-overflow-scrolling: touch;">
-                        <div class="d-inline-flex gap-2 align-items-center">
-                            <a href="@Url.Action("Index", "Product", new { country = ViewBag.CurrentCountry })" 
-                               class="btn rounded-pill px-4 py-2 shadow-sm transition-all d-inline-flex align-items-center gap-1 
-                                      @(currentCategory == null ? "bg-warning text-dark fw-bold border-warning" : "bg-theme-card border border-theme text-secondary-theme hover-bg-theme")"
-                               style="font-size: 0.95rem;">
-                                Tümü
-                            </a>
-                            @foreach (var rootCat in categories)
-                            {
-                                var isRootActive = (activeRootCategory?.Id == rootCat.Id);
-                                var rootCount = GetCategoryRollupCount(rootCat);
-                                <a href="@Url.Action("Index", "Product", new { categorySlug = rootCat.Slug, country = ViewBag.CurrentCountry })" 
-                                   class="btn rounded-pill px-4 py-2 shadow-sm transition-all d-inline-flex align-items-center gap-1 
-                                          @(isRootActive ? "bg-warning text-dark fw-bold border-warning" : "bg-theme-card border border-theme text-secondary-theme hover-bg-theme")"
-                                   style="font-size: 0.95rem;">
-                                    @rootCat.Name <span class="opacity-75 ms-1" style="font-size: 0.8rem;">(@rootCount)</span>
-                                </a>
-                            }
-                        </div>
-                    </div>
 
-                    <!-- Alt Satır: Seçili Ana Kategorinin Alt Kategorileri -->
-                    @if (activeSubCategories != null && activeSubCategories.Any())
-                    {
-                        <div class="category-chips-wrapper overflow-auto mt-2 pb-2" style="white-space: nowrap; -webkit-overflow-scrolling: touch;">
-                            <div class="d-inline-flex gap-2 align-items-center">
-                                <a href="@Url.Action("Index", "Product", new { categorySlug = activeRootCategory.Slug, country = ViewBag.CurrentCountry })" 
-                                   class="btn rounded-pill px-4 py-1.5 shadow-sm transition-all d-inline-flex align-items-center gap-1 
-                                          @(currentCategory?.Id == activeRootCategory.Id ? "bg-primary text-white fw-bold border-primary" : "bg-theme-card border border-theme text-secondary-theme hover-bg-theme")"
-                                   style="font-size: 0.9rem;">
-                                    Tümü
-                                </a>
-                                @foreach (var subCat in activeSubCategories)
-                                {
-                                    var isSubActive = (currentCategory?.Id == subCat.Id);
-                                    var subCount = GetCategoryRollupCount(subCat);
-                                    <a href="@Url.Action("Index", "Product", new { categorySlug = subCat.Slug, country = ViewBag.CurrentCountry })" 
-                                       class="btn rounded-pill px-4 py-1.5 shadow-sm transition-all d-inline-flex align-items-center gap-1 
-                                              @(isSubActive ? "bg-primary text-white fw-bold border-primary" : "bg-theme-card border border-theme text-secondary-theme hover-bg-theme")"
-                                       style="font-size: 0.9rem;">
-                                        @subCat.Name <span class="opacity-75 ms-1" style="font-size: 0.8rem;">(@subCount)</span>
-                                    </a>
-                                }
-                            </div>
-                        </div>
-                    }
-                </div>
 
                 <!-- Row 1: Category Title, Category Drawer Button & Sorting Dropdown -->
                 <div class="d-flex flex-row flex-wrap align-items-center justify-content-between gap-2 mb-3">

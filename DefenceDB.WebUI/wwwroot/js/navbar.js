@@ -1,125 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-    // === Mega Menu ===
-    const triggerBtn = document.getElementById('categoriesTriggerBtn');
-    const megaMenu = document.getElementById('megaMenu');
-    const sidebar = document.getElementById('megaMenuSidebar');
-    const content = document.getElementById('megaMenuContent');
-
-    // Eğer elementlerden biri sayfada yoksa kodu durdur (hata fırlatmasını engeller)
-    if (!triggerBtn || !megaMenu || !sidebar || !content) {
-        console.warn("DefenceDB Mega Menu hazır değil veya HTML eksik.");
-        return;
-    }
-
-    const sidebarItems = sidebar.querySelectorAll('.mega-menu-sidebar-item');
-    const contentPanels = content.querySelectorAll('.mega-menu-content-panel');
-    let isOpen = false;
-    let activeCategoryId = null;
-    let hoverTimeout;
-
-    function showPanel(catId) {
-        contentPanels.forEach(p => {
-            p.classList.toggle('active', p.dataset.categoryId == catId);
-        });
-        sidebarItems.forEach(item => {
-            item.classList.toggle('active', item.dataset.categoryId == catId);
-        });
-    }
-
-    function openMenu() {
-        megaMenu.classList.add('open');
-        triggerBtn.classList.add('active');
-        isOpen = true;
-
-        if (!activeCategoryId && sidebarItems.length > 0) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const currentSlug = urlParams.get('categorySlug');
-            let matchedId = null;
-
-            if (currentSlug) {
-                sidebarItems.forEach(item => {
-                    const href = item.getAttribute('href');
-                    if (href && href.includes(currentSlug)) {
-                        matchedId = item.dataset.categoryId;
-                    }
-                });
-            }
-            activeCategoryId = matchedId ? matchedId : sidebarItems[0].dataset.categoryId;
-            showPanel(activeCategoryId);
-        }
-    }
-
-    function closeMenu() {
-        megaMenu.classList.remove('open');
-        triggerBtn.classList.remove('active');
-        isOpen = false;
-    }
-
-    // --- PC İÇİN HOVER MANTIĞI ---
-    const handleMouseEnter = () => {
-        if (window.innerWidth >= 992) {
-            clearTimeout(hoverTimeout);
-            if (!isOpen) openMenu();
-        }
-    };
-
-    const handleMouseLeave = () => {
-        if (window.innerWidth >= 992) {
-            hoverTimeout = setTimeout(() => {
-                closeMenu();
-            }, 100);
-        }
-    };
-
-    triggerBtn.addEventListener('mouseenter', handleMouseEnter);
-    triggerBtn.addEventListener('mouseleave', handleMouseLeave);
-    megaMenu.addEventListener('mouseenter', handleMouseEnter);
-    megaMenu.addEventListener('mouseleave', handleMouseLeave);
-
-    // --- MOBİL İÇİN TIKLAMA MANTIĞI ---
-    triggerBtn.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (isOpen) closeMenu();
-        else openMenu();
-    });
-
-    sidebarItems.forEach(item => {
-        item.addEventListener('mouseenter', function () {
-            if (window.innerWidth >= 992) {
-                activeCategoryId = this.dataset.categoryId;
-                showPanel(activeCategoryId);
-            }
-        });
-
-        item.addEventListener('click', function (e) {
-            if (window.innerWidth < 992) {
-                const clickedId = this.dataset.categoryId;
-                if (activeCategoryId !== clickedId) {
-                    e.preventDefault();
-                    activeCategoryId = clickedId;
-                    showPanel(activeCategoryId);
-                } else {
-                    closeMenu();
-                }
-            } else {
-                closeMenu();
-            }
-        });
-    });
-
-    document.addEventListener('click', function (e) {
-        if (isOpen && !megaMenu.contains(e.target) && !triggerBtn.contains(e.target)) {
-            closeMenu();
-        }
-    });
-
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && isOpen) {
-            closeMenu();
-        }
-    });
-
     // === Mobile / Desktop Search Bar Expanding & Autocomplete Focus ===
     const searchInput = document.getElementById('searchInput');
     const searchContainer = document.getElementById('searchContainer');
@@ -130,8 +9,10 @@ document.addEventListener("DOMContentLoaded", function () {
     if (searchInput && searchContainer) {
         // Desktop focus scaling
         searchInput.addEventListener('focus', function () {
-            if (window.innerWidth >= 768) {
-                this.style.width = '450px';
+            if (window.innerWidth >= 992) {
+                searchInput.style.width = '450px';
+            } else if (window.innerWidth >= 768) {
+                searchInput.style.width = '350px';
             }
         });
 
@@ -175,11 +56,71 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Collapse search on mobile if clicked outside
         document.addEventListener('click', function (e) {
-            if (!searchContainer.contains(e.target)) {
-                if (window.innerWidth < 768) {
+            if (!searchContainer.contains(e.target) && !e.target.closest('#mobileSearchTrigger')) {
+                if (window.innerWidth < 992) {
                     searchContainer.classList.remove('expanded');
                     searchInput.style.width = '';
                 }
+            }
+        });
+    }
+
+    // === Mobile Categories Touch/Double-Tap Logic ===
+    const isMobile = () => window.innerWidth <= 991.98;
+
+    document.querySelectorAll('.cat-item-level1, .cat-item-level2').forEach(item => {
+        const link = item.querySelector(':scope > a');
+        const hasSubMenu = item.querySelector('.categories-level2-bar, .categories-level3-dropdown');
+
+        if (link && hasSubMenu) {
+            link.addEventListener('click', function (e) {
+                if (isMobile()) {
+                    if (!item.classList.contains('mobile-active')) {
+                        // Prevent navigation, expand instead
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        // Close siblings at the same level
+                        const siblings = item.parentElement.querySelectorAll(':scope > .mobile-active');
+                        siblings.forEach(s => s.classList.remove('mobile-active'));
+
+                        // Open this item
+                        item.classList.add('mobile-active');
+                    }
+                    // If it already has 'mobile-active', we let the click pass through (navigate)
+                }
+            });
+        }
+    });
+
+    // Close menus if clicking outside on mobile
+    document.addEventListener('click', function(e) {
+        if (isMobile()) {
+            if (!e.target.closest('.categories-nav-wrapper')) {
+                document.querySelectorAll('.mobile-active').forEach(activeItem => {
+                    activeItem.classList.remove('mobile-active');
+                });
+            }
+        }
+    });
+
+    // Auto-scroll to center the active category on mobile on page load
+    if (isMobile()) {
+        const scrollContainers = document.querySelectorAll('.categories-level1, .categories-level2-bar ul');
+        scrollContainers.forEach(container => {
+            const activeItem = container.querySelector('.mobile-active-text')?.closest('li');
+            if (activeItem) {
+                // Wait a tiny bit for layout to settle
+                setTimeout(() => {
+                    const containerWidth = container.offsetWidth;
+                    const itemOffset = activeItem.offsetLeft;
+                    const itemWidth = activeItem.offsetWidth;
+                    // Calculate scroll position to center the item
+                    container.scrollTo({
+                        left: itemOffset - (containerWidth / 2) + (itemWidth / 2),
+                        behavior: 'smooth'
+                    });
+                }, 100);
             }
         });
     }

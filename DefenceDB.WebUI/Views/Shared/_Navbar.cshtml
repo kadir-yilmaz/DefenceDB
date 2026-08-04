@@ -1,165 +1,111 @@
 @inject DefenceDB.BLL.Abstract.ICategoryQueryService CategoryService
 @{
     var rootCategories = await CategoryService.GetCategoriesWithChildrenAsync();
-    var productCounts = await CategoryService.GetCategoryProductCountsAsync();
+    var activeSlug = ViewContext.RouteData.Values["categorySlug"]?.ToString() ?? Context.Request.Query["categorySlug"].ToString();
 
-    // Özyinelemeli (Recursive) Kategori Ürün Sayısı Toplayıcı (Rollup Count)
-    int GetNavRollupCount(DefenceDB.EL.Models.Category cat)
-    {
-        int direct = productCounts.GetValueOrDefault(cat.Id, 0);
-        int childrenSum = (cat.SubCategories != null && cat.SubCategories.Any()) 
-            ? cat.SubCategories.Sum(sc => GetNavRollupCount(sc)) 
-            : 0;
-        return direct + childrenSum;
+    bool IsCategoryActive(DefenceDB.EL.Models.Category cat) {
+        if (cat == null) return false;
+        if (string.Equals(cat.Slug, activeSlug, StringComparison.OrdinalIgnoreCase)) return true;
+        if (cat.SubCategories != null) {
+            foreach(var sc in cat.SubCategories) {
+                if (IsCategoryActive(sc)) return true;
+            }
+        }
+        return false;
     }
 }
 
 <link rel="stylesheet" href="~/css/navbar.css" asp-append-version="true" />
 
-<div class="udemy-navbar-container @(ViewData["IsHome"] as bool? == true ? "navbar-transparent-home" : "")">
-
-    <nav class="navbar navbar-expand-lg navbar-dark border-bottom border-slate-850 py-2" style="background-color: var(--bg-navbar); transition: background-color 0.3s ease; position: relative;">
-        <div class="container-fluid px-4 align-items-center">
-
+<div class="header-wrapper @(ViewData["IsHome"] as bool? == true ? "navbar-transparent-home" : "")">
+    <!-- Top Row: Logo, Search, Links -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-top-row py-2" style="background-color: var(--bg-navbar); border-bottom: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 1050;">
+        <div class="container-fluid px-4 d-flex align-items-center justify-content-between">
             <a class="navbar-brand d-flex align-items-center gap-2 me-3" asp-area="" asp-controller="Home" asp-action="Index">
                 <i class="bi bi-shield-fill text-warning fs-3"></i>
                 <span class="brand-text d-none d-sm-block">DEFENCE<strong class="text-warning">DB</strong></span>
             </a>
 
-            <div class="me-auto" style="position: static;">
-                <button class="categories-trigger-btn" id="categoriesTriggerBtn" aria-label="Tüm Kategoriler">
-                    <i class="bi bi-grid-3x3-gap-fill"></i>
-                    <span class="d-none d-md-inline">Kategoriler</span>
-                </button>
-
-                <div class="mega-menu" id="megaMenu">
-                    <div class="mega-menu-inner">
-                        <div class="mega-menu-sidebar" id="megaMenuSidebar">
-                            @foreach (var rootCat in rootCategories.OrderBy(c => c.Name))
-                            {
-                                <a href="@Url.Action("Index", "Product", new { categorySlug = rootCat.Slug })" class="mega-menu-sidebar-item" data-category-id="@rootCat.Id">
-                                    @if (!string.IsNullOrEmpty(rootCat.IconClass))
-                                    {
-                                        <i class="@rootCat.IconClass"></i>
-                                    }
-                                    else
-                                    {
-                                        <i class="bi bi-folder2"></i>
-                                    }
-                                    <span>@rootCat.Name</span>
-                                    <i class="bi bi-chevron-right ms-auto"></i>
-                                </a>
-                            }
-                        </div>
-                        <div class="mega-menu-content" id="megaMenuContent">
-                            @foreach (var rootCat in rootCategories.OrderBy(c => c.Name))
-                            {
-                                if (rootCat.SubCategories != null && rootCat.SubCategories.Any())
-                                {
-                                    <div class="mega-menu-content-panel" data-category-id="@rootCat.Id">
-                                        <div class="mega-menu-grid">
-                                            @foreach (var child in rootCat.SubCategories.OrderBy(c => c.Name))
-                                            {
-                                                var childCount = GetNavRollupCount(child);
-                                                <div class="mega-menu-column">
-                                                    <!-- Level 1 Category Header -->
-                                                    <a href="@Url.Action("Index", "Product", new { categorySlug = child.Slug })" class="mega-menu-grid-item mega-menu-header-item">
-                                                        @if (!string.IsNullOrEmpty(child.IconClass))
-                                                        {
-                                                            <i class="@child.IconClass"></i>
-                                                        }
-                                                        else
-                                                        {
-                                                            <i class="bi bi-tag-fill text-warning"></i>
-                                                        }
-                                                        <span class="fw-bold">@child.Name</span>
-                                                        <span class="mega-menu-count">(@childCount)</span>
-                                                    </a>
-
-                                                    <!-- Level 2 Sub-subcategories -->
-                                                    @if (child.SubCategories != null && child.SubCategories.Any())
-                                                    {
-                                                        <div class="mega-menu-sublist ps-2 border-start border-secondary border-opacity-25 ms-1 my-2">
-                                                            @foreach (var subSub in child.SubCategories.OrderBy(c => c.Name))
-                                                            {
-                                                                var subSubCount = GetNavRollupCount(subSub);
-                                                                <a href="@Url.Action("Index", "Product", new { categorySlug = subSub.Slug })" class="mega-menu-subitem d-flex justify-content-between align-items-center py-1 text-decoration-none" style="font-size: 0.85rem; color: #94a3b8; transition: all 0.2s;">
-                                                                    <span>
-                                                                        @if (!string.IsNullOrEmpty(subSub.IconClass))
-                                                                        {
-                                                                            <i class="@subSub.IconClass me-1"></i>
-                                                                        }
-                                                                        @subSub.Name
-                                                                    </span>
-                                                                    <span class="mega-menu-count opacity-75" style="font-size: 0.75rem;">(@subSubCount)</span>
-                                                                </a>
-                                                            }
-                                                        </div>
-                                                    }
-                                                    else
-                                                    {
-                                                        <div class="mega-menu-sublist ps-1 my-1">
-                                                            <a href="@Url.Action("Index", "Product", new { categorySlug = child.Slug })" class="mega-menu-subitem d-flex align-items-center text-decoration-none" style="font-size: 0.82rem; color: #94a3b8; opacity: 0.85;">
-                                                                <i class="bi bi-arrow-right-short text-warning me-1" style="font-size: 1rem;"></i>
-                                                                <span>Tüm Ürünleri Gör</span>
-                                                            </a>
-                                                        </div>
-                                                    }
-                                                </div>
-                                            }
-                                        </div>
-                                    </div>
-                                }
-                                else
-                                {
-                                    <div class="mega-menu-content-panel" data-category-id="@rootCat.Id">
-                                        <div class="mega-menu-empty">
-                                            <i class="bi bi-inbox fs-1 opacity-50"></i>
-                                            <p>Alt kategori yok</p>
-                                            <a href="@Url.Action("Index", "Product", new { categorySlug = rootCat.Slug })" class="btn btn-sm btn-outline-warning mt-2">Tüm ürünleri gör</a>
-                                        </div>
-                                    </div>
-                                }
-                            }
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <div class="me-auto"></div>
 
             <div class="d-flex align-items-center gap-3 ms-auto">
-                <div id="searchContainer">
-                    <!-- Mobile trigger button (aligned with grid/logo in the main row) -->
+                <div id="searchContainer" class="position-relative">
+                    <!-- Mobile search trigger button -->
                     <button type="button" id="mobileSearchTrigger" class="btn btn-link p-0 border-0 d-md-none" style="font-size: 1.25rem; line-height: 1; color: #ffc107 !important;">
                         <i class="bi bi-search"></i>
                     </button>
 
-                    <form asp-controller="Product" asp-action="Index" method="get" class="position-relative d-flex align-items-center">
-                        <!-- Desktop search icon -->
-                        <i class="bi bi-search d-none d-md-block position-absolute text-secondary-theme" style="left: 14px; top: 50%; transform: translateY(-50%); font-size: 0.9rem; z-index: 5;"></i>
-                        <!-- Mobile sub-row search icon (styled with same yellow warning color) -->
-                        <i class="bi bi-search d-md-none position-absolute" style="left: 28px; top: 50%; transform: translateY(-50%); font-size: 0.9rem; z-index: 5; color: #ffc107 !important;"></i>
-                        
+                    <form asp-controller="Product" asp-action="Index" method="get" class="position-relative d-flex align-items-center" id="searchForm">
+                        <i class="bi bi-search position-absolute text-secondary-theme d-none d-md-block" style="left: 14px; top: 50%; transform: translateY(-50%); font-size: 0.9rem; z-index: 5;"></i>
                         <input type="text" id="searchInput" name="search" class="form-control rounded-pill bg-theme text-primary-theme border-theme"
-                               placeholder="Platform ara..." autocomplete="off" />
-                        <button type="button" id="mobileSearchClose" class="btn btn-link text-secondary-theme p-0 border-0 d-none" style="position: absolute; right: 28px; top: 50%; transform: translateY(-50%); z-index: 5; font-size: 1.2rem; line-height: 1;">
+                               placeholder="Platform ara..." autocomplete="off" style="width: 240px; transition: width 0.3s ease;" />
+                        
+                        <button type="button" id="mobileSearchClose" class="btn btn-link text-secondary-theme p-0 border-0 d-none" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); z-index: 5; font-size: 1.2rem; line-height: 1;">
                             <i class="bi bi-x-lg"></i>
                         </button>
                     </form>
-
-                    <div id="searchSuggestions" class="position-absolute w-100 bg-theme-card border border-theme rounded-3 shadow-lg d-none mt-2" style="z-index: 1050; max-height: 400px; overflow-y: auto;">
+                    <div id="searchSuggestions" class="position-absolute w-100 bg-theme-card border border-theme rounded-3 shadow-lg d-none mt-2" style="z-index: 1060; max-height: 400px; overflow-y: auto; right: 0;">
                         <div class="list-group list-group-flush" id="searchSuggestionsList">
                         </div>
                     </div>
                 </div>
 
-                <a asp-controller="Articles" asp-action="Index" class="nav-link text-warning d-flex align-items-center gap-1" style="font-size: 0.95rem; font-weight: 600; white-space: nowrap;">
+                <a asp-controller="Articles" asp-action="Index" class="nav-link text-warning d-flex align-items-center gap-1" style="font-size: 0.95rem; font-weight: 600;">
                     <i class="bi bi-journal-text" style="font-size: 1.25rem;"></i>
                     <span class="d-none d-md-inline">Makaleler</span>
                 </a>
             </div>
         </div>
     </nav>
+
+    <!-- Bottom Row: Categories Bar -->
+    <nav class="categories-nav-wrapper position-relative" style="background-color: #0b0f19; z-index: 1040;">
+        <div class="container-fluid px-4">
+            <ul class="categories-level1 d-flex align-items-center justify-content-center list-unstyled mb-0 m-0 p-0 flex-wrap">
+                @foreach (var rootCat in rootCategories.OrderBy(c => c.Name))
+                {
+                    var isRootActive = IsCategoryActive(rootCat);
+                    <li class="cat-item-level1 @(isRootActive ? "mobile-active" : "")" data-cat-id="@rootCat.Id">
+                        <a href="@Url.Action("Index", "Product", new { categorySlug = rootCat.Slug })" class="cat-link-level1 d-block py-2 px-3 text-decoration-none fw-semibold @(isRootActive ? "mobile-active-text" : "")">
+                            @rootCat.Name
+                        </a>
+
+                        @if (rootCat.SubCategories != null && rootCat.SubCategories.Any())
+                        {
+                            <div class="categories-level2-bar position-absolute start-0 end-0 w-100 shadow-lg" style="background-color: #151b2b; top: 100%; display: none; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <ul class="d-flex align-items-center justify-content-center list-unstyled mb-0 m-0 p-2 flex-wrap gap-4">
+                                    @foreach (var child in rootCat.SubCategories.OrderBy(c => c.Name))
+                                    {
+                                        var isChildActive = IsCategoryActive(child);
+                                        <li class="cat-item-level2 position-relative @(isChildActive ? "mobile-active" : "")">
+                                            <a href="@Url.Action("Index", "Product", new { categorySlug = child.Slug })" class="cat-link-level2 text-decoration-none d-block py-1 @(isChildActive ? "mobile-active-text fw-bold" : "")">
+                                                @child.Name
+                                            </a>
+
+                                            @if (child.SubCategories != null && child.SubCategories.Any())
+                                            {
+                                                <ul class="categories-level3-dropdown position-absolute list-unstyled p-2 rounded shadow-lg" style="background-color: #1e293b; top: 100%; left: 50%; transform: translateX(-50%); min-width: 160px; display: none; z-index: 1045; border: 1px solid rgba(255,255,255,0.1);">
+                                                    @foreach (var subSub in child.SubCategories.OrderBy(c => c.Name))
+                                                    {
+                                                        var isSubSubActive = IsCategoryActive(subSub);
+                                                        <li>
+                                                            <a href="@Url.Action("Index", "Product", new { categorySlug = subSub.Slug })" class="cat-link-level3 text-decoration-none d-block py-2 px-3 text-nowrap rounded @(isSubSubActive ? "mobile-active-text fw-bold" : "")">
+                                                                @subSub.Name
+                                                            </a>
+                                                        </li>
+                                                    }
+                                                </ul>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                    </li>
+                }
+            </ul>
+        </div>
+    </nav>
 </div>
 
 <script src="~/js/navbar.js" asp-append-version="true"></script>
-    
