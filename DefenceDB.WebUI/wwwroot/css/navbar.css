@@ -144,12 +144,12 @@
 
 
 
-/* Level 2 Bar (with 0.3s closing delay) */
+/* Level 2 Bar */
 .categories-level2-bar {
     visibility: hidden;
     opacity: 0;
     transform: translateY(-5px);
-    transition: opacity 0.2s ease 0.3s, transform 0.2s ease 0.3s, visibility 0s linear 0.5s;
+    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s linear;
     display: block !important;
 }
 
@@ -157,13 +157,10 @@
     visibility: visible;
     opacity: 1;
     transform: translateY(0);
-    transition: opacity 0.2s ease 0s, transform 0.2s ease 0s, visibility 0s linear 0s;
+    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s linear;
 }
 
-/* Remove delay when moving between items (only apply delay when leaving the entire navbar area) */
-.categories-level1:hover .categories-level2-bar {
-    transition-delay: 0s !important;
-}
+
 
 @media (max-width: 991.98px) {
     .cat-item-level1.mobile-active > .categories-level2-bar {
@@ -300,17 +297,16 @@
         border: 1px solid rgba(255,255,255,0.1);
         z-index: 1045;
         
-        /* 0.3s closing delay */
         visibility: hidden;
         opacity: 0;
-        transition: opacity 0.2s ease 0.3s, transform 0.2s ease 0.3s, visibility 0s linear 0.5s;
+        transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s linear;
     }
     
     .cat-item-level2:hover > .categories-level3-container {
         visibility: visible;
         opacity: 1;
         transform: translate(-50%, 0) !important;
-        transition: opacity 0.2s ease 0s, transform 0.2s ease 0s, visibility 0s linear 0s;
+        transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s linear;
     }
 
     /* Remove delay when moving between items (only apply delay when leaving the entire navbar area) */
