@@ -7,11 +7,11 @@ namespace DefenceDB.EL.Models;
 /// </summary>
 public class MascotSetting : BaseEntity
 {
-    [Required, MaxLength(255)]
+    [Required, MaxLength(2000)]
     [Display(Name = "Hedef Sayfa (Örn: /Category/balistik-fuzeler)")]
     public string TargetPath { get; set; } = string.Empty;
 
-    [Required, MaxLength(150)]
+    [MaxLength(150)]
     [Display(Name = "Başlık")]
     public string Title { get; set; } = string.Empty;
 

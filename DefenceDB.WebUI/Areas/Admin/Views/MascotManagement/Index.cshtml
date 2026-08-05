@@ -24,7 +24,11 @@
                     @foreach (var item in Model)
                     {
                         <tr>
-                            <td><code>@item.TargetPath</code></td>
+                            <td style="max-width: 300px;">
+                                <div style="max-height: 100px; overflow-y: auto;">
+                                    <code style="white-space: pre-wrap;">@item.TargetPath</code>
+                                </div>
+                            </td>
                             <td>
                                 @if (item.IsActive)
                                 {
@@ -36,13 +40,47 @@
                                 }
                             </td>
                             <td class="text-end">
-                                <a href="@item.TargetPath" target="_blank" class="btn btn-sm btn-outline-info"><i class="bi bi-box-arrow-up-right"></i> Sayfaya Git</a>
+                                <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#linksModal_@item.Id">
+                                    <i class="bi bi-box-arrow-up-right"></i> Sayfaya Git
+                                </button>
                                 <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i> Düzenle</a>
                                 <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Bu mesajı silmek istediğinize emin misiniz?');">
                                     <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Sil</button>
                                 </form>
                             </td>
                         </tr>
+                        
+                        <!-- Links Modal -->
+                        <div class="modal fade text-start" id="linksModal_@item.Id" tabindex="-1" aria-hidden="true">
+                          <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <h5 class="modal-title">Maskotun Çıkacağı Sayfalar</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body">
+                                <div class="list-group list-group-flush">
+                                    @{
+                                        var links = item.TargetPath.Split(new[] { '\n', '\r', ',' }, StringSplitOptions.RemoveEmptyEntries).Select(l => l.Trim()).ToList();
+                                        if (links.Any())
+                                        {
+                                            foreach (var link in links)
+                                            {
+                                                <a href="@link" target="_blank" class="list-group-item list-group-item-action text-primary text-break">
+                                                    <i class="bi bi-link-45deg me-2"></i>@link
+                                                </a>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <div class="text-muted">Link bulunamadı.</div>
+                                        }
+                                    }
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                     }
                     @if (!Model.Any())
                     {

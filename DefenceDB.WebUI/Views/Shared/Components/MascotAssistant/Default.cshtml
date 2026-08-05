@@ -8,6 +8,9 @@
 }
 
 <div id="mascotAssistantWrapper" class="mascot-assistant-wrapper">
+    <!-- Ekranı kilitleyen arka plan (Backdrop) -->
+    <div id="mascotBackdrop" class="mascot-backdrop d-none" onclick="toggleMascotPopup()"></div>
+
     <!-- İpucu Balonu -->
     <div class="mascot-bubble-hint shadow" onclick="toggleMascotPopup()">
         <span>Bunu Bilmelisin! <i class="bi bi-chat-dots-fill ms-1"></i></span>
@@ -17,8 +20,9 @@
 
     <!-- Dev Chat Balonu (A4 Boyutunda) -->
     <div id="mascotGiantBubble" class="mascot-giant-bubble shadow-lg d-none">
-        <div class="mascot-giant-header d-flex justify-content-end p-2 border-bottom">
-            <button type="button" class="btn-close" onclick="toggleMascotPopup()" aria-label="Close"></button>
+        <div class="mascot-giant-header d-flex justify-content-between align-items-center p-3 border-bottom">
+            <h5 class="mb-0 fw-bold" style="color: #1e293b;"><i class="bi bi-info-circle-fill text-warning me-2"></i> Bunu Bilmelisin!</h5>
+            <button type="button" class="btn-close btn-close-large shadow-sm" onclick="toggleMascotPopup()" aria-label="Close"></button>
         </div>
         
         <div class="mascot-giant-body text-dark p-4 p-md-5">
@@ -37,6 +41,18 @@
 </div>
 
 <style>
+    .mascot-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(15, 23, 42, 0.4);
+        z-index: 1049;
+        cursor: pointer;
+        backdrop-filter: blur(3px);
+    }
+
     .mascot-assistant-wrapper {
         position: fixed;
         bottom: 30px;
@@ -105,6 +121,22 @@
         0% { transform: translateY(0px); }
         50% { transform: translateY(-12px); }
         100% { transform: translateY(0px); }
+    }
+
+    /* Close Button Styling */
+    .btn-close-large {
+        font-size: 1.3rem; 
+        padding: 0.8rem;
+        background-color: #f1f5f9;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+        opacity: 0.8;
+    }
+    
+    .btn-close-large:hover {
+        background-color: #e2e8f0;
+        transform: scale(1.1);
+        opacity: 1;
     }
 
     /* Giant Bubble Styling */
@@ -203,10 +235,22 @@
     }
 
     @@media (max-width: 768px) {
+        .mascot-assistant-wrapper {
+            bottom: 20px;
+            right: 20px;
+        }
+        .mascot-img {
+            width: 85px; /* Mobilde baykuş daha küçük */
+        }
+        .mascot-bubble-hint {
+            padding: 6px 14px;
+            font-size: 0.85rem;
+        }
         .mascot-giant-bubble {
             width: calc(100vw - 40px);
-            right: -10px; /* Wrapper is 30px from right, so this pushes it to 20px from right edge */
+            right: 0px; /* Wrapper is 20px from right, right 0 keeps it 20px from edge */
             min-width: 0;
+            bottom: 100px;
         }
         .mascot-giant-body {
             padding: 1.25rem !important;
@@ -224,14 +268,17 @@
         var popover = document.getElementById('mascotGiantBubble');
         var hint = document.querySelector('.mascot-bubble-hint');
         var wrapper = document.getElementById('mascotAssistantWrapper');
+        var backdrop = document.getElementById('mascotBackdrop');
         
         if (popover.classList.contains('d-none')) {
             popover.classList.remove('d-none');
+            backdrop.classList.remove('d-none');
             hint.style.display = 'none'; // hide the "Bunu Bilmelisin!" hint
             document.body.style.overflow = 'hidden'; // prevent background scrolling
             wrapper.style.animation = 'none'; // Stop mascot from floating
         } else {
             popover.classList.add('d-none');
+            backdrop.classList.add('d-none');
             hint.style.display = 'block'; // show it back
             document.body.style.overflow = 'auto'; // allow background scrolling
             wrapper.style.animation = ''; // Resume mascot floating

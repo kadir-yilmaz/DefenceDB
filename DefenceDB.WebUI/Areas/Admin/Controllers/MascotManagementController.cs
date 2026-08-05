@@ -12,11 +12,13 @@ public class MascotManagementController : Controller
 {
     private readonly IMascotSettingService _mascotService;
     private readonly INotificationService _notificationService;
+    private readonly ICategoryQueryService _categoryQueryService;
 
-    public MascotManagementController(IMascotSettingService mascotService, INotificationService notificationService)
+    public MascotManagementController(IMascotSettingService mascotService, INotificationService notificationService, ICategoryQueryService categoryQueryService)
     {
         _mascotService = mascotService;
         _notificationService = notificationService;
+        _categoryQueryService = categoryQueryService;
     }
 
     public async Task<IActionResult> Index()
@@ -25,8 +27,9 @@ public class MascotManagementController : Controller
         return View(settings);
     }
 
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
+        ViewBag.Categories = await _categoryQueryService.GetAllCategoriesAsync();
         return View(new MascotSetting());
     }
 
@@ -39,11 +42,13 @@ public class MascotManagementController : Controller
         
         if (ModelState.IsValid)
         {
-            model.TargetPath = model.TargetPath.ToLower().Trim();
+            model.TargetPath = model.TargetPath.Trim();
             await _mascotService.AddAsync(model);
             _notificationService.Success("Maskot ayarı başarıyla eklendi.");
             return RedirectToAction(nameof(Index));
         }
+        
+        ViewBag.Categories = await _categoryQueryService.GetAllCategoriesAsync();
         return View(model);
     }
 
@@ -51,6 +56,8 @@ public class MascotManagementController : Controller
     {
         var setting = await _mascotService.GetByIdAsync(id);
         if (setting == null) return NotFound();
+        
+        ViewBag.Categories = await _categoryQueryService.GetAllCategoriesAsync();
         return View(setting);
     }
 
@@ -66,7 +73,7 @@ public class MascotManagementController : Controller
             var setting = await _mascotService.GetByIdAsync(model.Id);
             if (setting == null) return NotFound();
 
-            setting.TargetPath = model.TargetPath.ToLower().Trim();
+            setting.TargetPath = model.TargetPath.Trim();
             setting.Title = model.Title;
             setting.Message = model.Message;
             setting.LinksJson = model.LinksJson;
@@ -76,6 +83,8 @@ public class MascotManagementController : Controller
             _notificationService.Success("Maskot ayarı başarıyla güncellendi.");
             return RedirectToAction(nameof(Index));
         }
+        
+        ViewBag.Categories = await _categoryQueryService.GetAllCategoriesAsync();
         return View(model);
     }
 
