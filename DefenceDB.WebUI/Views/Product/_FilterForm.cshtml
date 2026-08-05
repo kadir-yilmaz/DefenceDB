@@ -1,64 +1,100 @@
 @{
     var currentCategory = ViewBag.CurrentCategory as DefenceDB.EL.Models.Category;
     var filterAttributes = ViewBag.FilterAttributes as List<DefenceDB.EL.Models.CategoryAttribute>;
+    var countries = ViewBag.CountriesList as List<DefenceDB.WebUI.Models.CountryHelper.CountryItem> ?? new List<DefenceDB.WebUI.Models.CountryHelper.CountryItem>();
 }
 
-@if (filterAttributes != null && filterAttributes.Any())
-{
-    <form method="get" action="@Url.Action("Index", "Product")">
-        <input type="hidden" name="categorySlug" value="@(currentCategory?.Slug)" />
-        <input type="hidden" name="country" value="@ViewBag.CurrentCountry" />
-        <input type="hidden" name="search" value="@ViewBag.CurrentSearch" />
-        
+<form method="get" action="@Url.Action("Index", "Product")" id="sidebarFilterForm">
+    <input type="hidden" name="categorySlug" value="@(currentCategory?.Slug)" />
+    <input type="hidden" name="search" value="@ViewBag.CurrentSearch" />
+    <input type="hidden" name="sortBy" value="@ViewBag.CurrentSortBy" />
+
+    <!-- Ortak Filtreler: Ülke -->
+    <div class="mb-3">
+        <label class="form-label text-secondary-theme small fw-bold">Ülke</label>
+        <select name="country" class="form-select form-select-sm bg-theme text-primary-theme border-theme" onchange="this.form.submit()">
+            <option value="">Tüm Ülkeler</option>
+            @foreach (var c in countries)
+            {
+                if (string.Equals(ViewBag.CurrentCountry, c.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    <option value="@c.Name" selected>@c.Name</option>
+                }
+                else
+                {
+                    <option value="@c.Name">@c.Name</option>
+                }
+            }
+        </select>
+    </div>
+
+    <!-- Ortak Filtreler: Durum -->
+    <div class="mb-3">
+        <label class="form-label text-secondary-theme small fw-bold">Durum</label>
+        <select name="status" class="form-select form-select-sm bg-theme text-primary-theme border-theme" onchange="this.form.submit()">
+            <option value="">Tüm Durumlar</option>
+            @if (ViewBag.CurrentStatus == "Active") { <option value="Active" selected>Aktif Kullanımda</option> } else { <option value="Active">Aktif Kullanımda</option> }
+            @if (ViewBag.CurrentStatus == "In Development") { <option value="In Development" selected>Geliştirme Aşamasında</option> } else { <option value="In Development">Geliştirme Aşamasında</option> }
+            @if (ViewBag.CurrentStatus == "Retired") { <option value="Retired" selected>Emekliye Ayrılmış</option> } else { <option value="Retired">Emekliye Ayrılmış</option> }
+        </select>
+    </div>
+
+    @if (filterAttributes != null && filterAttributes.Any())
+    {
+        <hr class="border-theme my-3" />
+        <h6 class="text-primary-theme mb-3">Kategoriye Özel Filtreler</h6>
+
         @foreach (var attr in filterAttributes)
         {
-            var currentVal = Context.Request.Query[attr.Name].ToString();
-            
             <div class="mb-3">
-                <label class="form-label text-secondary-theme small">@attr.DisplayName</label>
+                <label class="form-label text-secondary-theme small fw-bold">@attr.DisplayName</label>
                 
                 @if (attr.Type == DefenceDB.EL.Models.AttributeType.Boolean)
                 {
-                    <select name="@attr.Name" class="form-select form-select-sm bg-theme text-primary-theme border-theme" onchange="sessionStorage.setItem('filterScroll', window.scrollY); this.form.submit()">
+                    var currentVal = Context.Request.Query[attr.Name].ToString();
+                    <select name="@attr.Name" class="form-select form-select-sm bg-theme text-primary-theme border-theme" onchange="this.form.submit()">
                         <option value="">Tümü</option>
-                        <option value="true" selected="@(currentVal == "true" ? "selected" : null)">Evet</option>
-                        <option value="false" selected="@(currentVal == "false" ? "selected" : null)">Hayır</option>
+                        @if (currentVal == "true") { <option value="true" selected>Evet</option> } else { <option value="true">Evet</option> }
+                        @if (currentVal == "false") { <option value="false" selected>Hayır</option> } else { <option value="false">Hayır</option> }
                     </select>
                 }
                 else if (attr.Type == DefenceDB.EL.Models.AttributeType.Dropdown && attr.Options != null && attr.Options.Any())
                 {
-                    <select name="@attr.Name" class="form-select form-select-sm bg-theme text-primary-theme border-theme" onchange="sessionStorage.setItem('filterScroll', window.scrollY); this.form.submit()">
+                    var currentVal = Context.Request.Query[attr.Name].ToString();
+                    <select name="@attr.Name" class="form-select form-select-sm bg-theme text-primary-theme border-theme" onchange="this.form.submit()">
                         <option value="">Tümü</option>
                         @foreach(var opt in attr.Options)
                         {
-                            <option value="@opt" selected="@(currentVal == opt ? "selected" : null)">@opt</option>
+                            if (currentVal == opt) { <option value="@opt" selected>@opt</option> } else { <option value="@opt">@opt</option> }
                         }
                     </select>
                 }
                 else if (attr.Type == DefenceDB.EL.Models.AttributeType.Number)
                 {
-                    <input type="number" step="any" name="@attr.Name" class="form-control form-control-sm bg-theme text-primary-theme border-theme" placeholder="Sayı girin..." value="@currentVal" onchange="sessionStorage.setItem('filterScroll', window.scrollY); this.form.submit()" />
+                    var minKey = attr.Name + "_min";
+                    var maxKey = attr.Name + "_max";
+                    var currentMinVal = Context.Request.Query[minKey].ToString();
+                    var currentMaxVal = Context.Request.Query[maxKey].ToString();
+                    
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="number" step="any" name="@minKey" class="form-control form-control-sm bg-theme text-primary-theme border-theme" placeholder="Min" value="@currentMinVal" />
+                        <span class="text-secondary-theme fw-bold">-</span>
+                        <input type="number" step="any" name="@maxKey" class="form-control form-control-sm bg-theme text-primary-theme border-theme" placeholder="Max" value="@currentMaxVal" />
+                    </div>
                 }
                 else
                 {
-                    <input type="text" name="@attr.Name" class="form-control form-control-sm bg-theme text-primary-theme border-theme" placeholder="Aranacak değer..." value="@currentVal" onchange="sessionStorage.setItem('filterScroll', window.scrollY); this.form.submit()" />
+                    var currentVal = Context.Request.Query[attr.Name].ToString();
+                    <div class="d-flex gap-2">
+                        <input type="text" name="@attr.Name" class="form-control form-control-sm bg-theme text-primary-theme border-theme" placeholder="Aranacak değer..." value="@currentVal" />
+                    </div>
                 }
             </div>
         }
-        
-        @{
-            var clearUrl = Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch });
-        }
-        <a href="@clearUrl" class="btn btn-outline-secondary btn-sm w-100 mt-2" onclick="sessionStorage.setItem('filterScroll', window.scrollY);">Temizle</a>
-    </form>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            var scroll = sessionStorage.getItem('filterScroll');
-            if (scroll !== null) {
-                window.scrollTo({ top: parseInt(scroll), behavior: 'instant' });
-                sessionStorage.removeItem('filterScroll');
-            }
-        });
-    </script>
-}
+    }
+    
+    <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-warning btn-sm flex-grow-1 fw-bold">Filtrele</button>
+        <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug })" class="btn btn-outline-danger btn-sm flex-grow-1">Temizle</a>
+    </div>
+</form>

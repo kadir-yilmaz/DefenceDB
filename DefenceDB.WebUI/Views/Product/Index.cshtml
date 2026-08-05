@@ -119,20 +119,10 @@
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
-            @* Kategori Listesi (Mobil - İptal Edildi, Sadece Filtreler Kalacak) *@
-            @* <div class="bg-theme-card border border-theme rounded-4 p-3 shadow-sm mb-4"> ... </div> *@
-
             @* Ozellik Filtreleri (Mobil) *@
-            @if (ViewBag.FilterProperties != null && ((List<System.Reflection.PropertyInfo>)ViewBag.FilterProperties).Any())
-            {
-                <div class="bg-theme-card border border-theme rounded-4 p-3 shadow-sm">
-                    <h6 class="text-primary-theme mb-3 pb-2 border-bottom border-theme d-flex align-items-center gap-2">
-                        <i class="bi bi-sliders text-warning"></i>
-                        <span>Özellik Filtreleri</span>
-                    </h6>
-                    @await Html.PartialAsync("_FilterForm")
-                </div>
-            }
+            <div class="bg-theme-card border border-theme rounded-4 p-3 shadow-sm">
+                @await Html.PartialAsync("_FilterForm")
+            </div>
         </div>
     </div>
 
@@ -169,6 +159,15 @@
                         }
                     </div>
                 </div>
+
+                <!-- PC Sidebar Filters -->
+                <div class="bg-theme-card border border-theme rounded-4 p-4 shadow-sm mt-4">
+                    <h5 class="text-primary-theme mb-4 pb-2 border-bottom border-theme d-flex align-items-center gap-2">
+                        <i class="bi bi-sliders text-warning"></i>
+                        <span>Filtreler</span>
+                    </h5>
+                    @await Html.PartialAsync("_FilterForm")
+                </div>
             </div>
         </div>
 
@@ -180,9 +179,9 @@
 
 
                 <!-- Row 1: Category Title, Category Drawer Button & Sorting Dropdown -->
-                <div class="d-flex flex-row flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                <div class="d-flex flex-row flex-wrap align-items-center justify-content-between gap-3 mb-3">
                     <!-- Sol Taraf: Kategori Başlığı ve Sayısı -->
-                    <div class="text-truncate">
+                    <div class="text-truncate w-100 w-lg-auto mb-2 mb-lg-0">
                         @if (currentCategory != null)
                         {
                             <h3 class="text-primary-theme fw-bold mb-0 d-flex align-items-center gap-2 text-truncate" style="font-size: 1.15rem;">
@@ -207,8 +206,14 @@
                         }
                     </div>
 
-                    <!-- Sağ Taraf: Sadece Sıralama Dropdown -->
-                    <div class="d-flex align-items-center flex-shrink-0">
+                    <!-- Sağ Taraf: Mobil Filtre ve Sıralama Dropdown -->
+                    <div class="d-flex align-items-center justify-content-between w-100 w-lg-auto gap-2">
+                        <!-- Mobil Filtre Butonu (Sadece mobilde görünür) -->
+                        <button class="btn bg-theme-card border border-theme text-primary-theme d-flex d-lg-none align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileFilterPanel" aria-controls="mobileFilterPanel" style="font-size: 0.86rem;">
+                            <i class="bi bi-funnel-fill text-warning"></i>
+                            <span class="fw-semibold font-outfit">Filtreler</span>
+                        </button>
+                        
                         <!-- Sıralama Dropdown -->
                         <div class="dropdown">
                             <button class="btn bg-theme-card border border-theme text-primary-theme dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.86rem;">
@@ -276,7 +281,7 @@
 
 
 
-                <!-- Row 2: Comprehensive Top Filter Bar (Ülkeler, Durum, Ek Attribute'lar) -->
+                <!-- Active Filters Bar (Herhangi bir filtre aktifse görünür) -->
                 @{
                     var filterAttrs = ViewBag.FilterAttributes as List<DefenceDB.EL.Models.CategoryAttribute>;
                     bool isAnyFilterActive = !string.IsNullOrEmpty(ViewBag.CurrentStatus) || 
@@ -288,240 +293,73 @@
                                                  !string.IsNullOrEmpty(Context.Request.Query[a.Name + "_min"]) || 
                                                  !string.IsNullOrEmpty(Context.Request.Query[a.Name + "_max"])));
                 }
-                <div class="top-filter-bar bg-theme-card border border-theme rounded-4 p-3 shadow-sm mt-3 mb-4">
-                    <form method="get" action="@Url.Action("Index", "Product")" id="topFilterForm" class="d-flex flex-wrap align-items-center gap-2">
-                        <input type="hidden" name="categorySlug" value="@(currentCategory?.Slug)" />
-                        <input type="hidden" name="search" value="@ViewBag.CurrentSearch" />
-                        <input type="hidden" name="sortBy" value="@ViewBag.CurrentSortBy" />
+                @if (!string.IsNullOrEmpty(ViewBag.CurrentCountry) || !string.IsNullOrEmpty(ViewBag.CurrentStatus) || !string.IsNullOrEmpty(ViewBag.CurrentSearch) || isAnyFilterActive)
+                {
+                    <div class="d-flex align-items-center flex-wrap gap-2 pt-2 mt-2 mb-4 border-theme">
+                        <span class="fs-8 text-secondary-theme fw-semibold me-1"><i class="bi bi-funnel-fill text-warning me-1"></i>Aktif Filtreler:</span>
+                        
+                        @if (!string.IsNullOrEmpty(ViewBag.CurrentCountry))
+                        {
+                            <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy })" class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-1 text-decoration-none d-inline-flex align-items-center gap-1 fs-8">
+                                <span>Ülke: @ViewBag.CurrentCountry</span>
+                                <i class="bi bi-x-lg ms-1" style="font-size: 0.65rem;"></i>
+                            </a>
+                        }
 
-                        <!-- 1. Ülke Filtresi Dropdown -->
-                        <div class="dropdown">
-                            <button class="btn bg-theme border border-theme text-primary-theme dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.86rem;">
-                                @if(!string.IsNullOrEmpty(ViewBag.CurrentCountry))
-                                {
-                                    var flagUrlBtn = "https://flagcdn.com/w20/" + ((List<DefenceDB.WebUI.Models.CountryHelper.CountryItem>)ViewBag.CountriesList).FirstOrDefault(c => c.Name == ViewBag.CurrentCountry)?.Code + ".png";
-                                    <img src="@flagUrlBtn" alt="@ViewBag.CurrentCountry" style="width:16px; height:auto; border-radius: 2px;" onerror="this.style.display='none';" />
-                                    <span class="fw-bold">@ViewBag.CurrentCountry</span>
-                                }
-                                else
-                                {
-                                    <i class="bi bi-globe text-warning"></i>
-                                    <span>Tüm Ülkeler</span>
-                                }
-                            </button>
-                            <ul class="dropdown-menu bg-theme-card border-theme shadow-lg" style="max-height: 350px; overflow-y: auto; font-size: 0.86rem;">
-                                <li>
-                                    <a class="dropdown-item text-primary-theme d-flex align-items-center gap-2 @(string.IsNullOrEmpty(ViewBag.CurrentCountry) ? "active bg-warning text-dark" : "")" 
-                                       href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, sortBy = ViewBag.CurrentSortBy, status = ViewBag.CurrentStatus })">
-                                        <i class="bi bi-globe text-muted"></i> Tüm Ülkeler
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider border-theme"></li>
-                                @foreach (var c in ViewBag.CountriesList as List<DefenceDB.WebUI.Models.CountryHelper.CountryItem> ?? new List<DefenceDB.WebUI.Models.CountryHelper.CountryItem>())
-                                {
-                                    var flagUrl = "https://flagcdn.com/w20/" + c.Code + ".png";
-                                    <li>
-                                        <a class="dropdown-item text-primary-theme d-flex align-items-center gap-2 @(string.Equals(ViewBag.CurrentCountry, c.Name, StringComparison.OrdinalIgnoreCase) ? "active bg-warning text-dark" : "bg-theme-hover")" 
-                                           href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = c.Name, sortBy = ViewBag.CurrentSortBy, status = ViewBag.CurrentStatus })">
-                                            <img src="@flagUrl" alt="@c.Name" style="width: 16px; height: auto; border-radius: 2px;" />
-                                            @c.Name
-                                        </a>
-                                    </li>
-                                }
-                            </ul>
-                        </div>
+                        @if (!string.IsNullOrEmpty(ViewBag.CurrentStatus))
+                        {
+                            <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, sortBy = ViewBag.CurrentSortBy })" class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-1 text-decoration-none d-inline-flex align-items-center gap-1 fs-8">
+                                <span>Durum: @ViewBag.CurrentStatus</span>
+                                <i class="bi bi-x-lg ms-1" style="font-size: 0.65rem;"></i>
+                            </a>
+                        }
 
-                        <!-- 2. Envanter Durumu Dropdown -->
-                        <div class="dropdown">
-                            <button class="btn bg-theme border border-theme text-primary-theme dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.86rem;">
-                                <i class="bi bi-patch-check-fill text-warning"></i>
-                                <span>
-                                    @(ViewBag.CurrentStatus switch {
-                                        "Active" => "Aktif Kullanımda",
-                                        "In Development" => "Geliştirme Aşamasında",
-                                        "Retired" => "Emekliye Ayrılmış",
-                                        _ => "Tüm Durumlar"
-                                    })
-                                </span>
-                            </button>
-                            <ul class="dropdown-menu bg-theme-card border-theme shadow-lg" style="font-size: 0.86rem;">
-                                <li><a class="dropdown-item text-primary-theme @(string.IsNullOrEmpty(ViewBag.CurrentStatus) ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, sortBy = ViewBag.CurrentSortBy })">Tüm Durumlar</a></li>
-                                <li><hr class="dropdown-divider border-theme"></li>
-                                <li><a class="dropdown-item text-primary-theme @(ViewBag.CurrentStatus == "Active" ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, sortBy = ViewBag.CurrentSortBy, status = "Active" })"><span class="badge bg-success me-2">●</span>Aktif Kullanımda</a></li>
-                                <li><a class="dropdown-item text-primary-theme @(ViewBag.CurrentStatus == "In Development" ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, sortBy = ViewBag.CurrentSortBy, status = "In Development" })"><span class="badge bg-info text-dark me-2">●</span>Geliştirme Aşamasında</a></li>
-                                <li><a class="dropdown-item text-primary-theme @(ViewBag.CurrentStatus == "Retired" ? "active bg-warning text-dark" : "")" href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, sortBy = ViewBag.CurrentSortBy, status = "Retired" })"><span class="badge bg-secondary me-2">●</span>Emekliye Ayrılmış</a></li>
-                            </ul>
-                        </div>
-
-                        <!-- 3. Dynamic Category Attributes (Ek Özellik Filtreleri) -->
-                        @if (filterAttrs != null && filterAttrs.Any())
+                        @if (filterAttrs != null)
                         {
                             foreach (var attr in filterAttrs)
                             {
                                 if (attr.Type == DefenceDB.EL.Models.AttributeType.Number)
                                 {
-                                    var minKey = attr.Name + "_min";
-                                    var maxKey = attr.Name + "_max";
-                                    var currentMinVal = Context.Request.Query[minKey].ToString();
-                                    var currentMaxVal = Context.Request.Query[maxKey].ToString();
-                                    var hasNumberVal = !string.IsNullOrEmpty(currentMinVal) || !string.IsNullOrEmpty(currentMaxVal);
-
-                                    <div class="dropdown">
-                                        <button class="btn bg-theme border @(hasNumberVal ? "border-warning text-warning fw-bold" : "border-theme text-primary-theme") dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.86rem;">
-                                            <i class="bi bi-hash text-warning"></i>
-                                            <span>
-                                                @if (hasNumberVal)
-                                                {
-                                                    if (!string.IsNullOrEmpty(currentMinVal) && !string.IsNullOrEmpty(currentMaxVal))
-                                                    {
-                                                        @($"{attr.DisplayName}: {currentMinVal} - {currentMaxVal}")
-                                                    }
-                                                    else if (!string.IsNullOrEmpty(currentMinVal))
-                                                    {
-                                                        @($"{attr.DisplayName}: ≥ {currentMinVal}")
-                                                    }
-                                                    else
-                                                    {
-                                                        @($"{attr.DisplayName}: ≤ {currentMaxVal}")
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    @attr.DisplayName
-                                                }
-                                            </span>
-                                        </button>
-                                        <div class="dropdown-menu p-3 bg-theme-card border-theme shadow-lg" style="min-width: 250px; font-size: 0.86rem;">
-                                            <label class="form-label text-secondary-theme fw-bold mb-2">@attr.DisplayName (Min - Max)</label>
-                                            <div class="d-flex align-items-center gap-2 mb-2">
-                                                <input type="number" step="any" name="@minKey" class="form-control form-control-sm bg-theme text-primary-theme border-theme" placeholder="Min" value="@currentMinVal" />
-                                                <span class="text-secondary-theme font-mono fw-bold">-</span>
-                                                <input type="number" step="any" name="@maxKey" class="form-control form-control-sm bg-theme text-primary-theme border-theme" placeholder="Max" value="@currentMaxVal" />
-                                            </div>
-                                            <div class="d-flex justify-content-end">
-                                                <button type="submit" class="btn btn-sm btn-warning fw-bold px-3">Uygula</button>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    var minVal = Context.Request.Query[attr.Name + "_min"].ToString();
+                                    var maxVal = Context.Request.Query[attr.Name + "_max"].ToString();
+                                    if (!string.IsNullOrEmpty(minVal) || !string.IsNullOrEmpty(maxVal))
+                                    {
+                                        var labelText = !string.IsNullOrEmpty(minVal) && !string.IsNullOrEmpty(maxVal) 
+                                            ? $"{attr.DisplayName}: {minVal} - {maxVal}" 
+                                            : (!string.IsNullOrEmpty(minVal) ? $"{attr.DisplayName}: ≥ {minVal}" : $"{attr.DisplayName}: ≤ {maxVal}");
+                                        
+                                        <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy })" class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-1 text-decoration-none d-inline-flex align-items-center gap-1 fs-8">
+                                            <span>@labelText</span>
+                                            <i class="bi bi-x-lg ms-1" style="font-size: 0.65rem;"></i>
+                                        </a>
+                                    }
                                 }
                                 else
                                 {
-                                    var currentAttrVal = Context.Request.Query[attr.Name].ToString();
-                                    var hasVal = !string.IsNullOrEmpty(currentAttrVal);
-
-                                    <div class="dropdown">
-                                        <button class="btn bg-theme border @(hasVal ? "border-warning text-warning fw-bold" : "border-theme text-primary-theme") dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.86rem;">
-                                            <i class="bi bi-sliders text-warning"></i>
-                                            <span>@(hasVal ? $"{attr.DisplayName}: {currentAttrVal}" : attr.DisplayName)</span>
-                                        </button>
-                                        <div class="dropdown-menu p-3 bg-theme-card border-theme shadow-lg" style="min-width: 220px; font-size: 0.86rem;">
-                                            <label class="form-label text-secondary-theme fw-bold mb-2">@attr.DisplayName</label>
-                                            
-                                            @if (attr.Type == DefenceDB.EL.Models.AttributeType.Boolean)
-                                            {
-                                                var baseUrl = Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy });
-                                                <div class="d-flex flex-column gap-1">
-                                                    <a class="dropdown-item rounded-2 @(string.IsNullOrEmpty(currentAttrVal) ? "active bg-warning text-dark" : "text-primary-theme")" href="@baseUrl">Tümü</a>
-                                                    <a class="dropdown-item rounded-2 @(currentAttrVal == "true" ? "active bg-warning text-dark" : "text-primary-theme")" href="@(baseUrl + $"&{attr.Name}=true")">Evet</a>
-                                                    <a class="dropdown-item rounded-2 @(currentAttrVal == "false" ? "active bg-warning text-dark" : "text-primary-theme")" href="@(baseUrl + $"&{attr.Name}=false")">Hayır</a>
-                                                </div>
-                                            }
-                                            else if (attr.Type == DefenceDB.EL.Models.AttributeType.Dropdown && attr.Options != null && attr.Options.Any())
-                                            {
-                                                var baseUrl = Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy });
-                                                <div class="d-flex flex-column gap-1" style="max-height: 200px; overflow-y: auto;">
-                                                    <a class="dropdown-item rounded-2 @(string.IsNullOrEmpty(currentAttrVal) ? "active bg-warning text-dark" : "text-primary-theme")" href="@baseUrl">Tümü</a>
-                                                    @foreach (var opt in attr.Options)
-                                                    {
-                                                        <a class="dropdown-item rounded-2 @(currentAttrVal == opt ? "active bg-warning text-dark" : "text-primary-theme")" href="@(baseUrl + $"&{attr.Name}={System.Web.HttpUtility.UrlEncode(opt)}")">@opt</a>
-                                                    }
-                                                </div>
-                                            }
-                                            else
-                                            {
-                                                <div class="d-flex gap-2">
-                                                    <input type="text" name="@attr.Name" class="form-control form-control-sm bg-theme text-primary-theme border-theme" placeholder="Aranacak..." value="@currentAttrVal" />
-                                                    <button type="submit" class="btn btn-sm btn-warning">Ara</button>
-                                                </div>
-                                            }
-                                        </div>
-                                    </div>
+                                    var val = Context.Request.Query[attr.Name].ToString();
+                                    if (!string.IsNullOrEmpty(val))
+                                    {
+                                        var displayVal = val switch { "true" => "Evet", "false" => "Hayır", _ => val };
+                                        <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy })" class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-1 text-decoration-none d-inline-flex align-items-center gap-1 fs-8">
+                                            <span>@attr.DisplayName: @displayVal</span>
+                                            <i class="bi bi-x-lg ms-1" style="font-size: 0.65rem;"></i>
+                                        </a>
+                                    }
                                 }
                             }
                         }
 
-                    </form>
-
-                    <!-- Active Filters Bar (Herhangi bir filtre aktifse görünür) -->
-                    @if (!string.IsNullOrEmpty(ViewBag.CurrentCountry) || !string.IsNullOrEmpty(ViewBag.CurrentStatus) || !string.IsNullOrEmpty(ViewBag.CurrentSearch) || isAnyFilterActive)
-                    {
-                        <div class="d-flex align-items-center flex-wrap gap-2 pt-2 mt-2 border-top border-theme">
-                            <span class="fs-8 text-secondary-theme fw-semibold me-1"><i class="bi bi-funnel-fill text-warning me-1"></i>Aktif Filtreler:</span>
-                            
-                            @if (!string.IsNullOrEmpty(ViewBag.CurrentCountry))
-                            {
-                                <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy })" class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-1 text-decoration-none d-inline-flex align-items-center gap-1 fs-8">
-                                    <span>Ülke: @ViewBag.CurrentCountry</span>
-                                    <i class="bi bi-x-lg ms-1" style="font-size: 0.65rem;"></i>
-                                </a>
-                            }
-
-                            @if (!string.IsNullOrEmpty(ViewBag.CurrentStatus))
-                            {
-                                <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, sortBy = ViewBag.CurrentSortBy })" class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-1 text-decoration-none d-inline-flex align-items-center gap-1 fs-8">
-                                    <span>Durum: @ViewBag.CurrentStatus</span>
-                                    <i class="bi bi-x-lg ms-1" style="font-size: 0.65rem;"></i>
-                                </a>
-                            }
-
-                            @if (filterAttrs != null)
-                            {
-                                foreach (var attr in filterAttrs)
-                                {
-                                    if (attr.Type == DefenceDB.EL.Models.AttributeType.Number)
-                                    {
-                                        var minVal = Context.Request.Query[attr.Name + "_min"].ToString();
-                                        var maxVal = Context.Request.Query[attr.Name + "_max"].ToString();
-                                        if (!string.IsNullOrEmpty(minVal) || !string.IsNullOrEmpty(maxVal))
-                                        {
-                                            var labelText = !string.IsNullOrEmpty(minVal) && !string.IsNullOrEmpty(maxVal) 
-                                                ? $"{attr.DisplayName}: {minVal} - {maxVal}" 
-                                                : (!string.IsNullOrEmpty(minVal) ? $"{attr.DisplayName}: ≥ {minVal}" : $"{attr.DisplayName}: ≤ {maxVal}");
-                                            
-                                            <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy })" class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-1 text-decoration-none d-inline-flex align-items-center gap-1 fs-8">
-                                                <span>@labelText</span>
-                                                <i class="bi bi-x-lg ms-1" style="font-size: 0.65rem;"></i>
-                                            </a>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        var val = Context.Request.Query[attr.Name].ToString();
-                                        if (!string.IsNullOrEmpty(val))
-                                        {
-                                            var displayVal = val switch { "true" => "Evet", "false" => "Hayır", _ => val };
-                                            <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy })" class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-1 text-decoration-none d-inline-flex align-items-center gap-1 fs-8">
-                                                <span>@attr.DisplayName: @displayVal</span>
-                                                <i class="bi bi-x-lg ms-1" style="font-size: 0.65rem;"></i>
-                                            </a>
-                                        }
-                                    }
-                                }
-                            }
-
-                            <!-- Filtreleri Temizle Butonu (Aktif Filtreler Çubuğunun Sağında) -->
-                            @if (isAnyFilterActive)
-                            {
-                                <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry })" 
-                                   class="btn btn-sm btn-outline-danger rounded-pill px-3 ms-auto d-inline-flex align-items-center gap-1.5 shadow-2xs font-outfit" style="font-size: 0.82rem;" title="Ülke filtresi hariç tüm filtreleri sıfırlar">
-                                    <i class="bi bi-x-circle-fill"></i>
-                                    <span>Filtreleri Temizle</span>
-                                </a>
-                            }
-                        </div>
-                    }
-                </div>
-
+                        <!-- Filtreleri Temizle Butonu (Aktif Filtreler Çubuğunun Sağında) -->
+                        @if (isAnyFilterActive)
+                        {
+                            <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry })" 
+                               class="btn btn-sm btn-outline-danger rounded-pill px-3 ms-auto d-inline-flex align-items-center gap-1.5 shadow-2xs font-outfit" style="font-size: 0.82rem;" title="Ülke filtresi hariç tüm filtreleri sıfırlar">
+                                <i class="bi bi-x-circle-fill"></i>
+                                <span>Filtreleri Temizle</span>
+                            </a>
+                        }
+                    </div>
+                }
             <!-- Products List / Grid -->
             @if (Model.Count == 0)
             {

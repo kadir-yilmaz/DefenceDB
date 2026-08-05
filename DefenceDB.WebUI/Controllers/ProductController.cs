@@ -77,6 +77,65 @@ public class ProductController : Controller
         if (currentCategory != null)
         {
             var filterAttributes = await _categoryQueryService.GetInheritedAttributesAsync(currentCategory.Id);
+            
+            // Eğer veritabanında tanımlı özellik yoksa (CategoryAttributes boşsa), ürünlerin Specs (özellik) listesinden dinamik olarak çıkar
+            if (filterAttributes == null || !filterAttributes.Any())
+            {
+                var allCategoryProducts = await _productQueryService.GetProductsByCategorySlugAsync(categorySlug);
+                var dynamicAttrs = new List<DefenceDB.EL.Models.CategoryAttribute>();
+                
+                var specKeys = allCategoryProducts
+                    .Where(p => p.Specs != null)
+                    .SelectMany(p => p.Specs.Keys)
+                    .Distinct()
+                    .ToList();
+
+                foreach (var key in specKeys)
+                {
+                    var values = allCategoryProducts
+                        .Where(p => p.Specs != null && p.Specs.ContainsKey(key))
+                        .Select(p => p.Specs[key])
+                        .Where(v => !string.IsNullOrWhiteSpace(v))
+                        .Distinct()
+                        .ToList();
+
+                    if (!values.Any()) continue;
+
+                    var attrType = DefenceDB.EL.Models.AttributeType.Text;
+                    if (values.All(v => double.TryParse(v.Replace(",", ""), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out _)))
+                    {
+                        attrType = DefenceDB.EL.Models.AttributeType.Number;
+                    }
+                    else if (values.All(v => v.Equals("true", StringComparison.OrdinalIgnoreCase) || v.Equals("false", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        attrType = DefenceDB.EL.Models.AttributeType.Boolean;
+                    }
+                    else if (values.Count <= 12)
+                    {
+                        attrType = DefenceDB.EL.Models.AttributeType.Dropdown;
+                    }
+
+                    // Prettify name for display
+                    string cleanDisplayName = System.Text.RegularExpressions.Regex.Replace(key, "([a-z])([A-Z])", "$1 $2");
+                    if (cleanDisplayName.EndsWith(" Kmh", StringComparison.OrdinalIgnoreCase)) cleanDisplayName = cleanDisplayName[..^4] + " (km/h)";
+                    else if (cleanDisplayName.EndsWith(" Km", StringComparison.OrdinalIgnoreCase)) cleanDisplayName = cleanDisplayName[..^3] + " (km)";
+                    else if (cleanDisplayName.EndsWith(" Ft", StringComparison.OrdinalIgnoreCase)) cleanDisplayName = cleanDisplayName[..^3] + " (ft)";
+                    else if (cleanDisplayName.EndsWith(" Meters", StringComparison.OrdinalIgnoreCase)) cleanDisplayName = cleanDisplayName[..^7] + " (m)";
+                    else if (cleanDisplayName.EndsWith(" M", StringComparison.OrdinalIgnoreCase)) cleanDisplayName = cleanDisplayName[..^2] + " (m)";
+                    else if (cleanDisplayName.EndsWith(" Kg", StringComparison.OrdinalIgnoreCase)) cleanDisplayName = cleanDisplayName[..^3] + " (kg)";
+                    else if (cleanDisplayName.EndsWith(" Hours", StringComparison.OrdinalIgnoreCase)) cleanDisplayName = cleanDisplayName[..^6] + " (saat)";
+
+                    dynamicAttrs.Add(new DefenceDB.EL.Models.CategoryAttribute
+                    {
+                        Name = key,
+                        DisplayName = cleanDisplayName,
+                        Type = attrType,
+                        Options = attrType == DefenceDB.EL.Models.AttributeType.Dropdown ? values.OrderBy(v => v).ToList() : null
+                    });
+                }
+                filterAttributes = dynamicAttrs;
+            }
+            
             ViewBag.FilterAttributes = filterAttributes;
         }
 
