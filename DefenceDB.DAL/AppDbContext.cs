@@ -17,6 +17,7 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
     public DbSet<DefenseProduct> DefenseProducts { get; set; } = null!;
     public DbSet<ProductRelationship> ProductRelationships { get; set; } = null!;
     public DbSet<ProductImage> ProductImages { get; set; } = null!;
+    public DbSet<MascotSetting> MascotSettings { get; set; } = null!;
 
     // Visitor Tracking
     public DbSet<Visitor> Visitors { get; set; } = null!;

@@ -1,0 +1,240 @@
+@model DefenceDB.EL.Models.MascotSetting
+@using Markdig
+
+@{
+    var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+    var htmlMessage = Markdown.ToHtml(Model.Message ?? "", pipeline);
+    var htmlLinks = Markdown.ToHtml(Model.LinksJson ?? "", pipeline);
+}
+
+<div id="mascotAssistantWrapper" class="mascot-assistant-wrapper">
+    <!-- İpucu Balonu -->
+    <div class="mascot-bubble-hint shadow" onclick="toggleMascotPopup()">
+        <span>Bunu Bilmelisin! <i class="bi bi-chat-dots-fill ms-1"></i></span>
+    </div>
+    
+    <img src="~/images/owl_teacher_transparent.png" alt="Mascot Assistant" class="mascot-img" onclick="toggleMascotPopup()" />
+
+    <!-- Dev Chat Balonu (A4 Boyutunda) -->
+    <div id="mascotGiantBubble" class="mascot-giant-bubble shadow-lg d-none">
+        <div class="mascot-giant-header d-flex justify-content-end p-2 border-bottom">
+            <button type="button" class="btn-close" onclick="toggleMascotPopup()" aria-label="Close"></button>
+        </div>
+        
+        <div class="mascot-giant-body text-dark p-4 p-md-5">
+            @Html.Raw(htmlMessage)
+            
+            @if (!string.IsNullOrEmpty(Model.LinksJson))
+            {
+                <hr class="my-4" />
+                <h6 class="fw-bold mb-3 text-secondary">Ek Kaynaklar:</h6>
+                <div class="mascot-links-section">
+                    @Html.Raw(htmlLinks)
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .mascot-assistant-wrapper {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 1050;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        animation: floatMascot 3.5s ease-in-out infinite;
+    }
+
+    .mascot-img {
+        width: 110px;
+        height: auto;
+        filter: drop-shadow(0 8px 12px rgba(0,0,0,0.4));
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        cursor: pointer;
+        z-index: 1052;
+    }
+
+    .mascot-img:hover {
+        transform: scale(1.15) rotate(-8deg);
+    }
+
+    .mascot-bubble-hint {
+        background: #ffffff;
+        color: #0f172a;
+        padding: 8px 18px;
+        border-radius: 25px;
+        font-weight: 800;
+        font-size: 0.95rem;
+        margin-bottom: 5px;
+        position: relative;
+        border: 2px solid #e2e8f0;
+        z-index: 1053;
+        cursor: pointer;
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15) !important;
+        transition: all 0.2s ease;
+        animation: pulseBubble 2.5s infinite;
+    }
+    
+    .mascot-bubble-hint:hover {
+        background: #f8fafc;
+        color: #0f172a;
+        transform: translateY(-3px) scale(1.05);
+    }
+
+    .mascot-bubble-hint::after {
+        content: '';
+        position: absolute;
+        bottom: -7px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 7px 7px 0;
+        border-style: solid;
+        border-color: #ffffff transparent transparent transparent;
+    }
+
+    @@keyframes pulseBubble {
+        0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+        70% { box-shadow: 0 0 0 12px rgba(255, 255, 255, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+    }
+
+    @@keyframes floatMascot {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-12px); }
+        100% { transform: translateY(0px); }
+    }
+
+    /* Giant Bubble Styling */
+    .mascot-giant-bubble {
+        position: absolute;
+        bottom: 120px;
+        right: 20px;
+        width: 70vw; /* Ekranın %70'i */
+        max-width: 900px;
+        min-width: 300px;
+        background-color: #ffffff !important; /* Opak ve beyaz */
+        border: 2px solid #e2e8f0;
+        border-radius: 20px;
+        display: flex;
+        flex-direction: column;
+        z-index: 1051;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+        transform-origin: bottom right;
+        animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    /* Ucu maskota bağlansın */
+    .mascot-giant-bubble::after {
+        content: '';
+        position: absolute;
+        bottom: -15px;
+        right: 40px;
+        border-width: 15px 15px 0;
+        border-style: solid;
+        border-color: #ffffff transparent transparent transparent;
+        z-index: 1052;
+    }
+    
+    .mascot-giant-bubble::before {
+        content: '';
+        position: absolute;
+        bottom: -18px;
+        right: 38px;
+        border-width: 18px 18px 0;
+        border-style: solid;
+        border-color: #e2e8f0 transparent transparent transparent;
+        z-index: 1051;
+    }
+
+    .mascot-giant-body {
+        max-height: 60vh; /* İçerik taşarsa kaydırılabilir olacak */
+        overflow-y: auto;
+        font-size: 0.95rem; /* Biraz daha küçük font */
+    }
+
+    .mascot-giant-body h1 {
+        font-size: 1.5rem;
+        color: #1e293b;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+    }
+    
+    .mascot-giant-body h2 {
+        font-size: 1.25rem;
+        color: #1e293b;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+    }
+    
+    .mascot-giant-body h3 {
+        font-size: 1.1rem;
+        color: #1e293b;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+    }
+    
+    .mascot-giant-body table {
+        width: 100%;
+        margin-bottom: 1rem;
+        border-collapse: collapse;
+        color: #334155;
+    }
+    
+    .mascot-giant-body table th,
+    .mascot-giant-body table td {
+        border: 1px solid #cbd5e1;
+        padding: 0.75rem;
+    }
+    
+    .mascot-giant-body table th {
+        background-color: #f1f5f9;
+        font-weight: bold;
+    }
+
+    @@keyframes popIn {
+        0% { opacity: 0; transform: scale(0.8) translateY(20px); }
+        100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @@media (max-width: 768px) {
+        .mascot-giant-bubble {
+            width: calc(100vw - 40px);
+            right: -10px; /* Wrapper is 30px from right, so this pushes it to 20px from right edge */
+            min-width: 0;
+        }
+        .mascot-giant-body {
+            padding: 1.25rem !important;
+        }
+        .mascot-giant-body table {
+            display: block;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+    }
+</style>
+
+<script>
+    function toggleMascotPopup() {
+        var popover = document.getElementById('mascotGiantBubble');
+        var hint = document.querySelector('.mascot-bubble-hint');
+        var wrapper = document.getElementById('mascotAssistantWrapper');
+        
+        if (popover.classList.contains('d-none')) {
+            popover.classList.remove('d-none');
+            hint.style.display = 'none'; // hide the "Bunu Bilmelisin!" hint
+            document.body.style.overflow = 'hidden'; // prevent background scrolling
+            wrapper.style.animation = 'none'; // Stop mascot from floating
+        } else {
+            popover.classList.add('d-none');
+            hint.style.display = 'block'; // show it back
+            document.body.style.overflow = 'auto'; // allow background scrolling
+            wrapper.style.animation = ''; // Resume mascot floating
+        }
+    }
+</script>

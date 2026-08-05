@@ -103,6 +103,7 @@ builder.Services.AddScoped<ICategoryQueryService, CategoryQueryService>();
 builder.Services.AddScoped<ICategoryCommandService, CategoryCommandService>();
 builder.Services.AddScoped<IProductQueryService, ProductQueryService>();
 builder.Services.AddScoped<IProductCommandService, ProductCommandService>();
+builder.Services.AddScoped<IMascotSettingService, MascotSettingService>();
 builder.Services.AddScoped<INotificationService, ToastNotificationService>();
 builder.Services.AddScoped<IVisitorService, VisitorService>();
 

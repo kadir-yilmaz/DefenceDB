@@ -44,6 +44,11 @@
                     <i class="bi bi-journal-richtext"></i>
                     <span>Makale Yönetimi</span>
                 </a>
+                <a href="@Url.Action("Index", "MascotManagement", new { area = "Admin" })"
+                   class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "MascotManagement" ? "active" : "")">
+                    <i class="bi bi-robot"></i>
+                    <span>Maskot Mesajları</span>
+                </a>
             </div>
 
             @if (User.IsInRole("Admin"))
