@@ -13,6 +13,8 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.DataProtection;
 using DefenceDB.WebUI.Middleware;
 using System.Text.Json;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -120,6 +122,47 @@ builder.Services.AddControllersWithViews()
 
 builder.Services.AddHealthChecks();
 
+// ── Rate Limiting (Brute-force koruması) ─────────────────────────
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    // Login endpoint'i için IP bazlı rate limiting
+    options.AddPolicy("login", context =>
+    {
+        // Reverse proxy (nginx, cloudflare vb.) arkasındaysa X-Forwarded-For kullan
+        var ip = context.Request.Headers["X-Forwarded-For"].FirstOrDefault()
+                 ?? context.Connection.RemoteIpAddress?.ToString()
+                 ?? "unknown";
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: ip,
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,               // 15 dakikada en fazla 10 login denemesi
+                Window = TimeSpan.FromMinutes(15),
+                QueueLimit = 0                   // Kuyruk yok, direkt reddet
+            });
+    });
+
+    // Rate limit aşıldığında özel hata sayfası göster
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.ContentType = "text/html; charset=utf-8";
+
+        // Login sayfasına rate limit hatası ile yönlendir
+        if (context.HttpContext.Request.Path.StartsWithSegments("/Admin/Account"))
+        {
+            context.HttpContext.Response.Redirect("/Admin/Account/Login?rateLimited=true");
+            return;
+        }
+
+        await context.HttpContext.Response.WriteAsync(
+            "Çok fazla istek gönderdiniz. Lütfen bir süre bekleyin.", cancellationToken);
+    };
+});
+
 var app = builder.Build();
 
 // Seed roles and default admin user
@@ -162,6 +205,9 @@ app.UseNToastNotify();
 
 // Visitor Tracking Middleware
 app.UseMiddleware<VisitorTrackingMiddleware>();
+
+// Rate Limiting Middleware (Routing öncesinde olmalı)
+app.UseRateLimiter();
 
 app.UseRouting();
 

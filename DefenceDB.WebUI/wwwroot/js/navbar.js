@@ -1,66 +1,62 @@
 document.addEventListener("DOMContentLoaded", function () {
-    // === Mobile / Desktop Search Bar Expanding & Autocomplete Focus ===
+    // === Expandable Search Bar (Icon → Expand Left) ===
     const searchInput = document.getElementById('searchInput');
     const searchContainer = document.getElementById('searchContainer');
     const searchSuggestions = document.getElementById('searchSuggestions');
-    const mobileSearchTrigger = document.getElementById('mobileSearchTrigger');
-    const mobileSearchClose = document.getElementById('mobileSearchClose');
+    const searchForm = document.getElementById('searchForm');
+    const searchToggleBtn = document.getElementById('searchToggleBtn');
 
-    if (searchInput && searchContainer) {
-        // Desktop focus scaling
-        searchInput.addEventListener('focus', function () {
-            if (window.innerWidth >= 992) {
-                searchInput.style.width = '450px';
-            } else if (window.innerWidth >= 768) {
-                searchInput.style.width = '350px';
-            }
-        });
+    if (searchInput && searchForm && searchToggleBtn) {
+        // Toggle search open/close
+        searchToggleBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
 
-        // Desktop blur scaling
-        searchInput.addEventListener('blur', function () {
-            if (window.innerWidth >= 768) {
-                setTimeout(() => {
-                    if (searchSuggestions && !searchSuggestions.matches(':hover')) {
-                        searchInput.style.width = '240px';
-                    }
-                }, 200);
-            }
-        });
-
-        // Mobile click trigger to expand search
-        if (mobileSearchTrigger) {
-            mobileSearchTrigger.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                searchContainer.classList.add('expanded');
-                // Allow CSS transition to kick in before focus
+            if (searchForm.classList.contains('expanded')) {
+                // If it has text, submit search. Otherwise, close it.
+                if (searchInput.value.trim().length > 0) {
+                    searchForm.submit();
+                } else {
+                    closeSearch();
+                }
+            } else {
+                // Open search
+                searchForm.classList.add('expanded');
                 setTimeout(() => {
                     searchInput.focus();
-                }, 50);
-            });
+                }, 100);
+            }
+        });
+
+        // Close search helper
+        function closeSearch() {
+            searchForm.classList.remove('expanded');
+            searchInput.value = '';
+            if (searchSuggestions) {
+                searchSuggestions.classList.add('d-none');
+            }
         }
 
-        // Mobile close button to collapse search
-        if (mobileSearchClose) {
-            mobileSearchClose.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                searchContainer.classList.remove('expanded');
-                searchInput.value = '';
-                searchInput.style.width = '';
-                if (searchSuggestions) {
-                    searchSuggestions.classList.add('d-none');
-                }
-            });
-        }
-
-        // Collapse search on mobile if clicked outside
+        // Close on click outside
         document.addEventListener('click', function (e) {
-            if (!searchContainer.contains(e.target) && !e.target.closest('#mobileSearchTrigger')) {
-                if (window.innerWidth < 992) {
-                    searchContainer.classList.remove('expanded');
-                    searchInput.style.width = '';
-                }
+            if (searchForm.classList.contains('expanded') &&
+                !searchContainer.contains(e.target)) {
+                closeSearch();
+            }
+        });
+
+        // Close on Escape key
+        searchInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeSearch();
+                searchToggleBtn.focus();
+            }
+        });
+
+        // Submit form on Enter (allow normal form submission)
+        searchInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && searchInput.value.trim()) {
+                searchForm.submit();
             }
         });
     }

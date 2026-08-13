@@ -33,10 +33,13 @@ public class ProductQueryService : IProductQueryService
         if (!string.IsNullOrWhiteSpace(queryModel.Search))
         {
             var term = queryModel.Search.ToLower();
+            var normalizedTerm = term.Replace("-", "").Replace(" ", "").Replace(".", "");
+
             query = query.Where(p =>
                 p.Name.ToLower().Contains(term) ||
+                p.Name.ToLower().Replace("-", "").Replace(" ", "").Replace(".", "").Contains(normalizedTerm) ||
+                (p.NatoReportingName != null && (p.NatoReportingName.ToLower().Contains(term) || p.NatoReportingName.ToLower().Replace("-", "").Replace(" ", "").Replace(".", "").Contains(normalizedTerm))) ||
                 (p.Description != null && p.Description.ToLower().Contains(term)) ||
-                (p.NatoReportingName != null && p.NatoReportingName.ToLower().Contains(term)) ||
                 (p.Manufacturer != null && p.Manufacturer.ToLower().Contains(term)));
         }
 
@@ -333,14 +336,17 @@ public class ProductQueryService : IProductQueryService
             return new List<DefenseProduct>();
 
         term = term.ToLower();
+        var normalizedTerm = term.Replace("-", "").Replace(" ", "").Replace(".", "");
+
         return await _context.DefenseProducts
             .AsNoTracking()
             .Include(p => p.Category)
             .Include(p => p.Images.OrderByDescending(i => i.IsMainImage).Take(1))
             .Where(p =>
                 p.Name.ToLower().Contains(term) ||
-                (p.Manufacturer != null && p.Manufacturer.ToLower().Contains(term)) ||
-                (p.NatoReportingName != null && p.NatoReportingName.ToLower().Contains(term))
+                p.Name.ToLower().Replace("-", "").Replace(" ", "").Replace(".", "").Contains(normalizedTerm) ||
+                (p.NatoReportingName != null && (p.NatoReportingName.ToLower().Contains(term) || p.NatoReportingName.ToLower().Replace("-", "").Replace(" ", "").Replace(".", "").Contains(normalizedTerm))) ||
+                (p.Manufacturer != null && p.Manufacturer.ToLower().Contains(term))
             )
             .OrderBy(p => p.Name)
             .Take(maxResults)

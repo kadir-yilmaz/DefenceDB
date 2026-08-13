@@ -55,8 +55,8 @@
                 <tr>
                     <th>Görsel</th>
                     <th>Platform Adı</th>
-                    <th>Kategori</th>
-                    <th>Ülke</th>
+                    <th class="d-none d-md-table-cell">Kategori</th>
+                    <th class="d-none d-md-table-cell">Ülke</th>
                     <th>Durum</th>
                 </tr>
             </thead>
@@ -83,12 +83,12 @@
                                     </small>
                                 }
                             </td>
-                            <td>
+                            <td class="d-none d-md-table-cell">
                                 <span class="admin-badge info">
                                     @product.Category?.Name
                                 </span>
                             </td>
-                            <td style="color: var(--admin-text-secondary);">@product.Country</td>
+                            <td class="d-none d-md-table-cell" style="color: var(--admin-text-secondary);">@product.Country</td>
                             <td>
                                 @if (product.Status == "Active")
                                 {
@@ -129,8 +129,8 @@
                 <tr>
                     <th>Görsel</th>
                     <th>Platform Adı</th>
-                    <th>Kategori</th>
-                    <th>Durum</th>
+                    <th class="d-none d-md-table-cell">Kategori</th>
+                    <th class="d-none d-md-table-cell">Durum</th>
                     <th>Vitrin İşlemi</th>
                 </tr>
             </thead>
@@ -151,12 +151,12 @@
                             <td>
                                 <div style="font-weight: 600;">@product.Name</div>
                             </td>
-                            <td>
+                            <td class="d-none d-md-table-cell">
                                 <span class="admin-badge info">
                                     @product.Category?.Name
                                 </span>
                             </td>
-                            <td>
+                            <td class="d-none d-md-table-cell">
                                 @if (product.Status == "Active")
                                 {
                                     <span class="admin-badge active"><i class="bi bi-check-circle-fill"></i> Aktif</span>

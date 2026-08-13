@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using DefenceDB.EL.Models;
 
 namespace DefenceDB.WebUI.Areas.Admin.Controllers;
@@ -19,11 +20,16 @@ public class AccountController : Controller
 
     [HttpGet]
     [AllowAnonymous]
-    public IActionResult Login(string? returnUrl = null)
+    public IActionResult Login(string? returnUrl = null, bool rateLimited = false)
     {
         if (User.Identity?.IsAuthenticated == true)
         {
             return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
+        }
+
+        if (rateLimited)
+        {
+            ViewBag.Error = "Çok fazla giriş denemesi yapıldı. Lütfen 15 dakika bekleyip tekrar deneyin.";
         }
 
         ViewData["ReturnUrl"] = returnUrl;
@@ -33,6 +39,7 @@ public class AccountController : Controller
     [HttpPost]
     [AllowAnonymous]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("login")]
     public async Task<IActionResult> Login(string email, string password, string? returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;

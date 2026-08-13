@@ -1463,16 +1463,292 @@ body {
     }
 }
 
+/* === TABLET BREAKPOINT (768px) === */
+@media (max-width: 768px) {
+    /* Sayfa başlık + aksiyon butonları alt alta */
+    .admin-content .d-flex.justify-content-between.align-items-center.mb-4 {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+
+    /* Tablo hücreleri daha kompakt */
+    .admin-table thead th {
+        font-size: 0.65rem;
+        padding: 10px 8px;
+        letter-spacing: 0.5px;
+    }
+
+    .admin-table tbody td {
+        padding: 10px 8px;
+        font-size: 0.8rem;
+    }
+
+    /* Filtre alanı: wrap ile alt alta düşsün */
+    .admin-content .d-flex.align-items-center.justify-content-between.mb-4 {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
+
+    .admin-content .d-flex.align-items-center.gap-3 {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
+
+    /* Filtre pill'leri mobilde daha küçük */
+    .admin-filter-pill {
+        min-width: 160px !important;
+        font-size: 0.8rem !important;
+        height: 38px !important;
+    }
+
+    /* Dropdown butonları mobilde */
+    .admin-filter-pill.dropdown-toggle {
+        min-width: 150px !important;
+    }
+
+    /* Bulk action bar mobilde */
+    #bulkActionBar .d-flex.align-items-center.justify-content-between {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 10px !important;
+    }
+
+    #bulkActionBar .d-flex.gap-2 {
+        width: 100% !important;
+    }
+
+    #bulkActionBar .d-flex.gap-2 .btn {
+        flex: 1 !important;
+        font-size: 0.75rem !important;
+        padding: 6px 10px !important;
+    }
+
+    /* Table header (wrapper içindeki) mobilde */
+    .table-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+        padding: 14px 16px !important;
+    }
+
+    /* Form card daha az padding */
+    .form-card {
+        padding: 16px;
+    }
+
+    .form-card-title {
+        font-size: 0.95rem;
+    }
+
+    /* Image grid mobilde 2 kolon */
+    .admin-image-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 0.75rem;
+    }
+
+    /* Welcome section kompakt */
+    .welcome-section {
+        padding: 20px;
+    }
+
+    .welcome-title {
+        font-size: 1.25rem;
+    }
+
+    /* Stat kartları arasındaki gap azalt */
+    .row.g-4 {
+        --bs-gutter-y: 0.75rem !important;
+        --bs-gutter-x: 0.75rem !important;
+    }
+
+    /* Action butonları daha küçük */
+    .btn-icon {
+        width: 30px;
+        height: 30px;
+    }
+
+    .btn-admin-success,
+    .btn-admin-primary {
+        padding: 8px 14px;
+        font-size: 0.8rem;
+    }
+
+    /* Product thumb daha küçük */
+    .product-thumb {
+        width: 40px;
+        height: 28px;
+    }
+
+    /* Stat card padding azalt */
+    .stat-card {
+        padding: 18px;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+        margin-bottom: 12px;
+    }
+}
+
+/* === MOBILE BREAKPOINT (576px) === */
 @media (max-width: 576px) {
     .login-card {
         margin: 16px;
         padding: 32px 24px;
     }
+
+    /* Sidebar brand daha küçük */
+    .sidebar-brand {
+        font-size: 0.9rem !important;
+    }
+
+    /* Nav ikonları biraz daha küçük */
+    .sidebar-nav .nav-link {
+        width: 38px !important;
+        height: 38px !important;
+        padding: 8px !important;
+    }
+
+    .sidebar-nav .nav-link i {
+        font-size: 1.05rem !important;
+    }
+
+    /* Stat kartı değerleri küçült */
     .stat-value {
         font-size: 1.5rem;
     }
+
+    .stat-label {
+        font-size: 0.7rem;
+    }
+
+    .stat-card {
+        padding: 14px;
+    }
+
+    .stat-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+        margin-bottom: 10px;
+    }
+
+    /* Topbar daha az padding */
     .admin-topbar {
-        padding: 0 16px;
+        padding: 0 12px;
+        height: 52px;
+    }
+
+    .topbar-title {
+        font-size: 0.95rem;
+    }
+
+    /* Content daha az padding */
+    .admin-content {
+        padding: 12px !important;
+    }
+
+    /* Welcome daha kompakt */
+    .welcome-section {
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    .welcome-title {
+        font-size: 1.1rem;
+    }
+
+    .welcome-subtitle {
+        font-size: 0.8rem;
+    }
+
+    /* Tablo hücreleri minimalize */
+    .admin-table thead th {
+        font-size: 0.6rem;
+        padding: 8px 6px;
+    }
+
+    .admin-table tbody td {
+        padding: 8px 6px;
+        font-size: 0.75rem;
+    }
+
+    /* Filtre pill'leri tam genişlik */
+    .admin-filter-pill {
+        min-width: 100% !important;
+    }
+
+    .admin-filter-pill.dropdown-toggle {
+        min-width: 100% !important;
+    }
+
+    /* Product thumb daha da küçük */
+    .product-thumb {
+        width: 34px;
+        height: 24px;
+    }
+
+    /* Badges daha küçük */
+    .admin-badge {
+        font-size: 0.6rem;
+        padding: 3px 6px;
+    }
+
+    /* Image grid tekli kolon */
+    .admin-image-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 0.5rem;
+    }
+
+    /* Table header title küçült */
+    .table-header-title {
+        font-size: 0.85rem;
+    }
+
+    /* Form controls daha küçük */
+    .admin-form-control {
+        padding: 8px 10px;
+        font-size: 0.8rem;
+    }
+
+    /* Action butonları minimum */
+    .btn-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 0.75rem;
+    }
+
+    .btn-admin-outline {
+        padding: 6px 10px;
+        font-size: 0.7rem;
+    }
+
+    /* Bulk action bar mobilde kompakt */
+    #bulkActionBar {
+        padding: 10px !important;
+    }
+
+    #bulkActionBar .badge {
+        font-size: 0.75rem !important;
+    }
+
+    /* Sayfa açıklaması mobilde gizle */
+    .admin-content > .d-flex > div > p {
+        display: none;
+    }
+
+    /* Row gap azalt */
+    .row.g-4 {
+        --bs-gutter-y: 0.5rem !important;
+        --bs-gutter-x: 0.5rem !important;
+    }
+
+    /* Table wrapper border radius azalt */
+    .table-wrapper {
+        border-radius: 8px;
     }
 }
 
