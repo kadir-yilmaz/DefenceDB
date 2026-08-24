@@ -11,79 +11,74 @@ public class ProductQueryService : IProductQueryService
 {
     private readonly AppDbContext _context;
     private readonly ICacheService _cacheService;
+    private readonly ICategoryQueryService _categoryQueryService;
     private readonly ILogger<ProductQueryService> _logger;
 
     private static readonly TimeSpan DefaultCacheDuration = TimeSpan.FromMinutes(15);
 
-    public ProductQueryService(AppDbContext context, ICacheService cacheService, ILogger<ProductQueryService> logger)
+    public ProductQueryService(
+        AppDbContext context, 
+        ICacheService cacheService, 
+        ICategoryQueryService categoryQueryService,
+        ILogger<ProductQueryService> logger)
     {
         _context = context;
         _cacheService = cacheService;
+        _categoryQueryService = categoryQueryService;
         _logger = logger;
     }
 
     public async Task<(List<DefenseProduct> Products, int TotalItems)> GetFilteredProductsAsync(ProductFilterQueryModel queryModel)
     {
-        var query = _context.DefenseProducts
-            .AsNoTracking()
-            .Include(p => p.Category)
-            .Include(p => p.Images.OrderByDescending(i => i.IsMainImage).Take(1))
-            .AsQueryable();
+        // Temel filtre sorgusu (Include'suz, hafif)
+        var baseQuery = _context.DefenseProducts.AsNoTracking().AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(queryModel.Search))
         {
-            var term = queryModel.Search.ToLower();
-            var normalizedTerm = term.Replace("-", "").Replace(" ", "").Replace(".", "");
-
-            query = query.Where(p =>
-                p.Name.ToLower().Contains(term) ||
-                p.Name.ToLower().Replace("-", "").Replace(" ", "").Replace(".", "").Contains(normalizedTerm) ||
-                (p.NatoReportingName != null && (p.NatoReportingName.ToLower().Contains(term) || p.NatoReportingName.ToLower().Replace("-", "").Replace(" ", "").Replace(".", "").Contains(normalizedTerm))) ||
-                (p.Description != null && p.Description.ToLower().Contains(term)) ||
-                (p.Manufacturer != null && p.Manufacturer.ToLower().Contains(term)));
+            var term = queryModel.Search.Trim();
+            baseQuery = baseQuery.Where(p =>
+                p.Name.Contains(term) ||
+                (p.NatoReportingName != null && p.NatoReportingName.Contains(term)) ||
+                (p.Description != null && p.Description.Contains(term)) ||
+                (p.Manufacturer != null && p.Manufacturer.Contains(term)));
         }
 
         if (queryModel.DynamicFilters != null && queryModel.DynamicFilters.ContainsKey("ParentCategorySlugs"))
         {
             var allowedSlugs = queryModel.DynamicFilters["ParentCategorySlugs"];
-            var rootIds = await _context.Categories
-                .AsNoTracking()
-                .Where(c => allowedSlugs.Contains(c.Slug))
-                .Select(c => c.Id)
-                .ToListAsync();
+            var allCats = await _categoryQueryService.GetAllCategoriesAsync();
+            var rootIds = allCats.Where(c => allowedSlugs.Contains(c.Slug)).Select(c => c.Id).ToList();
 
             var allCategoryIds = await GetAllDescendantCategoryIdsAsync(rootIds);
             allCategoryIds.AddRange(rootIds);
 
-            query = query.Where(p => allCategoryIds.Contains(p.CategoryId));
+            baseQuery = baseQuery.Where(p => allCategoryIds.Contains(p.CategoryId));
         }
         else if (!string.IsNullOrEmpty(queryModel.CategorySlug))
         {
-            var category = await _context.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.Slug == queryModel.CategorySlug);
+            var category = await _categoryQueryService.GetCategoryBySlugAsync(queryModel.CategorySlug);
             if (category != null)
             {
                 var categoryIds = await GetAllDescendantCategoryIdsAsync(new[] { category.Id });
                 categoryIds.Insert(0, category.Id);
 
-                query = query.Where(p => categoryIds.Contains(p.CategoryId));
+                baseQuery = baseQuery.Where(p => categoryIds.Contains(p.CategoryId));
             }
         }
 
         if (!string.IsNullOrWhiteSpace(queryModel.Country))
         {
-            var country = queryModel.Country.ToLower();
-            query = query.Where(p => p.Country != null && p.Country.ToLower() == country);
+            baseQuery = baseQuery.Where(p => p.Country == queryModel.Country);
         }
 
         if (!string.IsNullOrWhiteSpace(queryModel.Status))
         {
-            query = query.Where(p => p.Status == queryModel.Status);
+            baseQuery = baseQuery.Where(p => p.Status == queryModel.Status);
         }
 
         if (!string.IsNullOrWhiteSpace(queryModel.Manufacturer))
         {
-            var mfg = queryModel.Manufacturer.ToLower();
-            query = query.Where(p => p.Manufacturer != null && p.Manufacturer.ToLower().Contains(mfg));
+            baseQuery = baseQuery.Where(p => p.Manufacturer != null && p.Manufacturer.Contains(queryModel.Manufacturer));
         }
 
         // Check for Dynamic Spec Sorting (e.g. spec_desc:Menzil (km) or spec_asc:Payload (kg))
@@ -93,15 +88,15 @@ public class ProductQueryService : IProductQueryService
         if (!isSpecSort)
         {
             // Standard Sorting
-            query = queryModel.SortBy switch
+            baseQuery = queryModel.SortBy switch
             {
-                "name_asc" => query.OrderBy(p => p.Name),
-                "name_desc" => query.OrderByDescending(p => p.Name),
-                "date_asc" => query.OrderBy(p => p.CreatedAt),
-                "country_asc" => query.OrderBy(p => p.Country),
-                "manufacturer_asc" => query.OrderBy(p => p.Manufacturer),
-                "status_asc" => query.OrderBy(p => p.Status),
-                _ => query.OrderByDescending(p => p.CreatedAt)
+                "name_asc" => baseQuery.OrderBy(p => p.Name),
+                "name_desc" => baseQuery.OrderByDescending(p => p.Name),
+                "date_asc" => baseQuery.OrderBy(p => p.CreatedAt),
+                "country_asc" => baseQuery.OrderBy(p => p.Country),
+                "manufacturer_asc" => baseQuery.OrderBy(p => p.Manufacturer),
+                "status_asc" => baseQuery.OrderBy(p => p.Status),
+                _ => baseQuery.OrderByDescending(p => p.CreatedAt)
             };
         }
 
@@ -111,12 +106,16 @@ public class ProductQueryService : IProductQueryService
 
         if (!hasDynamicFilters && !isSpecSort)
         {
-            // SQL-level pagination (fast path)
-            var totalItems = await query.CountAsync();
+            // Hızlı SQL yolu: Count doğrudan hafif sorgudan çekilir
+            var totalItems = await baseQuery.CountAsync();
             int totalPages = (int)Math.Ceiling(totalItems / (double)queryModel.PageSize);
             int validPage = Math.Max(1, Math.Min(queryModel.Page, totalPages > 0 ? totalPages : 1));
 
-            var pagedProducts = await query
+            // Sadece bu sayfada gösterilecek ürünler Include ve AsSplitQuery ile çekilir
+            var pagedProducts = await baseQuery
+                .Include(p => p.Category)
+                .Include(p => p.Images)
+                .AsSplitQuery()
                 .Skip((validPage - 1) * queryModel.PageSize)
                 .Take(queryModel.PageSize)
                 .ToListAsync();
@@ -124,15 +123,19 @@ public class ProductQueryService : IProductQueryService
             return (pagedProducts, totalItems);
         }
 
-        // In-memory processing path
-        var allProducts = await query.ToListAsync();
+        // In-memory processing path (Dinamik filtreler için)
+        var allProducts = await baseQuery
+            .Include(p => p.Category)
+            .Include(p => p.Images)
+            .AsSplitQuery()
+            .ToListAsync();
 
         double? ExtractNumber(string input)
         {
             if (string.IsNullOrWhiteSpace(input)) return null;
             var cleaned = input.Replace(",", "").Replace(" ", "");
             var match = System.Text.RegularExpressions.Regex.Match(cleaned, @"\d+(\.\d+)?");
-            if (match.Success && double.TryParse(match.Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double num))
+            if (match.Success && double.TryParse(match.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out double num))
             {
                 return num;
             }
@@ -152,7 +155,7 @@ public class ProductQueryService : IProductQueryService
                 if (key.EndsWith("_min", StringComparison.OrdinalIgnoreCase))
                 {
                     var baseKey = key.Substring(0, key.Length - 4);
-                    if (double.TryParse(filterValues.FirstOrDefault()?.Replace(",", "."), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double minVal))
+                    if (double.TryParse(filterValues.FirstOrDefault()?.Replace(",", "."), NumberStyles.Any, CultureInfo.InvariantCulture, out double minVal))
                     {
                         allProducts = allProducts.Where(p => {
                             if (p.Specs == null || !p.Specs.TryGetValue(baseKey, out var specVal)) return false;
@@ -164,7 +167,7 @@ public class ProductQueryService : IProductQueryService
                 else if (key.EndsWith("_max", StringComparison.OrdinalIgnoreCase))
                 {
                     var baseKey = key.Substring(0, key.Length - 4);
-                    if (double.TryParse(filterValues.FirstOrDefault()?.Replace(",", "."), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double maxVal))
+                    if (double.TryParse(filterValues.FirstOrDefault()?.Replace(",", "."), NumberStyles.Any, CultureInfo.InvariantCulture, out double maxVal))
                     {
                         allProducts = allProducts.Where(p => {
                             if (p.Specs == null || !p.Specs.TryGetValue(baseKey, out var specVal)) return false;
@@ -196,7 +199,7 @@ public class ProductQueryService : IProductQueryService
                 if (p.Specs != null && p.Specs.TryGetValue(specKey, out var rawVal) && !string.IsNullOrWhiteSpace(rawVal))
                 {
                     var match = System.Text.RegularExpressions.Regex.Match(rawVal, @"[\d\.]+");
-                    if (match.Success && double.TryParse(match.Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double num))
+                    if (match.Success && double.TryParse(match.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out double num))
                     {
                         return num;
                     }
@@ -232,10 +235,14 @@ public class ProductQueryService : IProductQueryService
             .Distinct()
             .ToList();
 
+        if (!relatedIds.Any())
+            return;
+
         var relatedProducts = await _context.DefenseProducts
             .AsNoTracking()
             .Include(p => p.Category)
-            .Include(p => p.Images.OrderByDescending(i => i.IsMainImage).Take(1))
+            .Include(p => p.Images)
+            .AsSplitQuery()
             .Where(p => relatedIds.Contains(p.Id))
             .ToDictionaryAsync(p => p.Id);
 
@@ -249,16 +256,6 @@ public class ProductQueryService : IProductQueryService
 
         product.SourceRelationships = relations.Where(r => r.SourceProductId == product.Id).ToList();
         product.TargetRelationships = relations.Where(r => r.TargetProductId == product.Id).ToList();
-    }
-
-    private async Task AttachImagesAsync(DefenseProduct product)
-    {
-        product.Images = await _context.ProductImages
-            .AsNoTracking()
-            .Where(i => i.ProductId == product.Id)
-            .OrderByDescending(i => i.IsMainImage)
-            .ThenBy(i => i.Id)
-            .ToListAsync();
     }
 
     public async Task<List<DefenseProduct>> GetAllProductsAsync()
@@ -283,7 +280,8 @@ public class ProductQueryService : IProductQueryService
         var products = await _context.DefenseProducts
             .AsNoTracking()
             .Include(p => p.Category)
-            .Include(p => p.Images.OrderByDescending(i => i.IsMainImage).Take(1))
+            .Include(p => p.Images)
+            .AsSplitQuery()
             .Where(p => p.CategoryId == categoryId)
             .OrderBy(p => p.Name)
             .ToListAsync();
@@ -300,33 +298,53 @@ public class ProductQueryService : IProductQueryService
 
     public async Task<DefenseProduct?> GetProductByIdAsync(int id)
     {
+        var cacheKey = $"products:detail:id:{id}";
+        var cached = await _cacheService.GetAsync<DefenseProduct>(cacheKey);
+        if (cached != null)
+            return cached;
+
         var product = await _context.DefenseProducts
             .AsNoTracking()
             .Include(p => p.Category)
                 .ThenInclude(c => c.ParentCategory)
                     .ThenInclude(p => p.ParentCategory)
+            .Include(p => p.Images.OrderByDescending(i => i.IsMainImage).ThenBy(i => i.Id))
+            .AsSplitQuery()
             .FirstOrDefaultAsync(p => p.Id == id);
 
         if (product is null)
             return null;
 
-        await AttachImagesAsync(product);
         await AttachRelationshipsAsync(product);
+
+        await _cacheService.SetAsync(cacheKey, product, DefaultCacheDuration);
         return product;
     }
 
     public async Task<DefenseProduct?> GetProductBySlugAsync(string slug)
     {
+        if (string.IsNullOrWhiteSpace(slug)) return null;
+
+        var cacheKey = $"products:detail:slug:{slug.ToLowerInvariant()}";
+        var cached = await _cacheService.GetAsync<DefenseProduct>(cacheKey);
+        if (cached != null)
+            return cached;
+
         var product = await _context.DefenseProducts
             .AsNoTracking()
             .Include(p => p.Category)
+                .ThenInclude(c => c.ParentCategory)
+                    .ThenInclude(p => p.ParentCategory)
+            .Include(p => p.Images.OrderByDescending(i => i.IsMainImage).ThenBy(i => i.Id))
+            .AsSplitQuery()
             .FirstOrDefaultAsync(p => p.Slug == slug);
 
         if (product is null)
             return null;
 
-        await AttachImagesAsync(product);
         await AttachRelationshipsAsync(product);
+
+        await _cacheService.SetAsync(cacheKey, product, DefaultCacheDuration);
         return product;
     }
 
@@ -335,18 +353,17 @@ public class ProductQueryService : IProductQueryService
         if (string.IsNullOrWhiteSpace(term))
             return new List<DefenseProduct>();
 
-        term = term.ToLower();
-        var normalizedTerm = term.Replace("-", "").Replace(" ", "").Replace(".", "");
+        term = term.Trim();
 
         return await _context.DefenseProducts
             .AsNoTracking()
             .Include(p => p.Category)
-            .Include(p => p.Images.OrderByDescending(i => i.IsMainImage).Take(1))
+            .Include(p => p.Images)
+            .AsSplitQuery()
             .Where(p =>
-                p.Name.ToLower().Contains(term) ||
-                p.Name.ToLower().Replace("-", "").Replace(" ", "").Replace(".", "").Contains(normalizedTerm) ||
-                (p.NatoReportingName != null && (p.NatoReportingName.ToLower().Contains(term) || p.NatoReportingName.ToLower().Replace("-", "").Replace(" ", "").Replace(".", "").Contains(normalizedTerm))) ||
-                (p.Manufacturer != null && p.Manufacturer.ToLower().Contains(term))
+                p.Name.Contains(term) ||
+                (p.NatoReportingName != null && p.NatoReportingName.Contains(term)) ||
+                (p.Manufacturer != null && p.Manufacturer.Contains(term))
             )
             .OrderBy(p => p.Name)
             .Take(maxResults)
@@ -363,7 +380,8 @@ public class ProductQueryService : IProductQueryService
         var products = await _context.DefenseProducts
             .AsNoTracking()
             .Include(p => p.Category)
-            .Include(p => p.Images.OrderByDescending(i => i.IsMainImage).Take(1))
+            .Include(p => p.Images)
+            .AsSplitQuery()
             .Where(p => p.IsActive)
             .OrderByDescending(p => p.CreatedAt)
             .Take(count)
@@ -383,7 +401,8 @@ public class ProductQueryService : IProductQueryService
         var products = await _context.DefenseProducts
             .AsNoTracking()
             .Include(p => p.Category)
-            .Include(p => p.Images.OrderByDescending(i => i.IsMainImage).Take(1))
+            .Include(p => p.Images)
+            .AsSplitQuery()
             .Where(p => p.IsActive && p.IsShowcase)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
@@ -397,17 +416,18 @@ public class ProductQueryService : IProductQueryService
         if (string.IsNullOrWhiteSpace(query))
             return new List<DefenseProduct>();
 
-        query = query.ToLower();
+        query = query.Trim();
 
         return await _context.DefenseProducts
             .AsNoTracking()
             .Include(p => p.Category)
-            .Include(p => p.Images.OrderByDescending(i => i.IsMainImage).Take(1))
+            .Include(p => p.Images)
+            .AsSplitQuery()
             .Where(p =>
-                p.Name.ToLower().Contains(query) ||
-                (p.Description != null && p.Description.ToLower().Contains(query)) ||
-                (p.NatoReportingName != null && p.NatoReportingName.ToLower().Contains(query)) ||
-                (p.Manufacturer != null && p.Manufacturer.ToLower().Contains(query))
+                p.Name.Contains(query) ||
+                (p.Description != null && p.Description.Contains(query)) ||
+                (p.NatoReportingName != null && p.NatoReportingName.Contains(query)) ||
+                (p.Manufacturer != null && p.Manufacturer.Contains(query))
             )
             .OrderBy(p => p.Name)
             .Take(20)
@@ -421,7 +441,7 @@ public class ProductQueryService : IProductQueryService
 
     private async Task<List<int>> GetAllDescendantCategoryIdsAsync(IEnumerable<int> parentIds)
     {
-        var allCategories = await _context.Categories.AsNoTracking().Select(c => new { c.Id, c.ParentCategoryId }).ToListAsync();
+        var allCategories = await _categoryQueryService.GetAllCategoriesAsync();
         var descendants = new List<int>();
 
         void AddChildren(IEnumerable<int> currentParentIds)

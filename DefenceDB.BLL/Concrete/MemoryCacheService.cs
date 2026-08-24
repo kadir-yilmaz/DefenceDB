@@ -1,14 +1,12 @@
 using System.Collections.Concurrent;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using DefenceDB.BLL.Abstract;
 using Microsoft.Extensions.Logging;
 
 namespace DefenceDB.BLL.Concrete;
 
 /// <summary>
-/// Varsayılan bellek-içi önbellek (in-memory) implementasyonu.
-/// Shared hosting (canlı site) için kullanılan implementasyon.
+/// Yüksek performanslı bellek-içi önbellek (in-memory) implementasyonu.
+/// Nesneleri doğrudan bellekte tutar, JSON serileştirme/ayrıştırma maliyetini ortadan kaldırır.
 /// </summary>
 public class MemoryCacheService : ICacheService
 {
@@ -17,14 +15,7 @@ public class MemoryCacheService : ICacheService
 
     private static readonly TimeSpan DefaultExpiry = TimeSpan.FromMinutes(30);
 
-    // IgnoreCycles breaks circular references (e.g., Category.SubCategories -> ParentCategory -> SubCategories)
-    private static readonly JsonSerializerOptions SerializerOptions = new()
-    {
-        ReferenceHandler = ReferenceHandler.IgnoreCycles,
-        PropertyNameCaseInsensitive = true
-    };
-
-    private record CacheEntry(string Json, DateTime ExpiresAt);
+    private record CacheEntry(object Value, DateTime ExpiresAt);
 
     public MemoryCacheService(ILogger<MemoryCacheService> logger)
     {
@@ -37,20 +28,24 @@ public class MemoryCacheService : ICacheService
         {
             if (entry.ExpiresAt > DateTime.UtcNow)
             {
-                var value = JsonSerializer.Deserialize<T>(entry.Json, SerializerOptions);
-                return Task.FromResult(value);
+                if (entry.Value is T typedValue)
+                {
+                    return Task.FromResult<T?>(typedValue);
+                }
             }
-            // Expired — remove
-            _cache.TryRemove(key, out _);
+            else
+            {
+                _cache.TryRemove(key, out _);
+            }
         }
         return Task.FromResult<T?>(null);
     }
 
     public Task SetAsync<T>(string key, T value, TimeSpan? expiry = null) where T : class
     {
-        var json = JsonSerializer.Serialize(value, SerializerOptions);
+        if (value == null) return Task.CompletedTask;
         var expiresAt = DateTime.UtcNow.Add(expiry ?? DefaultExpiry);
-        _cache[key] = new CacheEntry(json, expiresAt);
+        _cache[key] = new CacheEntry(value, expiresAt);
         return Task.CompletedTask;
     }
 

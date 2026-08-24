@@ -42,19 +42,45 @@ public class CategoryQueryService : ICategoryQueryService
 
     public async Task<Category?> GetCategoryByIdAsync(int id)
     {
-        return await _context.Categories
+        var cacheKey = $"categories:id:{id}";
+        var cached = await _cacheService.GetAsync<Category>(cacheKey);
+        if (cached != null)
+            return cached;
+
+        var category = await _context.Categories
             .AsNoTracking()
             .Include(c => c.SubCategories)
             .Include(c => c.Attributes.OrderBy(a => a.DisplayOrder))
             .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (category != null)
+        {
+            await _cacheService.SetAsync(cacheKey, category, DefaultCacheDuration);
+        }
+
+        return category;
     }
 
     public async Task<Category?> GetCategoryBySlugAsync(string slug)
     {
-        return await _context.Categories
+        if (string.IsNullOrWhiteSpace(slug)) return null;
+
+        var cacheKey = $"categories:slug:{slug.ToLowerInvariant()}";
+        var cached = await _cacheService.GetAsync<Category>(cacheKey);
+        if (cached != null)
+            return cached;
+
+        var category = await _context.Categories
             .AsNoTracking()
             .Include(c => c.SubCategories)
             .FirstOrDefaultAsync(c => c.Slug == slug);
+
+        if (category != null)
+        {
+            await _cacheService.SetAsync(cacheKey, category, DefaultCacheDuration);
+        }
+
+        return category;
     }
 
     public async Task<List<Category>> GetRootCategoriesAsync()
@@ -118,10 +144,22 @@ public class CategoryQueryService : ICategoryQueryService
 
     public async Task<Category?> GetCategoryWithSubCategoriesAsync(int id)
     {
-        return await _context.Categories
+        var cacheKey = $"categories:with-subs:{id}";
+        var cached = await _cacheService.GetAsync<Category>(cacheKey);
+        if (cached != null)
+            return cached;
+
+        var category = await _context.Categories
             .AsNoTracking()
             .Include(c => c.SubCategories)
             .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (category != null)
+        {
+            await _cacheService.SetAsync(cacheKey, category, DefaultCacheDuration);
+        }
+
+        return category;
     }
 
     /// <summary>
@@ -149,11 +187,19 @@ public class CategoryQueryService : ICategoryQueryService
     /// </summary>
     public async Task<List<CategoryAttribute>> GetCategoryAttributesAsync(int categoryId)
     {
-        return await _context.CategoryAttributes
+        var cacheKey = $"categories:attributes:{categoryId}";
+        var cached = await _cacheService.GetAsync<List<CategoryAttribute>>(cacheKey);
+        if (cached != null)
+            return cached;
+
+        var attributes = await _context.CategoryAttributes
             .AsNoTracking()
             .Where(a => a.CategoryId == categoryId)
             .OrderBy(a => a.DisplayOrder)
             .ToListAsync();
+
+        await _cacheService.SetAsync(cacheKey, attributes, DefaultCacheDuration);
+        return attributes;
     }
 
     /// <summary>
@@ -162,11 +208,14 @@ public class CategoryQueryService : ICategoryQueryService
     /// </summary>
     public async Task<List<CategoryAttribute>> GetInheritedAttributesAsync(int categoryId)
     {
-        // 1. Sorgu: Tüm kategorilerin Id ve ParentCategoryId haritasını al
-        var categoryMap = await _context.Categories
-            .AsNoTracking()
-            .Select(c => new { c.Id, c.ParentCategoryId })
-            .ToDictionaryAsync(c => c.Id, c => c.ParentCategoryId);
+        var cacheKey = $"categories:inherited-attrs:{categoryId}";
+        var cached = await _cacheService.GetAsync<List<CategoryAttribute>>(cacheKey);
+        if (cached != null)
+            return cached;
+
+        // 1. Önbellekteki tüm kategorilerden hızlı hiyerarşi çıkar (DB sorgusu yok)
+        var allCats = await GetAllCategoriesAsync();
+        var categoryMap = allCats.ToDictionary(c => c.Id, c => c.ParentCategoryId);
 
         var targetCategoryIds = new List<int>();
         var visitedIds = new HashSet<int>();
@@ -191,9 +240,12 @@ public class CategoryQueryService : ICategoryQueryService
 
         // Kendi attribute'ları başta, üst kategorilerinki sonda olacak şekilde sırala
         var orderDict = targetCategoryIds.Select((id, index) => new { id, index }).ToDictionary(x => x.id, x => x.index);
-        return attributes
+        var result = attributes
             .OrderBy(a => orderDict.GetValueOrDefault(a.CategoryId, 999))
             .ThenBy(a => a.DisplayOrder)
             .ToList();
+
+        await _cacheService.SetAsync(cacheKey, result, DefaultCacheDuration);
+        return result;
     }
 }

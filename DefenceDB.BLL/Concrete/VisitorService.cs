@@ -30,6 +30,8 @@ public class VisitorService : IVisitorService
         _logger = logger;
     }
 
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, DateTime> _knownVisitors = new();
+
     public async Task TrackVisitorAsync(string visitorId, string userAgent)
     {
         try
@@ -43,11 +45,21 @@ public class VisitorService : IVisitorService
 
             var visitorHash = GenerateVisitorHash(visitorId);
 
+            // Eğer ziyaretçi zaten yakın zamanda takip edildiyse DB'ye gitme (0ms)
+            if (_knownVisitors.TryGetValue(visitorHash, out var lastSeen) && lastSeen > DateTime.UtcNow.AddHours(-24))
+            {
+                return;
+            }
+
             // Bu hash ile ziyaretçi var mı?
             var exists = await _context.Visitors
                 .AnyAsync(v => v.VisitorHash == visitorHash);
 
-            if (!exists)
+            if (exists)
+            {
+                _knownVisitors[visitorHash] = DateTime.UtcNow;
+            }
+            else
             {
                 var (os, browser) = ParseUserAgent(userAgent);
 
@@ -62,12 +74,25 @@ public class VisitorService : IVisitorService
 
                 _context.Visitors.Add(visitor);
                 await _context.SaveChangesAsync();
+
+                _knownVisitors[visitorHash] = DateTime.UtcNow;
                 
                 // Cache'i temizle
                 await _cacheService.RemoveAsync(CACHE_KEY);
                 
                 _logger.LogInformation("New unique visitor tracked: {Hash} ({OS} - {Browser})", 
                     visitorHash.Substring(0, 8), os, browser);
+            }
+
+            // Bellek temizliği (10 binden fazla kayıt birikirse eski kayıtları temizle)
+            if (_knownVisitors.Count > 10000)
+            {
+                var cutoff = DateTime.UtcNow.AddHours(-24);
+                foreach (var pair in _knownVisitors)
+                {
+                    if (pair.Value < cutoff)
+                        _knownVisitors.TryRemove(pair.Key, out _);
+                }
             }
         }
         catch (Exception ex)
