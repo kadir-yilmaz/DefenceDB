@@ -23,9 +23,9 @@ jobs:
       - name: Create appsettings.json from Secrets
         shell: pwsh
         run: |
-          $appsettings = @"
+          $appsettings = @'
           ${{ secrets.APPSETTINGS_JSON }}
-          "@
+          '@
           if (-not [string]::IsNullOrWhiteSpace($appsettings.Trim())) {
               $appsettings | Out-File -FilePath "DefenceDB.WebUI/appsettings.json" -Encoding utf8
               Write-Host "Successfully created DefenceDB.WebUI/appsettings.json from APPSETTINGS_JSON secret."
@@ -45,9 +45,9 @@ jobs:
       - name: Deploy WebUI via WebDeploy
         shell: pwsh
         run: |
-          $rawJson = @"
+          $rawJson = @'
           ${{ secrets.DEPLOY_SECRETS_JSON }}
-          "@
+          '@
 
           if ([string]::IsNullOrWhiteSpace($rawJson.Trim())) {
               Write-Error "DEPLOY_SECRETS_JSON secret is missing or empty!"
@@ -74,18 +74,18 @@ jobs:
           Write-Host "Publishing and Deploying DefenceDB to $site..."
 
           dotnet publish DefenceDB.WebUI -c Release `
-            /p:SourceRevisionId=${{ github.sha }} `
-            /p:WebPublishMethod=MSDeploy `
-            /p:MSDeployPublishMethod=WMSVC `
-            /p:MsDeployServiceUrl=$server `
-            /p:DeployIisAppPath=$site `
-            /p:UserName=$username `
-            /p:Password=$password `
-            /p:AuthType=Basic `
-            /p:AllowUntrustedCertificate=true `
-            /p:EnableMSDeployAppOffline=true `
-            /p:UseChecksum=true `
-            /p:MSDeployVerbosity=Detailed `
-            /p:RetryAttempts=3 `
-            /p:RetryInterval=2000 `
-            /p:SkipExtraFilesOnServer=true
+            "/p:SourceRevisionId=${{ github.sha }}" `
+            "/p:WebPublishMethod=MSDeploy" `
+            "/p:MSDeployPublishMethod=WMSVC" `
+            "/p:MsDeployServiceUrl=$server" `
+            "/p:DeployIisAppPath=$site" `
+            "/p:UserName=$username" `
+            "/p:Password=$password" `
+            "/p:AuthType=Basic" `
+            "/p:AllowUntrustedCertificate=true" `
+            "/p:EnableMSDeployAppOffline=true" `
+            "/p:UseChecksum=true" `
+            "/p:MSDeployVerbosity=Detailed" `
+            "/p:RetryAttempts=3" `
+            "/p:RetryInterval=2000" `
+            "/p:SkipExtraFilesOnServer=true"
