@@ -81,8 +81,11 @@ jobs:
             /p:DeployIisAppPath=$site `
             /p:UserName=$username `
             /p:Password=$password `
+            /p:AuthType=Basic `
             /p:AllowUntrustedCertificate=true `
             /p:EnableMSDeployAppOffline=true `
-            /p:RetryAttempts=10 `
+            /p:UseChecksum=true `
+            /p:MSDeployVerbosity=Detailed `
+            /p:RetryAttempts=3 `
             /p:RetryInterval=2000 `
             /p:SkipExtraFilesOnServer=true
