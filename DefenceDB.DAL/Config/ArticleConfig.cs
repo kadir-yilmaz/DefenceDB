@@ -10,13 +10,13 @@ public class ArticleConfig : IEntityTypeConfiguration<Article>
     {
         builder.HasKey(a => a.Id);
         builder.Property(a => a.Title).IsRequired().HasMaxLength(180);
-        builder.Property(a => a.Slug).IsRequired().HasMaxLength(220);
         builder.Property(a => a.Summary).HasMaxLength(500);
         builder.Property(a => a.ContentMarkdown).IsRequired();
         builder.Property(a => a.IsPublished).HasDefaultValue(true);
         builder.Property(a => a.IsShowcase).HasDefaultValue(false);
 
-        builder.HasIndex(a => a.Slug).IsUnique();
+        builder.Ignore(a => a.Slug);
+
         builder.HasIndex(a => a.PublishedAt);
         builder.HasIndex(a => a.IsShowcase);
 

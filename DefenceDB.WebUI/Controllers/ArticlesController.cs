@@ -1,4 +1,5 @@
 using DefenceDB.DAL;
+using DefenceDB.EL.Helpers;
 using DefenceDB.EL.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -62,13 +63,29 @@ public class ArticlesController : Controller
         if (string.IsNullOrWhiteSpace(slug))
             return NotFound();
 
+        if (!ArticleSlugHelper.TryExtractId(slug, out int id))
+            return NotFound();
+
         var article = await _context.Articles
             .AsNoTracking()
             .Include(a => a.ArticleCategory)
-            .FirstOrDefaultAsync(a => a.Slug == slug && a.IsPublished);
+            .FirstOrDefaultAsync(a => a.Id == id);
 
         if (article == null)
             return NotFound();
+
+        // Draft articles can only be previewed by logged-in users
+        if (!article.IsPublished && !(User.Identity?.IsAuthenticated == true))
+            return NotFound();
+
+        // Smart SEO Canonical Check:
+        // If the URL slug does not match the article's canonical slug (e.g. title was edited or legacy link was used),
+        // issue a 301 Permanent Redirect to the canonical URL.
+        var canonicalSlug = article.Slug;
+        if (!string.Equals(slug, canonicalSlug, StringComparison.Ordinal))
+        {
+            return RedirectToActionPermanent(nameof(Detail), new { slug = canonicalSlug });
+        }
 
         return View(article);
     }

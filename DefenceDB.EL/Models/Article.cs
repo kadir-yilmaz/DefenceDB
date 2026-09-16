@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using DefenceDB.EL.Helpers;
 
 namespace DefenceDB.EL.Models;
 
@@ -7,8 +9,8 @@ public class Article : BaseEntity
     [Required, MaxLength(180)]
     public string Title { get; set; } = string.Empty;
 
-    [Required, MaxLength(220)]
-    public string Slug { get; set; } = string.Empty;
+    [NotMapped]
+    public string Slug => ArticleSlugHelper.GenerateSlug(Title, Id);
 
     [MaxLength(500)]
     public string? Summary { get; set; }

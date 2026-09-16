@@ -27,7 +27,8 @@ public static class StringExtensions
         
         // Boşlukları tireye çevir
         str = Regex.Replace(str, @"\s", "-");
-        
+        str = Regex.Replace(str, @"-+", "-").Trim('-');
+
         return str;
     }
 
