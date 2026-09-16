@@ -3,8 +3,31 @@
     ViewData["Title"] = "Yeni Makale";
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/editorjs-article.css" asp-append-version="true" />
+}
+
 <partial name="_ArticleForm" model="Model" />
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <!-- Editor.js Core -->
+    <script src="https://cdn.jsdelivr.net/npm/@@editorjs/editorjs@@2.31.6/dist/editorjs.umd.min.js"></script>
+
+    <!-- Editor.js Plugins -->
+    <script src="https://cdn.jsdelivr.net/npm/@@editorjs/header@@2.8.9/dist/header.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@editorjs/list@@2.0.2/dist/list.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@editorjs/quote@@2.7.6/dist/quote.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@editorjs/delimiter@@1.4.2/dist/delimiter.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@editorjs/table@@2.4.2/dist/table.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@editorjs/code@@2.9.3/dist/code.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@editorjs/warning@@1.4.1/dist/warning.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@editorjs/raw@@2.5.1/dist/raw.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@editorjs/embed@@2.7.6/dist/embed.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@editorjs/image@@2.10.0/dist/image.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@editorjs/underline@@1.1.0/dist/bundle.js"></script>
+
+    <!-- Editor Init -->
+    <script src="~/js/editorjs-article.js" asp-append-version="true"></script>
 }

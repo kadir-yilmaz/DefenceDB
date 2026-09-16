@@ -1,10 +1,16 @@
+@using DefenceDB.EL.Helpers
 @model Article
 @{
     ViewData["Title"] = Model.Title;
     var publishedAt = Model.PublishedAt ?? Model.CreatedAt;
+    var isEditorJs = EditorJsRenderer.IsEditorJsFormat(Model.ContentMarkdown);
 }
 
 <link rel="stylesheet" href="~/css/articles.css" asp-append-version="true" />
+@if (isEditorJs)
+{
+    <link rel="stylesheet" href="~/css/editorjs-article.css" asp-append-version="true" />
+}
 
 <article class="article-detail-page">
     <div class="container py-5">
@@ -22,7 +28,14 @@
             </header>
 
             <div class="article-markdown markdown-content">
-                @Html.Raw(Model.ContentMarkdown.ToHtmlFormat())
+                @if (isEditorJs)
+                {
+                    @Html.Raw(EditorJsRenderer.RenderToHtml(Model.ContentMarkdown))
+                }
+                else
+                {
+                    @Html.Raw(Model.ContentMarkdown.ToHtmlFormat())
+                }
             </div>
         </div>
     </div>

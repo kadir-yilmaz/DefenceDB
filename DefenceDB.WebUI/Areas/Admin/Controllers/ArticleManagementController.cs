@@ -14,11 +14,13 @@ public class ArticleManagementController : Controller
 {
     private readonly AppDbContext _context;
     private readonly INotificationService _notificationService;
+    private readonly IWebHostEnvironment _env;
 
-    public ArticleManagementController(AppDbContext context, INotificationService notificationService)
+    public ArticleManagementController(AppDbContext context, INotificationService notificationService, IWebHostEnvironment env)
     {
         _context = context;
         _notificationService = notificationService;
+        _env = env;
     }
 
     public async Task<IActionResult> Index(int? categoryId)
@@ -223,5 +225,32 @@ public class ArticleManagementController : Controller
     {
         ModelState.Remove(nameof(Article.Slug));
         ModelState.Remove(nameof(Article.Summary));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> UploadImage(IFormFile image)
+    {
+        if (image == null || image.Length == 0)
+            return Json(new { success = 0, message = "Dosya seçilmedi." });
+
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg" };
+        var ext = Path.GetExtension(image.FileName).ToLowerInvariant();
+        if (!allowedExtensions.Contains(ext))
+            return Json(new { success = 0, message = "Geçersiz dosya formatı." });
+
+        if (image.Length > 5 * 1024 * 1024)
+            return Json(new { success = 0, message = "Dosya boyutu 5MB'dan büyük olamaz." });
+
+        var uploadDir = Path.Combine(_env.WebRootPath, "images", "articles");
+        Directory.CreateDirectory(uploadDir);
+
+        var fileName = $"{Guid.NewGuid():N}{ext}";
+        var filePath = Path.Combine(uploadDir, fileName);
+
+        await using var stream = new FileStream(filePath, FileMode.Create);
+        await image.CopyToAsync(stream);
+
+        var url = $"/images/articles/{fileName}";
+        return Json(new { success = 1, file = new { url } });
     }
 }
