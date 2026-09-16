@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using DefenceDB.BLL.Abstract;
+using DefenceDB.EL.Extensions;
 using DefenceDB.EL.Models;
 using DefenceDB.WebUI.Services;
 using Microsoft.EntityFrameworkCore;
@@ -161,7 +162,7 @@ public class ProductManagementController : Controller
                 newMainImageIndex = index;
             }
 
-            var imagePaths = await _imageService.ProcessAndSaveImagesAsync(uploadedImages, instance.Slug, 10);
+            var imagePaths = await _imageService.ProcessAndSaveImagesAsync(uploadedImages, instance.Name.ToSlug(), 10);
             
             instance.Images ??= new List<ProductImage>();
             for (int i = 0; i < imagePaths.Count; i++)
@@ -236,7 +237,7 @@ public class ProductManagementController : Controller
                 newMainImageIndex = index;
             }
 
-            var imagePaths = await _imageService.ProcessAndSaveImagesAsync(uploadedImages, instance.Slug, allowedNewImages);
+            var imagePaths = await _imageService.ProcessAndSaveImagesAsync(uploadedImages, instance.Name.ToSlug(), allowedNewImages);
             
             instance.Images ??= new List<ProductImage>();
             for (int i = 0; i < imagePaths.Count; i++)

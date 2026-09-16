@@ -50,7 +50,6 @@ public class ProductFormMapper : IProductFormMapper
         }
         
         instance.VideoUrl = form["VideoUrl"].ToString();
-        instance.Slug = instance.Name?.ToSlug() ?? "";
     }
 
     private void MapSpecsFromForm(IFormCollection form, DefenseProduct instance)

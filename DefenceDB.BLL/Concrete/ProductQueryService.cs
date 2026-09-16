@@ -325,27 +325,12 @@ public class ProductQueryService : IProductQueryService
     {
         if (string.IsNullOrWhiteSpace(slug)) return null;
 
-        var cacheKey = $"products:detail:slug:{slug.ToLowerInvariant()}";
-        var cached = await _cacheService.GetAsync<DefenseProduct>(cacheKey);
-        if (cached != null)
-            return cached;
+        if (DefenceDB.EL.Helpers.ProductSlugHelper.TryExtractId(slug, out int id))
+        {
+            return await GetProductByIdAsync(id);
+        }
 
-        var product = await _context.DefenseProducts
-            .AsNoTracking()
-            .Include(p => p.Category)
-                .ThenInclude(c => c.ParentCategory)
-                    .ThenInclude(p => p.ParentCategory)
-            .Include(p => p.Images.OrderByDescending(i => i.IsMainImage).ThenBy(i => i.Id))
-            .AsSplitQuery()
-            .FirstOrDefaultAsync(p => p.Slug == slug);
-
-        if (product is null)
-            return null;
-
-        await AttachRelationshipsAsync(product);
-
-        await _cacheService.SetAsync(cacheKey, product, DefaultCacheDuration);
-        return product;
+        return null;
     }
 
     public async Task<List<DefenseProduct>> SearchSuggestionsAsync(string term, int maxResults = 8)

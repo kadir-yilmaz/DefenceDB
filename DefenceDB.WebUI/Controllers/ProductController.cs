@@ -18,8 +18,16 @@ public class ProductController : Controller
         _memoryCache = memoryCache;
     }
 
+    [HttpGet("ara")]
+    [HttpGet("Product")]
+    [HttpGet("Product/Index")]
     public async Task<IActionResult> Index(string? categorySlug, string? country, string? search, string? status, string? manufacturer, string? sortBy, string? viewMode, int page = 1)
     {
+        if (Request.Path.StartsWithSegments("/Product", StringComparison.OrdinalIgnoreCase))
+        {
+            return RedirectPermanent($"/ara{Request.QueryString.Value}");
+        }
+
         var queryModel = new ProductFilterQueryModel
         {
             CategorySlug = categorySlug,
@@ -155,18 +163,27 @@ public class ProductController : Controller
     }
 
     [HttpGet("Product/Detail/{combinedSlug}")]
+    [HttpGet("{combinedSlug:productSlug}")]
     public async Task<IActionResult> Detail(string combinedSlug)
     {
         if (string.IsNullOrEmpty(combinedSlug))
             return NotFound();
 
-        var parts = combinedSlug.Split('-', 2);
-        if (parts.Length < 2 || !int.TryParse(parts[0], out int id))
+        if (!DefenceDB.EL.Helpers.ProductSlugHelper.TryExtractId(combinedSlug, out int id))
             return NotFound();
 
         var product = await _productQueryService.GetProductByIdAsync(id);
         if (product == null)
             return NotFound();
+
+        // Canonical 301 Permanent Redirect for SEO:
+        // Ensures direct root URL /{canonicalSlug} without /Product/Detail
+        var canonicalSlug = product.Slug;
+        var canonicalPath = $"/{canonicalSlug}";
+        if (!string.Equals(Request.Path.Value, canonicalPath, StringComparison.OrdinalIgnoreCase))
+        {
+            return RedirectPermanent(canonicalPath);
+        }
 
         var rivalProducts = (await _productQueryService.GetProductsByCategoryAsync(product.CategoryId))
             .Where(p => p.Id != product.Id && p.IsActive)

@@ -15,7 +15,7 @@ public class ArticlesController : Controller
         _context = context;
     }
 
-    [HttpGet("Makaleler")]
+    [HttpGet("article")]
     public async Task<IActionResult> Index(string? categorySlug, int page = 1)
     {
         const int pageSize = 12;

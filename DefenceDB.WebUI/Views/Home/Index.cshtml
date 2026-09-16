@@ -94,7 +94,7 @@
                 var thumbImage = toThumb(mainImage);
                 var categoryName = prod.Category?.Name;
                 <div class="col-md-6 col-lg-3 reveal-card" style="--delay: @(showIndex * 45)ms;">
-                    <div class="card-premium h-100 d-flex flex-column" style="cursor: pointer; border-color: rgba(251, 191, 36, 0.25) !important; box-shadow: 0 4px 25px rgba(251, 191, 36, 0.05);" onclick="handleProductClick(event, '/Product/Detail/@(prod.Id)-@(prod.Slug)')">
+                    <div class="card-premium h-100 d-flex flex-column" style="cursor: pointer; border-color: rgba(251, 191, 36, 0.25) !important; box-shadow: 0 4px 25px rgba(251, 191, 36, 0.05);" onclick="handleProductClick(event, '/@(prod.Slug)')">
                         @if (!string.IsNullOrWhiteSpace(categoryName))
                         {
                             <span class="category-badge bg-warning text-dark border-0 fw-bold">@categoryName</span>
@@ -177,7 +177,7 @@
             <p class="text-secondary-theme mb-0">Teknoloji sınıflarına göre filtreleyip detaylı incelemeler yapabilirsiniz.</p>
         </div>
         <div class="col-md-4 text-md-end mt-2 mt-md-0">
-            <a href="/Product" class="text-warning text-decoration-none fw-bold">
+            <a href="/ara" class="text-warning text-decoration-none fw-bold">
                 Tüm Kategorileri Gör <i class="bi bi-arrow-right"></i>
             </a>
         </div>
@@ -220,7 +220,7 @@
             <p class="text-secondary-theme mb-0">Veritabanına en son eklenen aktif savunma sanayii ürünleri.</p>
         </div>
         <div class="col-md-4 text-md-end mt-2 mt-md-0">
-            <a href="/Product" class="text-warning text-decoration-none fw-bold">
+            <a href="/ara" class="text-warning text-decoration-none fw-bold">
                 Tüm Veritabanını Gör <i class="bi bi-arrow-right"></i>
             </a>
         </div>
@@ -234,7 +234,7 @@
             var thumbImage = toThumb(mainImage);
             var categoryName = prod.Category?.Name;
             <div class="reveal-card" style="--delay: @(prodIndex * 35)ms;">
-                <div class="card-premium card-compact h-100 d-flex flex-column" style="cursor: pointer;" onclick="handleProductClick(event, '/Product/Detail/@(prod.Id)-@(prod.Slug)')">
+                <div class="card-premium card-compact h-100 d-flex flex-column" style="cursor: pointer;" onclick="handleProductClick(event, '/@(prod.Slug)')">
                     @if (!string.IsNullOrWhiteSpace(categoryName))
                     {
                         <span class="category-badge">@categoryName</span>

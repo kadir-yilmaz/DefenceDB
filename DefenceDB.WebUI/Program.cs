@@ -122,6 +122,12 @@ builder.Services.AddControllersWithViews()
 
 builder.Services.AddHealthChecks();
 
+// Custom Route Constraints
+builder.Services.Configure<RouteOptions>(options =>
+{
+    options.ConstraintMap.Add("productSlug", typeof(DefenceDB.WebUI.Routing.ProductSlugConstraint));
+});
+
 // ── Rate Limiting (Brute-force koruması) ─────────────────────────
 builder.Services.AddRateLimiter(options =>
 {

@@ -122,7 +122,7 @@ $(document).ready(function () {
                             let cat = item.categoryName ? `<span class="badge bg-light text-secondary-theme border fw-medium rounded-pill px-3 py-2" style="font-size: 0.75rem;">${item.categoryName}</span>` : '';
                             
                             let html = `
-                                <a href="/Product/Detail/${item.id}-${item.slug}" class="list-group-item list-group-item-action bg-transparent border-bottom border-theme d-flex align-items-center justify-content-between p-3" style="transition: background-color 0.2s ease;">
+                                <a href="/${item.slug}" class="list-group-item list-group-item-action bg-transparent border-bottom border-theme d-flex align-items-center justify-content-between p-3" style="transition: background-color 0.2s ease;">
                                     <div class="d-flex align-items-center gap-3 flex-grow-1 overflow-hidden">
                                         <img src="${item.image}" alt="${item.name}" onerror="handleImageError(this, '${item.name.replace(/'/g, "\\'")}')" class="rounded shadow-sm" style="width: 50px; height: 50px; object-fit: cover; border: 1px solid rgba(0,0,0,0.1);">
                                         <h6 class="mb-0 text-primary-theme text-truncate" style="font-size: 1.05rem; font-weight: 600;">${item.name}</h6>

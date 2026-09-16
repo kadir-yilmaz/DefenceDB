@@ -11,7 +11,6 @@ public class DefenseProductConfig : IEntityTypeConfiguration<DefenseProduct>
         builder.ToTable("DefenseProducts");
         builder.HasKey(p => p.Id);
         builder.Property(p => p.Name).IsRequired().HasMaxLength(200);
-        builder.Property(p => p.Slug).IsRequired().HasMaxLength(250);
         builder.Property(p => p.NatoReportingName).HasMaxLength(100);
         builder.Property(p => p.Description).HasMaxLength(5000);
         builder.Property(p => p.Country).HasMaxLength(100);
@@ -19,6 +18,8 @@ public class DefenseProductConfig : IEntityTypeConfiguration<DefenseProduct>
         builder.Property(p => p.ThumbnailUrl).HasMaxLength(500);
         builder.Property(p => p.Status).HasMaxLength(50);
         builder.Property(p => p.VideoUrl).HasMaxLength(500);
+
+        builder.Ignore(p => p.Slug);
 
         // Specs JSON column — dinamik kategoriye özel alanlar
         var jsonOptions = new System.Text.Json.JsonSerializerOptions();
@@ -31,7 +32,6 @@ public class DefenseProductConfig : IEntityTypeConfiguration<DefenseProduct>
             .HasColumnType("nvarchar(max)");
 
         // Indexes
-        builder.HasIndex(p => p.Slug).IsUnique();
         builder.HasIndex(p => p.CategoryId);
         builder.HasIndex(p => p.Country);
         builder.HasIndex(p => new { p.IsActive, p.IsShowcase });

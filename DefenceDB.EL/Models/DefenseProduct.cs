@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using DefenceDB.EL.Helpers;
 
 namespace DefenceDB.EL.Models;
 
@@ -11,8 +13,8 @@ public class DefenseProduct : BaseEntity
     [Required, MaxLength(200)]
     public string Name { get; set; } = string.Empty;
 
-    [Required, MaxLength(250)]
-    public string Slug { get; set; } = string.Empty;
+    [NotMapped]
+    public string Slug => ProductSlugHelper.GenerateSlug(Name, Id);
 
     [MaxLength(100)]
     public string? NatoReportingName { get; set; }

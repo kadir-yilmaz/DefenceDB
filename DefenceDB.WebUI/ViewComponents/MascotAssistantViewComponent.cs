@@ -44,7 +44,9 @@ public class MascotAssistantViewComponent : ViewComponent
         // Öncelik sırasına göre eşleşme ara: Tam URL -> Path+Query -> Sadece Path -> Genel (*)
         var setting = FindMatch(t => string.Equals(t, fullUrl, StringComparison.OrdinalIgnoreCase))
                    ?? FindMatch(t => string.Equals(t, pathAndQuery, StringComparison.OrdinalIgnoreCase))
+                   ?? FindMatch(t => string.Equals(t.Replace("/Product", "/ara", StringComparison.OrdinalIgnoreCase), pathAndQuery, StringComparison.OrdinalIgnoreCase))
                    ?? FindMatch(t => string.Equals(t, pathOnly, StringComparison.OrdinalIgnoreCase))
+                   ?? FindMatch(t => string.Equals(t.Replace("/Product", "/ara", StringComparison.OrdinalIgnoreCase), pathOnly, StringComparison.OrdinalIgnoreCase))
                    ?? FindMatch(t => t == "*");
 
         if (setting == null)

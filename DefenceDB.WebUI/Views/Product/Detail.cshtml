@@ -294,7 +294,7 @@
                         @foreach (var rel in allRelations)
                         {
                             <div class="rival-card">
-                                <a href="/Product/Detail/@(rel.Id)-@(rel.Slug)" class="text-decoration-none">
+                                <a href="/@(rel.Slug)" class="text-decoration-none">
                                     <div class="card-premium h-100 overflow-hidden d-flex flex-column" style="cursor: pointer; transition: transform 0.2s;">
                                         <div class="card-img-wrapper" style="height: 140px;">
                                             <img src="@rel.Image" class="card-img-top w-100 h-100" style="object-fit: cover;" alt="@rel.Name" loading="lazy" onerror="handleImageError(this, '@(rel.Name?.Replace("'", "\\'") ?? "")')" />
@@ -361,7 +361,7 @@
                     {
                         var rivalImage = rival.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? rival.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
 
-                        <div class="card-premium rival-card" style="cursor: pointer;" onclick="handleProductClick(event, '/Product/Detail/@(rival.Id)-@(rival.Slug)')">
+                        <div class="card-premium rival-card" style="cursor: pointer;" onclick="handleProductClick(event, '/@(rival.Slug)')">
                             <span class="category-badge">@rival.Category?.Name</span>
                             <div class="card-img-wrapper">
                                 <img src="@thumbPath(rivalImage)" alt="@rival.Name" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='@rivalImage';" />

@@ -282,7 +282,7 @@
                             </td>
                             <td class="text-end">
                                 <div class="d-flex justify-content-end gap-2">
-                                    <a href="/Product/Detail/@(prod.Id)-@(prod.Slug)" class="btn-icon" title="Detay" target="_blank">
+                                    <a href="/@(prod.Slug)" class="btn-icon" title="Detay" target="_blank">
                                         <i class="bi bi-eye"></i>
                                     </a>
                                     <a asp-action="Edit" asp-route-id="@prod.Id" asp-route-returnUrl="@Context.Request.QueryString" class="btn-icon info" title="Düzenle">
