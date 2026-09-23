@@ -279,69 +279,6 @@ h4.ce-header {
     z-index: 100 !important;
 }
 
-/* Table Row Drag & Drop Handle - positioned to the left of the 3-dots button */
-.tc-row-drag-handle {
-    position: absolute;
-    left: -58px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 22px;
-    height: 26px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: grab;
-    color: var(--admin-text-muted);
-    background: var(--admin-surface);
-    border: 1px solid var(--admin-border);
-    border-radius: 6px;
-    opacity: 0;
-    transition: opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
-    z-index: 8;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-    user-select: none;
-    pointer-events: auto;
-}
-
-.tc-row:hover .tc-row-drag-handle,
-.tc-row-drag-handle:hover {
-    opacity: 1;
-}
-
-.tc-row-drag-handle:hover {
-    color: var(--admin-accent);
-    border-color: var(--admin-accent);
-    background: var(--admin-bg-secondary);
-}
-
-.tc-row-drag-handle:active {
-    cursor: grabbing;
-    transform: translateY(-50%) scale(0.95);
-}
-
-/* SortableJS drag states */
-.tc-row.tc-row-ghost {
-    opacity: 0.35 !important;
-    background: rgba(245, 158, 11, 0.12) !important;
-    border: 1px dashed var(--admin-accent) !important;
-}
-
-.tc-row.tc-row-chosen {
-    background: var(--admin-bg-secondary) !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
-    z-index: 20;
-}
-
-.tc-row.tc-row-dragging {
-    cursor: grabbing !important;
-}
-
-/* Popover Move Up / Move Down custom items */
-.tc-popover__item--move-up .tc-popover__item-icon,
-.tc-popover__item--move-down .tc-popover__item-icon {
-    color: var(--admin-accent, #f59e0b);
-}
-
 /* Delimiter */
 .ce-delimiter {
     text-align: center;
