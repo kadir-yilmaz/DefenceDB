@@ -15,7 +15,7 @@
 
 .articles-header h1,
 .article-detail-header h1 {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Outfit', 'Twemoji Country Flags', sans-serif;
     font-weight: 800;
     margin: 0;
 }
