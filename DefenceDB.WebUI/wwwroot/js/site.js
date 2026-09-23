@@ -4,9 +4,27 @@
 
 $(document).ready(function () {
     // ----------------------------------------------------
-    // Theme is permanently light now. Theme switcher removed.
+    // 1. Dynamic Theme Manager
     // ----------------------------------------------------
-    $('html').attr('data-theme', 'light');
+    function updateThemeIcons(theme) {
+        var isDark = theme === 'dark';
+        $('.theme-icon-dark').toggleClass('d-none', isDark);
+        $('.theme-icon-light').toggleClass('d-none', !isDark);
+        $('#themeToggleBtn').attr('title', isDark ? 'Aydınlık Moda Geç' : 'Karanlık Moda Geç');
+    }
+
+    var currentTheme = $('html').attr('data-theme') || localStorage.getItem('defencedb_theme') || 'light';
+    $('html').attr('data-theme', currentTheme);
+    updateThemeIcons(currentTheme);
+
+    $(document).on('click', '#themeToggleBtn', function (e) {
+        e.preventDefault();
+        var activeTheme = $('html').attr('data-theme') || 'light';
+        var nextTheme = activeTheme === 'dark' ? 'light' : 'dark';
+        $('html').attr('data-theme', nextTheme);
+        localStorage.setItem('defencedb_theme', nextTheme);
+        updateThemeIcons(nextTheme);
+    });
 
     // ----------------------------------------------------
     // 2. AJAX Popup Engine & Radar Systems Loader

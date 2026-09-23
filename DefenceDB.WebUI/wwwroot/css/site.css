@@ -17,6 +17,13 @@
     --font-body: 'Inter', sans-serif;
     --glow-yellow: rgba(217, 119, 6, 0.08);
     --close-btn-filter: none;
+
+    /* Semantic Theme Aliases */
+    --bg-theme: var(--bg-main);
+    --bg-theme-card: var(--bg-card);
+    --primary-theme: var(--text-primary);
+    --secondary-theme: var(--text-secondary);
+    --border-theme: var(--border-color);
 }
 
 /* Dark Theme Override */
@@ -34,6 +41,13 @@
     --border-light: #374151;
     --glow-yellow: rgba(245, 158, 11, 0.15);
     --close-btn-filter: invert(1) grayscale(1) brightness(2);
+
+    /* Semantic Theme Aliases */
+    --bg-theme: var(--bg-main);
+    --bg-theme-card: var(--bg-card);
+    --primary-theme: var(--text-primary);
+    --secondary-theme: var(--text-secondary);
+    --border-theme: var(--border-color);
 }
 
 /* Global Transitions */

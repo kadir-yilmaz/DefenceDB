@@ -181,6 +181,7 @@
         onReady: function () {
             updateStats();
             updateStatus();
+            initTableDragAndDrop();
             console.log('Editor.js initialized successfully');
         },
         i18n: {
@@ -382,6 +383,182 @@
         });
     }
 
+    // ── Table Row Drag & Drop and Row Management Enhancement ──
+    function initTableDragAndDrop() {
+        if (!editorHolder) return;
+
+        function attachRowHandles(tableEl) {
+            var rows = tableEl.querySelectorAll('.tc-row');
+            rows.forEach(function (row) {
+                if (!row.querySelector('.tc-row-drag-handle')) {
+                    var handle = document.createElement('div');
+                    handle.className = 'tc-row-drag-handle';
+                    handle.setAttribute('contenteditable', 'false');
+                    handle.setAttribute('title', 'Satırı taşımak için sürükleyin');
+                    handle.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">' +
+                        '<circle cx="8" cy="4" r="2"/>' +
+                        '<circle cx="16" cy="4" r="2"/>' +
+                        '<circle cx="8" cy="12" r="2"/>' +
+                        '<circle cx="16" cy="12" r="2"/>' +
+                        '<circle cx="8" cy="20" r="2"/>' +
+                        '<circle cx="16" cy="20" r="2"/>' +
+                        '</svg>';
+                    // Append at end of row so row.firstChild remains a valid .tc-cell
+                    row.appendChild(handle);
+                }
+            });
+        }
+
+        function enhanceRowPopover(popoverEl) {
+            if (popoverEl.querySelector('.tc-popover__item--move-up')) return;
+
+            var wrap = popoverEl.closest('.tc-wrap');
+            if (!wrap) return;
+            var tableEl = wrap.querySelector('.tc-table');
+            if (!tableEl) return;
+
+            // Find Delete row item to place Move buttons right before it
+            var deleteItem = null;
+            var items = popoverEl.querySelectorAll('.tc-popover__item');
+            items.forEach(function (item) {
+                var txt = item.textContent || '';
+                if (txt.indexOf('Satır sil') !== -1 || txt.indexOf('Delete row') !== -1) {
+                    deleteItem = item;
+                }
+            });
+
+            // Move Up button
+            var upItem = document.createElement('div');
+            upItem.className = 'tc-popover__item tc-popover__item--move-up';
+            upItem.innerHTML = '<span class="tc-popover__item-icon">' +
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                '<polyline points="18 15 12 9 6 15"></polyline>' +
+                '</svg></span>' +
+                '<span class="tc-popover__item-label">Yukarı taşı</span>';
+
+            upItem.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var selectedRow = tableEl.querySelector('.tc-row--selected');
+                if (selectedRow && selectedRow.previousElementSibling && selectedRow.previousElementSibling.classList.contains('tc-row')) {
+                    tableEl.insertBefore(selectedRow, selectedRow.previousElementSibling);
+                    hasChanges = true;
+                    updateStatus();
+                    debouncedUpdateStats();
+                }
+                popoverEl.classList.remove('tc-popover--opened');
+                if (selectedRow) selectedRow.classList.remove('tc-row--selected');
+            });
+
+            // Move Down button
+            var downItem = document.createElement('div');
+            downItem.className = 'tc-popover__item tc-popover__item--move-down';
+            downItem.innerHTML = '<span class="tc-popover__item-icon">' +
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                '<polyline points="6 9 12 15 18 9"></polyline>' +
+                '</svg></span>' +
+                '<span class="tc-popover__item-label">Aşağı taşı</span>';
+
+            downItem.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var selectedRow = tableEl.querySelector('.tc-row--selected');
+                if (selectedRow && selectedRow.nextElementSibling && selectedRow.nextElementSibling.classList.contains('tc-row')) {
+                    tableEl.insertBefore(selectedRow.nextElementSibling, selectedRow);
+                    hasChanges = true;
+                    updateStatus();
+                    debouncedUpdateStats();
+                }
+                popoverEl.classList.remove('tc-popover--opened');
+                if (selectedRow) selectedRow.classList.remove('tc-row--selected');
+            });
+
+            if (deleteItem) {
+                popoverEl.insertBefore(upItem, deleteItem);
+                popoverEl.insertBefore(downItem, deleteItem);
+            } else {
+                popoverEl.appendChild(upItem);
+                popoverEl.appendChild(downItem);
+            }
+        }
+
+        function enhanceTables() {
+            var tables = editorHolder.querySelectorAll('.tc-table');
+            tables.forEach(function (tableEl) {
+                attachRowHandles(tableEl);
+
+                if (window.Sortable && !tableEl._sortableInstance) {
+                    tableEl._sortableInstance = new Sortable(tableEl, {
+                        animation: 150,
+                        handle: '.tc-row-drag-handle',
+                        draggable: '.tc-row',
+                        ghostClass: 'tc-row-ghost',
+                        chosenClass: 'tc-row-chosen',
+                        dragClass: 'tc-row-dragging',
+                        filter: '.tc-cell, .tc-toolbox, .tc-popover',
+                        preventOnFilter: false,
+                        swapThreshold: 0.65,
+                        onEnd: function (evt) {
+                            if (evt.oldIndex !== evt.newIndex) {
+                                hasChanges = true;
+                                updateStatus();
+                                debouncedUpdateStats();
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Check any open row popovers
+            var popovers = editorHolder.querySelectorAll('.tc-toolbox--row .tc-popover');
+            popovers.forEach(function (popover) {
+                enhanceRowPopover(popover);
+            });
+        }
+
+        // Initial scan
+        enhanceTables();
+
+        // Observe dynamic DOM changes (new tables, new rows, opened popovers)
+        var observer = new MutationObserver(function (mutations) {
+            var shouldEnhance = false;
+            for (var i = 0; i < mutations.length; i++) {
+                var m = mutations[i];
+                if (m.type === 'attributes' && m.attributeName === 'class') {
+                    if (m.target && m.target.classList && m.target.classList.contains('tc-popover--opened')) {
+                        enhanceRowPopover(m.target);
+                    }
+                }
+                if (m.addedNodes && m.addedNodes.length > 0) {
+                    for (var j = 0; j < m.addedNodes.length; j++) {
+                        var node = m.addedNodes[j];
+                        if (node.nodeType === 1) {
+                            if (node.classList.contains('tc-table') ||
+                                node.classList.contains('tc-row') ||
+                                node.classList.contains('tc-popover') ||
+                                (node.querySelector && (node.querySelector('.tc-table') || node.querySelector('.tc-row') || node.querySelector('.tc-popover')))) {
+                                shouldEnhance = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (shouldEnhance) break;
+            }
+
+            if (shouldEnhance) {
+                enhanceTables();
+            }
+        });
+
+        observer.observe(editorHolder, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['class']
+        });
+    }
+
     // ── Unsaved changes warning ──
     window.addEventListener('beforeunload', function (e) {
         if (hasChanges) {
@@ -391,3 +568,4 @@
     });
 
 })();
+

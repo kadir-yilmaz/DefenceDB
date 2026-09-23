@@ -10,6 +10,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/admin.css?v=5" asp-append-version="true" />
+    <script>
+        (function () {
+            var theme = localStorage.getItem('defencedb_theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
@@ -136,7 +142,15 @@
             <div class="topbar-left">
                 <h5 class="topbar-title">@ViewData["Title"]</h5>
             </div>
-            <div class="topbar-right">
+            <div class="topbar-right d-flex align-items-center gap-2">
+                <button type="button" id="adminThemeToggleBtn" class="admin-theme-toggle-btn" title="Karanlık / Aydınlık Mod" aria-label="Temayı Değiştir">
+                    <i class="bi bi-moon-stars-fill admin-theme-icon-dark"></i>
+                    <i class="bi bi-sun-fill admin-theme-icon-light d-none"></i>
+                </button>
+                <a href="/" target="_blank" class="btn-view-site" title="Siteyi Görüntüle">
+                    <i class="bi bi-globe2"></i>
+                    <span class="d-none d-sm-inline">Siteyi Gör</span>
+                </a>
             </div>
         </header>
 
@@ -196,6 +210,35 @@
                 document.querySelector('.admin-main').classList.remove('expanded');
             }
         });
+
+        // Admin Theme Manager
+        (function initAdminTheme() {
+            var toggleBtn = document.getElementById('adminThemeToggleBtn');
+            if (!toggleBtn) return;
+
+            function updateIcons(theme) {
+                var isDark = theme === 'dark';
+                var darkIcon = toggleBtn.querySelector('.admin-theme-icon-dark');
+                var lightIcon = toggleBtn.querySelector('.admin-theme-icon-light');
+                if (darkIcon && lightIcon) {
+                    darkIcon.classList.toggle('d-none', isDark);
+                    lightIcon.classList.toggle('d-none', !isDark);
+                }
+                toggleBtn.setAttribute('title', isDark ? 'Aydınlık Moda Geç' : 'Karanlık Moda Geç');
+            }
+
+            var currentTheme = document.documentElement.getAttribute('data-theme') || localStorage.getItem('defencedb_theme') || 'light';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            updateIcons(currentTheme);
+
+            toggleBtn.addEventListener('click', function () {
+                var activeTheme = document.documentElement.getAttribute('data-theme') || 'light';
+                var nextTheme = activeTheme === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', nextTheme);
+                localStorage.setItem('defencedb_theme', nextTheme);
+                updateIcons(nextTheme);
+            });
+        })();
     </script>
     @await Component.InvokeAsync("NToastNotify")
     @await RenderSectionAsync("Scripts", required: false)

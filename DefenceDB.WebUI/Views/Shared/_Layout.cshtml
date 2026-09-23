@@ -13,6 +13,12 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/DefenceDB.WebUI.styles.css" asp-append-version="true" />
     <script>
+        (function () {
+            var theme = localStorage.getItem('defencedb_theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+    <script>
         window.handleImageError = function (img, title) {
             // If we've already tried /images/default.jpg and it failed, load the gorgeous SVG radar placeholder!
             if (img.src.indexOf('/images/default.jpg') !== -1) {
