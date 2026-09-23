@@ -15,7 +15,6 @@
     var hiddenInput = document.getElementById('ContentMarkdownHidden');
     var form = document.getElementById('articleEditorForm');
     var titleInput = document.getElementById('articleTitleInput');
-    var statusEl = document.getElementById('editorSaveStatus');
     var wordCountEl = document.getElementById('editorWordCount');
     var blockCountEl = document.getElementById('editorBlockCount');
     var legacyWarning = document.getElementById('editorLegacyWarning');
@@ -175,12 +174,10 @@
         autofocus: !initialData,
         onChange: function () {
             hasChanges = true;
-            updateStatus();
             debouncedUpdateStats();
         },
         onReady: function () {
             updateStats();
-            updateStatus();
             initTableRowReordering(editorHolder);
             initTableClipboardIntegration(editorHolder);
             console.log('Editor.js initialized with Table Row Reordering & Notion/Excel Paste');
@@ -518,7 +515,7 @@
             return div.innerHTML.trim();
         }
 
-        function parseTableFromClipboard(clipboardData) {
+        function parseBlocksFromClipboard(clipboardData) {
             if (!clipboardData) return null;
 
             var html = '';
@@ -526,18 +523,23 @@
             try { html = clipboardData.getData('text/html') || ''; } catch (e) {}
             try { plain = clipboardData.getData('text/plain') || ''; } catch (e) {}
 
-            // 1. Try HTML (Notion, Google Docs, Excel, Word, Web)
+            // 1. Try HTML Multi-Block Parsing (Notion, Google Docs, Word, Web)
             if (html && html.trim()) {
                 try {
                     var parser = new DOMParser();
                     var doc = parser.parseFromString(html, 'text/html');
+                    var body = doc.body;
 
-                    // A. Standard <table>
-                    var table = doc.querySelector('table');
-                    if (table) {
-                        var rows = Array.from(table.querySelectorAll('tr'));
-                        if (rows.length > 0) {
-                            var hasHeadings = table.querySelector('th') !== null || (table.querySelector('thead') !== null);
+                    var hasStructure = body.querySelector('table, tr, [role="table"], [role="row"], h1, h2, h3, h4, h5, h6, ul, ol, blockquote, .notion-table-row, [class*="notion-table"], [class*="notion-header"]') !== null;
+
+                    if (hasStructure) {
+                        var blocks = [];
+
+                        function parseTableElement(tableEl) {
+                            var rows = Array.from(tableEl.querySelectorAll('tr'));
+                            if (rows.length === 0) return null;
+
+                            var hasHeadings = tableEl.querySelector('th') !== null || (tableEl.querySelector('thead') !== null);
                             var content = [];
                             var maxCols = 0;
 
@@ -558,95 +560,170 @@
                                 });
                                 return { withHeadings: hasHeadings, content: content };
                             }
+                            return null;
                         }
-                    }
 
-                    // B. Notion role="table" / role="row" or [class*="notion-table"]
-                    var roleRows = Array.from(doc.querySelectorAll('[role="row"], .notion-table-row, [class*="notion-table-row"]'));
-                    if (roleRows.length > 0) {
-                        var content = [];
-                        var maxCols = 0;
-                        var hasHeadings = doc.querySelector('[role="columnheader"]') !== null;
+                        function parseNotionRoleTable(tableEl) {
+                            var roleRows = Array.from(tableEl.querySelectorAll('[role="row"], .notion-table-row, [class*="notion-table-row"]'));
+                            if (roleRows.length === 0) return null;
 
-                        roleRows.forEach(function (rRow) {
-                            var cells = Array.from(rRow.querySelectorAll('[role="cell"], [role="columnheader"], [role="gridcell"], .notion-table-cell, [class*="notion-table-cell"]'));
-                            if (cells.length > 0) {
-                                var rowData = cells.map(function (c) {
-                                    return cleanCellContent(c.innerHTML) || c.textContent.trim();
+                            var content = [];
+                            var maxCols = 0;
+                            var hasHeadings = tableEl.querySelector('[role="columnheader"]') !== null;
+
+                            roleRows.forEach(function (rRow) {
+                                var cells = Array.from(rRow.querySelectorAll('[role="cell"], [role="columnheader"], [role="gridcell"], .notion-table-cell, [class*="notion-table-cell"]'));
+                                if (cells.length > 0) {
+                                    var rowData = cells.map(function (c) {
+                                        return cleanCellContent(c.innerHTML) || c.textContent.trim();
+                                    });
+                                    if (rowData.length > maxCols) maxCols = rowData.length;
+                                    content.push(rowData);
+                                }
+                            });
+
+                            if (content.length > 0 && maxCols > 0) {
+                                content.forEach(function (row) {
+                                    while (row.length < maxCols) row.push('');
                                 });
-                                if (rowData.length > maxCols) maxCols = rowData.length;
-                                content.push(rowData);
+                                return { withHeadings: hasHeadings, content: content };
                             }
+                            return null;
+                        }
+
+                        function processNode(node) {
+                            if (node.nodeType === 3) {
+                                var txt = node.textContent.trim();
+                                if (txt) {
+                                    blocks.push({ type: 'paragraph', data: { text: txt } });
+                                }
+                                return;
+                            }
+                            if (node.nodeType !== 1) return;
+
+                            var tag = node.tagName.toUpperCase();
+
+                            // Headings
+                            if (/^H[1-6]$/.test(tag) || node.classList.contains('notion-header-block') || node.classList.contains('notion-sub_header-block')) {
+                                var level = (tag === 'H1' || tag === 'H2') ? 2 : (tag === 'H3' ? 3 : 4);
+                                var hText = cleanCellContent(node.innerHTML) || node.textContent.trim();
+                                if (hText) {
+                                    blocks.push({ type: 'header', data: { text: hText, level: level } });
+                                }
+                                return;
+                            }
+
+                            // Standard Table
+                            if (tag === 'TABLE') {
+                                var tData = parseTableElement(node);
+                                if (tData) {
+                                    blocks.push({ type: 'table', data: tData });
+                                }
+                                return;
+                            }
+
+                            // Notion Role Table
+                            if (node.getAttribute('role') === 'table' || node.classList.contains('notion-simple-table') || node.classList.contains('notion-collection-table')) {
+                                var nrData = parseNotionRoleTable(node);
+                                if (nrData) {
+                                    blocks.push({ type: 'table', data: nrData });
+                                }
+                                return;
+                            }
+
+                            // Lists
+                            if (tag === 'UL' || tag === 'OL') {
+                                var items = Array.from(node.querySelectorAll(':scope > li')).map(function (li) {
+                                    return cleanCellContent(li.innerHTML) || li.textContent.trim();
+                                }).filter(Boolean);
+                                if (items.length > 0) {
+                                    blocks.push({
+                                        type: 'list',
+                                        data: {
+                                            style: tag === 'OL' ? 'ordered' : 'unordered',
+                                            items: items
+                                        }
+                                    });
+                                }
+                                return;
+                            }
+
+                            // Quotes
+                            if (tag === 'BLOCKQUOTE') {
+                                var qText = cleanCellContent(node.innerHTML) || node.textContent.trim();
+                                if (qText) {
+                                    blocks.push({ type: 'quote', data: { text: qText, caption: '' } });
+                                }
+                                return;
+                            }
+
+                            // Code
+                            if (tag === 'PRE' || tag === 'CODE') {
+                                blocks.push({ type: 'code', data: { code: node.textContent } });
+                                return;
+                            }
+
+                            // Paragraph
+                            if (tag === 'P') {
+                                var pText = cleanCellContent(node.innerHTML) || node.textContent.trim();
+                                if (pText) {
+                                    blocks.push({ type: 'paragraph', data: { text: pText } });
+                                }
+                                return;
+                            }
+
+                            // Containers (DIV, SECTION, ARTICLE, etc.)
+                            var children = Array.from(node.childNodes);
+                            if (children.length > 0) {
+                                var hasBlockChild = children.some(function (c) {
+                                    return c.nodeType === 1 && /^(DIV|P|TABLE|H1|H2|H3|H4|H5|H6|UL|OL|BLOCKQUOTE|PRE|SECTION|ARTICLE)$/i.test(c.tagName);
+                                });
+                                if (!hasBlockChild) {
+                                    var divText = cleanCellContent(node.innerHTML) || node.textContent.trim();
+                                    if (divText) {
+                                        blocks.push({ type: 'paragraph', data: { text: divText } });
+                                    }
+                                    return;
+                                }
+
+                                children.forEach(function (child) {
+                                    processNode(child);
+                                });
+                            }
+                        }
+
+                        Array.from(body.childNodes).forEach(function (child) {
+                            processNode(child);
                         });
 
-                        if (content.length > 0 && maxCols > 0) {
-                            content.forEach(function (row) {
-                                while (row.length < maxCols) row.push('');
-                            });
-                            return { withHeadings: hasHeadings, content: content };
+                        if (blocks.length > 0) {
+                            return blocks;
                         }
                     }
                 } catch (e) {
-                    console.warn('HTML Table parsing error:', e);
+                    console.warn('HTML Multi-block parsing error:', e);
                 }
             }
 
-            // 2. Try Plain Text (TSV from Notion/Excel or Markdown Table)
+            // 2. Plain Text Fallback (Single Table TSV / Markdown Table)
             if (plain && plain.trim()) {
-                var rawLines = plain.split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean);
-
-                // A. Check for Markdown Table (| col 1 | col 2 |)
-                var mdLines = rawLines.filter(function (l) { return l.startsWith('|') && l.endsWith('|'); });
-                if (mdLines.length >= 2) {
+                if (plain.indexOf('\t') !== -1) {
+                    var lines = plain.split(/\r?\n/).filter(function (line) { return line.length > 0; });
                     var content = [];
                     var maxCols = 0;
-                    var hasHeadings = false;
-
-                    mdLines.forEach(function (line) {
-                        if (/^\|[\s\-:|]+\|$/.test(line)) {
-                            hasHeadings = true;
-                            return;
-                        }
-                        var parts = line.slice(1, -1).split('|').map(function (p) { return p.trim(); });
-                        if (parts.length > maxCols) maxCols = parts.length;
-                        content.push(parts);
+                    lines.forEach(function (line) {
+                        var cols = line.split('\t').map(function (c) { return c.trim(); });
+                        if (cols.length > maxCols) maxCols = cols.length;
+                        content.push(cols);
                     });
-
-                    if (content.length > 0 && maxCols > 1) {
+                    if (maxCols > 1 && content.length > 0) {
                         content.forEach(function (row) {
                             while (row.length < maxCols) row.push('');
                         });
-                        return { withHeadings: hasHeadings, content: content };
-                    }
-                }
-
-                // B. Check for Tab-Separated Values (TSV from Notion / Excel)
-                if (plain.indexOf('\t') !== -1) {
-                    var lines = plain.split(/\r?\n/).filter(function (line) {
-                        return line.length > 0;
-                    });
-
-                    if (lines.length > 0) {
-                        var content = [];
-                        var maxCols = 0;
-
-                        lines.forEach(function (line) {
-                            var cols = line.split('\t').map(function (c) {
-                                return c.trim();
-                            });
-                            if (cols.length > maxCols) maxCols = cols.length;
-                            content.push(cols);
-                        });
-
-                        if (maxCols > 1 && content.length > 0) {
-                            content.forEach(function (row) {
-                                while (row.length < maxCols) row.push('');
-                            });
-                            return {
-                                withHeadings: false,
-                                content: content
-                            };
-                        }
+                        return [{
+                            type: 'table',
+                            data: { withHeadings: false, content: content }
+                        }];
                     }
                 }
             }
@@ -697,12 +774,12 @@
             var clipboardData = e.clipboardData || window.clipboardData;
             if (!clipboardData) return;
 
-            var tableData = parseTableFromClipboard(clipboardData);
-            if (!tableData || !tableData.content || tableData.content.length === 0) {
-                return; // Not a table, let Editor.js / Image tool handle normal paste
+            var parsedBlocks = parseBlocksFromClipboard(clipboardData);
+            if (!parsedBlocks || parsedBlocks.length === 0) {
+                return; // Not structured blocks, let Editor.js handle normal paste
             }
 
-            // CRITICAL: Stop immediate propagation so ImageTool or file uploader is never invoked
+            // CRITICAL: Stop immediate propagation so ImageTool or other plugins never intercept
             e.preventDefault();
             e.stopPropagation();
             if (e.stopImmediatePropagation) {
@@ -710,8 +787,8 @@
             }
 
             var targetCell = e.target.closest ? e.target.closest('.tc-cell') : null;
-            if (targetCell) {
-                pasteIntoExistingTable(targetCell, tableData);
+            if (targetCell && parsedBlocks.length === 1 && parsedBlocks[0].type === 'table') {
+                pasteIntoExistingTable(targetCell, parsedBlocks[0].data);
                 return;
             }
 
@@ -745,12 +822,15 @@
                 if (!text) isCurrentEmpty = true;
             }
 
+            // If current block is empty, delete it so pasted blocks start cleanly
             if (isCurrentEmpty) {
                 editor.blocks.delete(currentIdx);
-                editor.blocks.insert('table', tableData, {}, currentIdx, true);
-            } else {
-                editor.blocks.insert('table', tableData, {}, currentIdx + 1, true);
             }
+
+            // Insert ALL parsed blocks in order
+            parsedBlocks.forEach(function (block, offset) {
+                editor.blocks.insert(block.type, block.data, {}, currentIdx + offset, true);
+            });
 
             hasChanges = true;
             updateStatus();
@@ -839,7 +919,6 @@
             // Write JSON to hidden input
             hiddenInput.value = JSON.stringify(outputData);
             hasChanges = false;
-            updateStatus();
 
             // Submit the form natively (form.submit() bypasses event listeners)
             form.submit();
@@ -853,7 +932,6 @@
         titleInput.addEventListener('input', function () {
             this.classList.remove('is-invalid');
             hasChanges = true;
-            updateStatus();
         });
     }
 
@@ -863,18 +941,6 @@
         catSelect.addEventListener('change', function () {
             this.classList.remove('is-invalid');
         });
-    }
-
-    // ── Status Indicator ──
-    function updateStatus() {
-        if (!statusEl) return;
-        if (hasChanges) {
-            statusEl.classList.add('has-changes');
-            statusEl.innerHTML = '<i class="bi bi-circle-fill"></i> Değişiklikler var';
-        } else {
-            statusEl.classList.remove('has-changes');
-            statusEl.innerHTML = '<i class="bi bi-check-circle-fill"></i> Hazır';
-        }
     }
 
     // ── Debounced stats update ──

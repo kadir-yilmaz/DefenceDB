@@ -8,35 +8,84 @@
     var uploadUrl = Url.Action("UploadImage", "ArticleManagement", new { area = "Admin" });
 }
 
-<!-- Header Bar -->
-<div class="editor-header">
-    <div class="editor-header-left">
-        <div class="editor-icon">
-            <i class="bi bi-journal-richtext"></i>
-        </div>
-        <h4>@(isEdit ? "Makale Düzenle" : "Yeni Makale")</h4>
-    </div>
-    <div class="editor-header-actions">
-        <button type="button" class="btn-admin-outline btn-copy-article" id="btnCopyArticle" title="Tüm makaleyi Notion/Word uyumlu kopyala">
-            <i class="bi bi-clipboard"></i> <span>Kopyala</span>
-        </button>
-        <div class="editor-save-status" id="editorSaveStatus">
-            <i class="bi bi-check-circle-fill"></i> Hazır
-        </div>
-        <a asp-action="Index" class="btn-admin-outline">
-            <i class="bi bi-arrow-left"></i> Geri
-        </a>
-    </div>
-</div>
-
-<!-- Main Editor Layout -->
 <form asp-action="@(isEdit ? "Edit" : "Create")" asp-route-id="@(isEdit ? Model.Id : null)" method="post"
-      id="articleEditorForm" class="editor-page-wrapper">
+      id="articleEditorForm" class="editor-full-form">
     @Html.AntiForgeryToken()
     <div asp-validation-summary="ModelOnly" class="text-danger" style="display:none;"></div>
 
-    <!-- LEFT: Editor Area -->
-    <div class="editor-main">
+    <!-- TOP STICKY CONTROL BAR (Banner) -->
+    <div class="editor-top-bar">
+        <div class="editor-top-bar-left">
+            <!-- Back Button -->
+            <a asp-action="Index" class="btn-top-back" title="Makale Listesine Geri Dön">
+                <i class="bi bi-arrow-left"></i> <span>Geri</span>
+            </a>
+
+            <div class="editor-top-divider"></div>
+
+            <!-- Category Select -->
+            <div class="editor-top-category">
+                <i class="bi bi-folder2 editor-category-icon"></i>
+                <select name="ArticleCategoryId"
+                        id="articleCategorySelect"
+                        class="editor-category-select-top @(categoryHasError ? "is-invalid" : "")">
+                    <option value="">Kategori seçin</option>
+                    @foreach (var category in categories)
+                    {
+                        if (Model.ArticleCategoryId == category.Id)
+                        {
+                            <option value="@category.Id" selected>@category.Name</option>
+                        }
+                        else
+                        {
+                            <option value="@category.Id">@category.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="editor-top-divider"></div>
+
+            <!-- Toggles (Yayında & Vitrin) -->
+            <div class="editor-top-toggles">
+                <label class="editor-toggle-inline" title="Makaleyi sitede yayına al">
+                    <input type="checkbox" name="IsPublished" value="true"
+                           @(Model.IsPublished ? "checked" : "") />
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-text"><i class="bi bi-globe2"></i> Yayında</span>
+                </label>
+
+                <label class="editor-toggle-inline" title="Makaleyi anasayfa vitrininde göster">
+                    <input type="checkbox" name="IsShowcase" value="true"
+                           @(Model.IsShowcase ? "checked" : "") />
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-text"><i class="bi bi-star"></i> Vitrin</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="editor-top-bar-right">
+            <!-- Stats -->
+            <div class="editor-top-stats" title="Kelime ve Blok İstatistikleri">
+                <span><strong id="editorWordCount">0</strong> kelime</span>
+                <span class="stat-dot">·</span>
+                <span><strong id="editorBlockCount">0</strong> blok</span>
+            </div>
+
+            <!-- Copy Button -->
+            <button type="button" class="btn-admin-outline btn-copy-article" id="btnCopyArticle" title="Tüm makaleyi Notion/Word uyumlu kopyala">
+                <i class="bi bi-clipboard"></i> <span>Kopyala</span>
+            </button>
+
+            <!-- Submit Button -->
+            <button type="submit" class="editor-btn-save-top">
+                <i class="bi bi-check-lg"></i> <span>@(isEdit ? "Güncelle" : "Yayınla")</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN EDITOR CANVAS (FULL WIDTH) -->
+    <div class="editor-main-canvas">
         <!-- Title -->
         <div class="editor-title-area">
             <input type="text"
@@ -70,90 +119,5 @@
         <input type="hidden" name="ContentMarkdown" id="ContentMarkdownHidden"
                value="@Model.ContentMarkdown" />
         <span asp-validation-for="ContentMarkdown" class="editor-field-error" style="padding: 0 2.5rem;"></span>
-    </div>
-
-    <!-- RIGHT: Sidebar Panel -->
-    <div class="editor-sidebar">
-        <!-- Category Section -->
-        <div class="editor-sidebar-section">
-            <div class="editor-sidebar-title">
-                <i class="bi bi-folder2"></i> Kategori
-            </div>
-            <select name="ArticleCategoryId"
-                    id="articleCategorySelect"
-                    class="editor-category-select @(categoryHasError ? "is-invalid" : "")">
-                <option value="">Kategori seçin</option>
-                @foreach (var category in categories)
-                {
-                    if (Model.ArticleCategoryId == category.Id)
-                    {
-                        <option value="@category.Id" selected>@category.Name</option>
-                    }
-                    else
-                    {
-                        <option value="@category.Id">@category.Name</option>
-                    }
-                }
-            </select>
-            <span asp-validation-for="ArticleCategoryId" class="editor-field-error"></span>
-        </div>
-
-        <!-- Publish Settings -->
-        <div class="editor-sidebar-section">
-            <div class="editor-sidebar-title">
-                <i class="bi bi-gear"></i> Yayın Ayarları
-            </div>
-            <div class="editor-toggle-group">
-                <div class="editor-toggle-item">
-                    <span class="editor-toggle-label">
-                        <i class="bi bi-globe2"></i> Yayında
-                    </span>
-                    <label class="editor-switch">
-                        <input type="checkbox" name="IsPublished" value="true"
-                               @(Model.IsPublished ? "checked" : "") />
-                        <span class="editor-switch-slider"></span>
-                    </label>
-                </div>
-                <div class="editor-toggle-item">
-                    <span class="editor-toggle-label">
-                        <i class="bi bi-star"></i> Vitrin
-                    </span>
-                    <label class="editor-switch">
-                        <input type="checkbox" name="IsShowcase" value="true"
-                               @(Model.IsShowcase ? "checked" : "") />
-                        <span class="editor-switch-slider"></span>
-                    </label>
-                </div>
-            </div>
-        </div>
-
-        <!-- Stats -->
-        <div class="editor-sidebar-section">
-            <div class="editor-sidebar-title">
-                <i class="bi bi-bar-chart"></i> İstatistikler
-            </div>
-            <div class="editor-stats">
-                <div class="editor-stat-item">
-                    <i class="bi bi-type"></i>
-                    <strong id="editorWordCount">0</strong> kelime
-                </div>
-                <div class="editor-stat-item">
-                    <i class="bi bi-layers"></i>
-                    <strong id="editorBlockCount">0</strong> blok
-                </div>
-            </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="editor-sidebar-section">
-            <div class="editor-sidebar-actions">
-                <button type="submit" class="editor-btn-save">
-                    <i class="bi bi-check-lg"></i> @(isEdit ? "Güncelle" : "Yayınla")
-                </button>
-                <a asp-action="Index" class="editor-btn-cancel">
-                    <i class="bi bi-x-lg"></i> İptal
-                </a>
-            </div>
-        </div>
     </div>
 </form>
