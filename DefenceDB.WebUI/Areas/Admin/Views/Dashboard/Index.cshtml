@@ -57,7 +57,6 @@
                     <th>Platform Adı</th>
                     <th class="d-none d-md-table-cell">Kategori</th>
                     <th class="d-none d-md-table-cell">Ülke</th>
-                    <th>Durum</th>
                 </tr>
             </thead>
             <tbody>
@@ -89,23 +88,13 @@
                                 </span>
                             </td>
                             <td class="d-none d-md-table-cell" style="color: var(--admin-text-secondary);">@product.Country</td>
-                            <td>
-                                @if (product.Status == "Active")
-                                {
-                                    <span class="admin-badge active"><i class="bi bi-check-circle-fill"></i> Aktif</span>
-                                }
-                                else
-                                {
-                                    <span class="admin-badge warning"><i class="bi bi-exclamation-circle-fill"></i> @product.Status</span>
-                                }
-                            </td>
                         </tr>
                     }
                 }
                 else
                 {
                     <tr>
-                        <td colspan="5" class="text-center py-5" style="color: var(--admin-text-muted);">
+                        <td colspan="4" class="text-center py-5" style="color: var(--admin-text-muted);">
                             <i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 8px;"></i>
                             Henüz kayıtlı ürün bulunmamaktadır.
                         </td>
@@ -130,7 +119,6 @@
                     <th>Görsel</th>
                     <th>Platform Adı</th>
                     <th class="d-none d-md-table-cell">Kategori</th>
-                    <th class="d-none d-md-table-cell">Durum</th>
                     <th>Vitrin İşlemi</th>
                 </tr>
             </thead>
@@ -156,16 +144,6 @@
                                     @product.Category?.Name
                                 </span>
                             </td>
-                            <td class="d-none d-md-table-cell">
-                                @if (product.Status == "Active")
-                                {
-                                    <span class="admin-badge active"><i class="bi bi-check-circle-fill"></i> Aktif</span>
-                                }
-                                else
-                                {
-                                    <span class="admin-badge warning"><i class="bi bi-exclamation-circle-fill"></i> @product.Status</span>
-                                }
-                            </td>
                             <td>
                                 <button type="button" class="btn btn-sm btn-outline-danger" onclick="toggleShowcase(@product.Id, false)">
                                     <i class="bi bi-star-half"></i> Vitrinden Kaldır
@@ -177,7 +155,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="5" class="text-center py-5" style="color: var(--admin-text-muted);">
+                        <td colspan="4" class="text-center py-5" style="color: var(--admin-text-muted);">
                             <i class="bi bi-star" style="font-size: 2rem; display: block; margin-bottom: 8px;"></i>
                             Vitrinde hiç ürün bulunmamaktadır.
                         </td>

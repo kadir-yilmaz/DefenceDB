@@ -19,7 +19,6 @@ public class DefenseProduct : BaseEntity
     [MaxLength(100)]
     public string? NatoReportingName { get; set; }
 
-    [MaxLength(5000)]
     public string? Description { get; set; }
 
     [MaxLength(100)]

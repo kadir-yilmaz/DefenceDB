@@ -127,23 +127,6 @@
                             <span>@Model.Country</span>
                         </div>
                     </li>
-                    <li class="spec-item">
-                        <div class="spec-label">Üretici Firma</div>
-                        <div class="spec-value text-warning fw-bold">@Model.Manufacturer</div>
-                    </li>
-                    <li class="spec-item">
-                        <div class="spec-label">Envanter Durumu</div>
-                        <div class="spec-value">
-                            @if (Model.Status == "Active")
-                            {
-                                <span class="badge bg-success rounded-pill px-3">Aktif Kullanımda</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary rounded-pill px-3">@Model.Status</span>
-                            }
-                        </div>
-                    </li>
                 </ul>
             </div>
 

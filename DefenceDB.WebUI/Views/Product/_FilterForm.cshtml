@@ -28,17 +28,6 @@
         </select>
     </div>
 
-    <!-- Ortak Filtreler: Durum -->
-    <div class="mb-3">
-        <label class="form-label text-secondary-theme small fw-bold">Durum</label>
-        <select name="status" class="form-select form-select-sm bg-theme text-primary-theme border-theme" onchange="this.form.submit()">
-            <option value="">Tüm Durumlar</option>
-            @if (ViewBag.CurrentStatus == "Active") { <option value="Active" selected>Aktif Kullanımda</option> } else { <option value="Active">Aktif Kullanımda</option> }
-            @if (ViewBag.CurrentStatus == "In Development") { <option value="In Development" selected>Geliştirme Aşamasında</option> } else { <option value="In Development">Geliştirme Aşamasında</option> }
-            @if (ViewBag.CurrentStatus == "Retired") { <option value="Retired" selected>Emekliye Ayrılmış</option> } else { <option value="Retired">Emekliye Ayrılmış</option> }
-        </select>
-    </div>
-
     @if (filterAttributes != null && filterAttributes.Any())
     {
         <hr class="border-theme my-3" />

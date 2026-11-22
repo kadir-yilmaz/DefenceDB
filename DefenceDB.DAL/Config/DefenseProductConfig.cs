@@ -12,7 +12,7 @@ public class DefenseProductConfig : IEntityTypeConfiguration<DefenseProduct>
         builder.HasKey(p => p.Id);
         builder.Property(p => p.Name).IsRequired().HasMaxLength(200);
         builder.Property(p => p.NatoReportingName).HasMaxLength(100);
-        builder.Property(p => p.Description).HasMaxLength(5000);
+        builder.Property(p => p.Description).HasColumnType("nvarchar(max)");
         builder.Property(p => p.Country).HasMaxLength(100);
         builder.Property(p => p.Manufacturer).HasMaxLength(200);
         builder.Property(p => p.ThumbnailUrl).HasMaxLength(500);

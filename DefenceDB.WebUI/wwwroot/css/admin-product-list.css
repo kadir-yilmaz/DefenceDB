@@ -109,3 +109,34 @@
     align-items: center;
     height: 100%;
 }
+
+[data-theme="dark"] .admin-pagination .page-link-custom {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+}
+
+[data-theme="dark"] .admin-pagination .page-link-custom:hover {
+    background: rgba(59, 130, 246, 0.28);
+    color: #93c5fd;
+}
+
+[data-theme="dark"] .admin-pagination .active .page-link-custom {
+    background: var(--admin-accent);
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.35);
+}
+
+[data-theme="dark"] .admin-pagination .disabled .page-link-custom {
+    background: transparent;
+    color: var(--admin-text-muted);
+    opacity: 0.5;
+}
+
+[data-theme="dark"] .admin-pagination .page-link-text {
+    background: transparent;
+    color: #60a5fa;
+}
+
+[data-theme="dark"] .admin-pagination .ellipsis {
+    color: var(--admin-text-muted);
+}

@@ -63,20 +63,6 @@
                             <select id="countrySelect" name="Country" class="form-select"></select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Uretici Firma</label>
-                            <select id="manufacturerSelect" multiple="multiple" class="form-select"></select>
-                            <input type="hidden" name="Manufacturer" id="ManufacturerHidden" />
-                            <small class="text-muted d-block mt-1">Coklu secim yapabilirsiniz. Ulke sectikten sonra liste guncellenir. Listede yoksa yazarak ekleyebilirsiniz.</small>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Durum</label>
-                            <select name="Status" class="form-select">
-                                <option value="Active">Aktif Kullanımda</option>
-                                <option value="In Development">Geliştirme Aşamasında</option>
-                                <option value="Retired">Emekliye Ayrılmış</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
                             <label class="form-label fw-semibold">YouTube Video Linki (Istege Bagli)</label>
                             <input name="VideoUrl" class="form-control" placeholder="Orn: https://www.youtube.com/watch?v=..." />
                         </div>
@@ -120,23 +106,6 @@
             </div>
         </div>
 
-        <!-- Aciklama -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card border-primary shadow-sm">
-                    <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between py-2">
-                        <div><i class="bi bi-text-paragraph me-2"></i> Aciklama / Detayli Bilgi</div>
-                        <button type="button" class="btn btn-sm btn-light text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#mdTableGeneratorModal">
-                            <i class="bi bi-table me-1 text-primary"></i> Tablo Ekle
-                        </button>
-                    </div>
-                    <div class="card-body p-0">
-                        <textarea name="Description" class="form-control border-0 p-3" rows="10" style="resize: vertical;" placeholder="Urun hakkinda detayli bilgi..."></textarea>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Baglantili Urunler -->
         <div class="row mt-4">
             <div class="col-12">
@@ -165,6 +134,23 @@
             </div>
         </div>
 
+        <!-- Aciklama -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-primary shadow-sm">
+                    <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between py-2">
+                        <div><i class="bi bi-text-paragraph me-2"></i> Aciklama / Detayli Bilgi</div>
+                        <button type="button" class="btn btn-sm btn-light text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#mdTableGeneratorModal">
+                            <i class="bi bi-table me-1 text-primary"></i> Tablo Ekle
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <textarea id="Description" name="Description" class="form-control border-0 p-3 auto-expand-textarea" rows="10" style="resize: vertical; overflow-y: hidden;" placeholder="Urun hakkinda detayli bilgi..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         @await Html.PartialAsync("_MarkdownTableGenerator")
 
         <!-- Relation Modal -->
@@ -172,8 +158,8 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content" style="background-color:var(--admin-surface);border:1px solid var(--admin-border);">
                     <div class="modal-header" style="border-color:var(--admin-border)!important;">
-                        <h5 class="modal-title fw-bold text-white"><i class="bi bi-link-45deg text-warning"></i> Baglantili Urun Sec</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        <h5 class="modal-title fw-bold" style="color:var(--admin-text);"><i class="bi bi-link-45deg text-warning"></i> Baglantili Urun Sec</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body pt-3">
                         <div class="row g-2 mb-3">
@@ -232,22 +218,11 @@
             if (!flagUrl) return country.text;
             return $('<span><img src="'+flagUrl+'" class="img-flag border" style="width:24px;height:16px;margin-right:8px;object-fit:cover;" /> '+country.text+'</span>');
         }
-        var manufacturersData = {};
-        $.getJSON('/data/manufacturers.json', function(data) { manufacturersData = data; });
-        $('#manufacturerSelect').select2({ tags: true, placeholder: "Uretici Secin veya Yazin...", width: '100%' });
         $.getJSON('/data/countries.json', function(data) {
             var sel = $('#countrySelect');
             sel.append('<option value="">Ulke Secin...</option>');
             data.forEach(function(c) { sel.append('<option value="'+c.name+'" data-flag="https://flagcdn.com/w40/'+c.code+'.png">'+c.name+'</option>'); });
             sel.select2({ templateResult: formatCountry, templateSelection: formatCountry, width: '100%' });
-        });
-        $('#countrySelect').on('change', function() {
-            var country = $(this).val(), mfgSel = $('#manufacturerSelect');
-            mfgSel.empty();
-            if (country && manufacturersData[country]) {
-                manufacturersData[country].forEach(function(m) { mfgSel.append(new Option(m, m, false, false)); });
-            }
-            mfgSel.trigger('change');
         });
 
         // === DYNAMIC CATEGORY ATTRIBUTES ===
@@ -486,6 +461,24 @@
             $('#productForm').append('<input type="hidden" name="RelatedProductIds" value="'+id+'" id="rel_input_'+id+'">');
         }
 
+        // === AUTO-EXPAND TEXTAREA ===
+        function autoResizeTextarea(el) {
+            if (!el) return;
+            var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            el.style.height = 'auto';
+            el.style.height = Math.max(220, el.scrollHeight) + 'px';
+            window.scrollTo(0, scrollTop);
+        }
+        var descTextarea = document.getElementById('Description');
+        if (descTextarea) {
+            autoResizeTextarea(descTextarea);
+            descTextarea.addEventListener('input', function() { autoResizeTextarea(this); });
+            descTextarea.addEventListener('paste', function() {
+                var self = this;
+                setTimeout(function() { autoResizeTextarea(self); }, 0);
+            });
+        }
+
         // === FORM SUBMIT ===
         $('#productForm').on('submit', function() {
             if ($('.guidance-checkbox').length > 0) {
@@ -500,8 +493,6 @@
                 var sel = []; $('.cooling-checkbox:checked').each(function() { sel.push($(this).val()); });
                 $('#CoolingSystemHidden').val(sel.join(' / '));
             }
-            var mfgs = $('#manufacturerSelect').val();
-            $('#ManufacturerHidden').val(mfgs && mfgs.length > 0 ? mfgs.join(' + ') : '');
         });
     });
     </script>

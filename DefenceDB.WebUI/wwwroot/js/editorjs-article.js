@@ -305,8 +305,8 @@
             }
 
             var isWithHeadings = table.classList.contains('tc-table--with-headings') ||
-                                 table.classList.contains('tc-table--heading') ||
-                                 table.querySelector('.tc-row--heading') !== null;
+                table.classList.contains('tc-table--heading') ||
+                table.querySelector('.tc-row--heading') !== null;
             var rows = Array.from(table.querySelectorAll('.tc-row'));
             var idx = rows.indexOf(row);
             var startIndex = isWithHeadings ? 1 : 0;
@@ -353,8 +353,8 @@
 
                 var prevRow = row.previousElementSibling;
                 var isWithHeadings = table.classList.contains('tc-table--with-headings') ||
-                                     table.classList.contains('tc-table--heading') ||
-                                     table.querySelector('.tc-row--heading') !== null;
+                    table.classList.contains('tc-table--heading') ||
+                    table.querySelector('.tc-row--heading') !== null;
 
                 if (prevRow && prevRow.classList.contains('tc-row')) {
                     if (isWithHeadings && prevRow === table.querySelector('.tc-row:first-child')) {
@@ -458,8 +458,8 @@
         var tables = clone.querySelectorAll('.tc-table');
         tables.forEach(function (table) {
             var isHeading = table.classList.contains('tc-table--with-headings') ||
-                            table.classList.contains('tc-table--heading') ||
-                            table.querySelector('.tc-row--heading') !== null;
+                table.classList.contains('tc-table--heading') ||
+                table.querySelector('.tc-row--heading') !== null;
 
             var htmlTable = document.createElement('table');
             htmlTable.setAttribute('border', '1');
@@ -520,8 +520,8 @@
 
             var html = '';
             var plain = '';
-            try { html = clipboardData.getData('text/html') || ''; } catch (e) {}
-            try { plain = clipboardData.getData('text/plain') || ''; } catch (e) {}
+            try { html = clipboardData.getData('text/html') || ''; } catch (e) { }
+            try { plain = clipboardData.getData('text/plain') || ''; } catch (e) { }
 
             // 1. Try HTML Multi-Block Parsing (Notion, Google Docs, Word, Web)
             if (html && html.trim()) {
@@ -844,9 +844,9 @@
 
             var range = selection.getRangeAt(0);
             var intersectsEditor = container.contains(range.commonAncestorContainer) ||
-                                   range.commonAncestorContainer === container ||
-                                   container.contains(range.startContainer) ||
-                                   container.contains(range.endContainer);
+                range.commonAncestorContainer === container ||
+                container.contains(range.startContainer) ||
+                container.contains(range.endContainer);
 
             if (!intersectsEditor) return;
 
@@ -991,10 +991,10 @@
 
             try {
                 var title = titleInput ? titleInput.value.trim() : '';
-                
+
                 // Clone editor DOM and convert tables to semantic HTML
                 var convertedDiv = convertEditorTablesToSemanticHtml(editorHolder);
-                
+
                 // Build semantic HTML string
                 var htmlParts = [];
                 if (title) {

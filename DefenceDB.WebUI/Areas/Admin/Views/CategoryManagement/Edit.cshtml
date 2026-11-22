@@ -72,7 +72,7 @@
                     <div class="mb-2">
                         <div class="form-check form-switch d-flex align-items-center gap-2 p-0">
                             <input asp-for="IsShowcase" class="form-check-input ms-0 me-2" type="checkbox" role="switch" style="width: 2.5em; height: 1.3em; cursor: pointer;">
-                            <label asp-for="IsShowcase" class="form-check-label fw-bold text-dark mb-0" style="cursor: pointer;">Ana Sayfada Göster</label>
+                            <label asp-for="IsShowcase" class="form-check-label fw-bold mb-0" style="cursor: pointer; color: var(--admin-text);">Ana Sayfada Göster</label>
                         </div>
                         <div class="form-text text-muted small mt-2">Bu kategori ana sayfada öne çıkanlar arasında gösterilsin mi?</div>
                     </div>
@@ -94,7 +94,7 @@
                 <div class="card-body p-4" id="attributesContainer">
                     <div id="emptyAttrMsg" class="text-center py-5 border rounded-4 text-muted" style="border-style: dashed !important; border-color: var(--admin-border) !important; background: var(--admin-bg); @(Model.Attributes != null && Model.Attributes.Any() ? "display:none;" : "")">
                         <i class="bi bi-tags display-5 text-warning opacity-75 d-block mb-2"></i>
-                        <p class="mb-1 fw-bold text-dark">Henüz eklenmiş özellik bulunmuyor.</p>
+                        <p class="mb-1 fw-bold" style="color: var(--admin-text);">Henüz eklenmiş özellik bulunmuyor.</p>
                         <small class="text-muted">Bu kategoriye özel teknik alanlar eklemek için üstteki <b>+ Özellik Ekle</b> butonunu kullanın.</small>
                     </div>
 

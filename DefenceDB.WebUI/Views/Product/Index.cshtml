@@ -284,8 +284,7 @@
                 <!-- Active Filters Bar (Herhangi bir filtre aktifse görünür) -->
                 @{
                     var filterAttrs = ViewBag.FilterAttributes as List<DefenceDB.EL.Models.CategoryAttribute>;
-                    bool isAnyFilterActive = !string.IsNullOrEmpty(ViewBag.CurrentStatus) || 
-                                             !string.IsNullOrEmpty(ViewBag.CurrentSearch) || 
+                    bool isAnyFilterActive = !string.IsNullOrEmpty(ViewBag.CurrentSearch) || 
                                              !string.IsNullOrEmpty(ViewBag.CurrentManufacturer) || 
                                              !string.IsNullOrEmpty(ViewBag.CurrentSortBy) ||
                                              (filterAttrs != null && filterAttrs.Any(a => 
@@ -293,23 +292,15 @@
                                                  !string.IsNullOrEmpty(Context.Request.Query[a.Name + "_min"]) || 
                                                  !string.IsNullOrEmpty(Context.Request.Query[a.Name + "_max"])));
                 }
-                @if (!string.IsNullOrEmpty(ViewBag.CurrentCountry) || !string.IsNullOrEmpty(ViewBag.CurrentStatus) || !string.IsNullOrEmpty(ViewBag.CurrentSearch) || isAnyFilterActive)
+                @if (!string.IsNullOrEmpty(ViewBag.CurrentCountry) || !string.IsNullOrEmpty(ViewBag.CurrentSearch) || isAnyFilterActive)
                 {
                     <div class="d-flex align-items-center flex-wrap gap-2 pt-2 mt-2 mb-4 border-theme">
                         <span class="fs-8 text-secondary-theme fw-semibold me-1"><i class="bi bi-funnel-fill text-warning me-1"></i>Aktif Filtreler:</span>
                         
                         @if (!string.IsNullOrEmpty(ViewBag.CurrentCountry))
                         {
-                            <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, sortBy = ViewBag.CurrentSortBy })" class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-1 text-decoration-none d-inline-flex align-items-center gap-1 fs-8">
+                            <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, search = ViewBag.CurrentSearch, sortBy = ViewBag.CurrentSortBy })" class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-1 text-decoration-none d-inline-flex align-items-center gap-1 fs-8">
                                 <span>Ülke: @ViewBag.CurrentCountry</span>
-                                <i class="bi bi-x-lg ms-1" style="font-size: 0.65rem;"></i>
-                            </a>
-                        }
-
-                        @if (!string.IsNullOrEmpty(ViewBag.CurrentStatus))
-                        {
-                            <a href="@Url.Action("Index", "Product", new { categorySlug = currentCategory?.Slug, country = ViewBag.CurrentCountry, search = ViewBag.CurrentSearch, sortBy = ViewBag.CurrentSortBy })" class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-1 text-decoration-none d-inline-flex align-items-center gap-1 fs-8">
-                                <span>Durum: @ViewBag.CurrentStatus</span>
                                 <i class="bi bi-x-lg ms-1" style="font-size: 0.65rem;"></i>
                             </a>
                         }

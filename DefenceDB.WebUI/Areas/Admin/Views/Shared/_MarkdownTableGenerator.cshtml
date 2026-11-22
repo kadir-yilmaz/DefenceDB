@@ -21,9 +21,9 @@
                     <p class="text-muted small mb-0"><i class="bi bi-info-circle me-1 text-info"></i> Bu araç, belirttiğiniz boyutlarda hazır bir Markdown tablosu şablonu oluşturarak <b>Açıklama</b> alanına imlecin bulunduğu yere ekler. Ekledikten sonra içeriklerini rahatça değiştirebilirsiniz.</p>
                 </div>
             </div>
-            <div class="modal-footer bg-light">
+            <div class="modal-footer bg-light" style="background-color: var(--admin-bg-secondary) !important; border-color: var(--admin-border) !important;">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">İptal</button>
-                <button type="button" class="btn btn-warning fw-bold" onclick="generateMarkdownTable()"><i class="bi bi-plus-circle me-1"></i> Tabloyu Ekle</button>
+                <button type="button" class="btn btn-warning text-dark fw-bold" onclick="generateMarkdownTable()"><i class="bi bi-plus-circle me-1"></i> Tabloyu Ekle</button>
             </div>
         </div>
     </div>
@@ -79,6 +79,7 @@
             const newPos = startPos + md.length;
             textarea.selectionStart = newPos;
             textarea.selectionEnd = newPos;
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
             textarea.focus();
         } else {
             console.error("Description textarea bulunamadı!");
