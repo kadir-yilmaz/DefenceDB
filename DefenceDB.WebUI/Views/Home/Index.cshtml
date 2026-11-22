@@ -31,10 +31,10 @@
     
     <div class="container hero-content h-100 d-flex flex-column justify-content-end pb-5">
         <div class="quote-wrapper text-center w-100 mb-4 px-3" style="animation: fadeInUp 1.5s ease-out;">
-            <p class="text-white opacity-75 fst-italic mx-auto" style="max-width: 800px; font-size: 1.5rem; line-height: 1.6; font-family: 'Outfit', sans-serif;">
+            <p class="text-white opacity-90 fst-italic mx-auto" style="max-width: 800px; font-size: 1.45rem; line-height: 1.6; font-family: 'Outfit', sans-serif;">
                 "Uçmayı bir kere tattıktan sonra, yeryüzünde sonsuza dek gözleriniz gökyüzüne çevrilmiş bir şekilde yürüyeceksiniz..."
             </p>
-            <p class="text-warning fw-bold mt-2" style="font-size: 1.1rem; letter-spacing: 2px;">
+            <p class="fw-bold mt-2" style="font-size: 0.95rem; letter-spacing: 2.5px; color: #cbd5e1;">
                 — LEONARDO DA VINCI
             </p>
         </div>
@@ -75,14 +75,13 @@
     var showcaseProducts = ViewBag.ShowcaseProducts as List<DefenseProduct> ?? new List<DefenseProduct>();
 }
 
-<link rel="stylesheet" href="~/css/home.css" asp-append-version="true" />
 @if (showcaseProducts.Any())
 {
-    <section class="container mb-5">
-        <div class="row mb-4 align-items-center">
-            <div class="col-md-12">
-                <h2 class="text-primary-theme"><i class="bi bi-star-fill text-warning me-2"></i> Sizin İçin Seçtiklerimiz</h2>
-                <p class="text-secondary-theme mb-0">Geleceğin Türk Hava Kuvvetleri</p>
+    <section class="container home-section">
+        <div class="home-section-header">
+            <div>
+                <h2 class="home-section-title">Sizin İçin Seçtiklerimiz</h2>
+                <p class="home-section-subtitle">Geleceğin Türk Hava Kuvvetleri ve öne çıkan stratejik sistemler</p>
             </div>
         </div>
 
@@ -94,34 +93,29 @@
                 var thumbImage = toThumb(mainImage);
                 var categoryName = prod.Category?.Name;
                 <div class="col-md-6 col-lg-3 reveal-card" style="--delay: @(showIndex * 45)ms;">
-                    <div class="card-premium h-100 d-flex flex-column" style="cursor: pointer; border-color: rgba(251, 191, 36, 0.25) !important; box-shadow: 0 4px 25px rgba(251, 191, 36, 0.05);" onclick="handleProductClick(event, '/@(prod.Slug)')">
+                    <div class="card-premium home-product-card h-100 d-flex flex-column" onclick="handleProductClick(event, '/@(prod.Slug)')">
                         @if (!string.IsNullOrWhiteSpace(categoryName))
                         {
-                            <span class="category-badge bg-warning text-dark border-0 fw-bold">@categoryName</span>
+                            <span class="home-card-badge">@categoryName</span>
                         }
-                        <div class="card-img-wrapper" style="position: relative;">
+                        <div class="card-img-wrapper">
                             <img src="@thumbImage" alt="@prod.Name" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='@mainImage';" />
                         </div>
                         <div class="card-body d-flex flex-column flex-grow-1">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h5 class="card-title text-truncate text-warning font-outfit mb-0" style="max-width: 80%; font-weight: 600;" title="@prod.Name">@prod.Name</h5>
-                            </div>
+                            <h5 class="home-card-title text-truncate" title="@prod.Name">@prod.Name</h5>
                             
                             @if (!string.IsNullOrEmpty(prod.NatoReportingName))
                             {
-                                <div class="fs-7 text-secondary italic mb-2">NATO: "@prod.NatoReportingName"</div>
+                                <div class="home-card-nato">NATO: "@prod.NatoReportingName"</div>
                             }
 
                             <div class="flex-grow-1"></div>
                             
-                            <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top border-theme">
-                                <span class="fs-8 text-muted-theme text-truncate" style="max-width: 65%;">Üretici: <strong class="text-secondary-theme">@prod.Manufacturer</strong></span>
-                                @if (!string.IsNullOrEmpty(prod.Country))
+                            <div class="home-card-meta">
+                                <span class="home-card-country-name text-truncate">@(!string.IsNullOrEmpty(prod.Country) ? prod.Country : "Bilinmiyor")</span>
+                                @if (!string.IsNullOrEmpty(prod.Country) && !string.IsNullOrEmpty(CountryHelper.GetFlagUrl(prod.Country)))
                                 {
-                                    @if (!string.IsNullOrEmpty(CountryHelper.GetFlagUrl(prod.Country)))
-                                    {
-                                        <img src="@CountryHelper.GetFlagUrl(prod.Country)" alt="@prod.Country" title="@prod.Country" style="width: 24px; height: auto; object-fit: contain; border-radius: 2px; border: 1px solid var(--border-light, #e2e8f0); box-shadow: 0 1px 3px rgba(0,0,0,0.08);" />
-                                    }
+                                    <img src="@CountryHelper.GetFlagUrl(prod.Country)" alt="@prod.Country" title="@prod.Country" class="home-card-flag" />
                                 }
                             </div>
                         </div>
@@ -135,17 +129,15 @@
 
 @if (showcaseArticles.Any())
 {
-    <section class="container mb-5">
-        <div class="row mb-4 align-items-center">
-            <div class="col-md-8">
-                <h2 class="text-primary-theme"><i class="bi bi-journal-richtext text-warning me-2"></i> Öne Çıkan Makaleler</h2>
-                <p class="text-secondary-theme mb-0">Editörün seçtiği analizler ve derlemeler.</p>
+    <section class="container home-section">
+        <div class="home-section-header">
+            <div>
+                <h2 class="home-section-title">Öne Çıkan Makaleler</h2>
+                <p class="home-section-subtitle">Editörün seçtiği analizler ve savunma sanayii derlemeleri</p>
             </div>
-            <div class="col-md-4 text-md-end mt-2 mt-md-0">
-                <a asp-controller="Articles" asp-action="Index" class="text-warning text-decoration-none fw-bold">
-                    Tüm Makaleleri Gör <i class="bi bi-arrow-right"></i>
-                </a>
-            </div>
+            <a asp-controller="Articles" asp-action="Index" class="home-section-link">
+                <span>Tüm Makaleleri Gör</span> <i class="bi bi-arrow-right"></i>
+            </a>
         </div>
 
         <div class="grid-5-columns">
@@ -158,7 +150,7 @@
                         <h3 title="@article.Title">@article.Title</h3>
                         <div class="home-article-footer">
                             <time datetime="@((article.PublishedAt ?? article.CreatedAt).ToString("yyyy-MM-dd"))">@((article.PublishedAt ?? article.CreatedAt).ToString("dd.MM.yyyy"))</time>
-                            <i class="bi bi-arrow-right"></i>
+                            <span class="home-article-read">Oku <i class="bi bi-arrow-up-right"></i></span>
                         </div>
                     </article>
                 </div>
@@ -168,19 +160,16 @@
     </section>
 }
 
-<link rel="stylesheet" href="~/css/home.css" asp-append-version="true" />
 <!-- Categories Section -->
-<section class="container mb-5">
-    <div class="row mb-4 align-items-center">
-        <div class="col-md-8">
-            <h2 class="text-primary-theme"><i class="bi bi-grid-fill text-warning me-2"></i> Savunma Kategorileri</h2>
-            <p class="text-secondary-theme mb-0">Teknoloji sınıflarına göre filtreleyip detaylı incelemeler yapabilirsiniz.</p>
+<section class="container home-section">
+    <div class="home-section-header">
+        <div>
+            <h2 class="home-section-title">Savunma Kategorileri</h2>
+            <p class="home-section-subtitle">Teknoloji sınıflarına göre filtreleyip detaylı teknik incelemeler yapabilirsiniz</p>
         </div>
-        <div class="col-md-4 text-md-end mt-2 mt-md-0">
-            <a href="/ara" class="text-warning text-decoration-none fw-bold">
-                Tüm Kategorileri Gör <i class="bi bi-arrow-right"></i>
-            </a>
-        </div>
+        <a href="/ara" class="home-section-link">
+            <span>Tüm Kategorileri Gör</span> <i class="bi bi-arrow-right"></i>
+        </a>
     </div>
 
     <div class="row g-4">
@@ -188,21 +177,24 @@
         @foreach (var cat in categories)
         {
             <div class="col-md-4 reveal-card" style="--delay: @(catIndex * 45)ms;">
-                <div class="card-premium-dark d-flex flex-column h-100 p-4" style="cursor: pointer;" onclick="location.href='@Url.Action("Index", "Product", new { categorySlug = cat.Slug })'">
+                <div class="home-category-card d-flex flex-column h-100" onclick="location.href='@Url.Action("Index", "Product", new { categorySlug = cat.Slug })'">
                     <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="p-3 category-icon-wrapper rounded-circle text-warning fs-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <div class="home-category-icon">
                             <i class="@cat.IconClass"></i>
                         </div>
-                        <div>
-                            <h4 class="card-title mb-0">@cat.Name</h4>
-                        </div>
+                        <h4 class="home-category-title mb-0">@cat.Name</h4>
                     </div>
-                    <p class="card-text mb-4 flex-grow-1">
-                        @cat.Description
-                    </p>
-                    <div class="mt-auto d-flex align-items-center justify-content-between category-action-link fw-bold fs-7">
-                        <span>İncele</span>
-                        <i class="bi bi-chevron-right"></i>
+                    @if (!string.IsNullOrWhiteSpace(cat.Description))
+                    {
+                        <p class="home-category-desc mb-3 flex-grow-1">@cat.Description</p>
+                    }
+                    else
+                    {
+                        <div class="flex-grow-1"></div>
+                    }
+                    <div class="home-category-footer">
+                        <span>Envanteri İncele</span>
+                        <i class="bi bi-arrow-right"></i>
                     </div>
                 </div>
             </div>
@@ -211,19 +203,16 @@
     </div>
 </section>
 
-<!-- Compact Grid Styling for 5 columns -->
 <!-- Recent Products Section (5 per row, 2 rows) -->
-<section class="container mb-5 pb-5">
-    <div class="row mb-4 align-items-center">
-        <div class="col-md-8">
-            <h2 class="text-primary-theme"><i class="bi bi-lightning-charge-fill text-warning me-2"></i> En Son Eklenen Ürünler</h2>
-            <p class="text-secondary-theme mb-0">Veritabanına en son eklenen aktif savunma sanayii ürünleri.</p>
+<section class="container home-section pb-4">
+    <div class="home-section-header">
+        <div>
+            <h2 class="home-section-title">En Son Eklenen Ürünler</h2>
+            <p class="home-section-subtitle">Veritabanına en son eklenen savunma sanayii platformları ve mühimmatlar</p>
         </div>
-        <div class="col-md-4 text-md-end mt-2 mt-md-0">
-            <a href="/ara" class="text-warning text-decoration-none fw-bold">
-                Tüm Veritabanını Gör <i class="bi bi-arrow-right"></i>
-            </a>
-        </div>
+        <a href="/ara" class="home-section-link">
+            <span>Tüm Veritabanını Gör</span> <i class="bi bi-arrow-right"></i>
+        </a>
     </div>
 
     <div class="grid-5-columns">
@@ -234,37 +223,29 @@
             var thumbImage = toThumb(mainImage);
             var categoryName = prod.Category?.Name;
             <div class="reveal-card" style="--delay: @(prodIndex * 35)ms;">
-                <div class="card-premium card-compact h-100 d-flex flex-column" style="cursor: pointer;" onclick="handleProductClick(event, '/@(prod.Slug)')">
+                <div class="card-premium home-product-card card-compact h-100 d-flex flex-column" onclick="handleProductClick(event, '/@(prod.Slug)')">
                     @if (!string.IsNullOrWhiteSpace(categoryName))
                     {
-                        <span class="category-badge">@categoryName</span>
+                        <span class="home-card-badge home-card-badge-sm">@categoryName</span>
                     }
                     <div class="card-img-wrapper">
                         <img src="@thumbImage" alt="@prod.Name" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='@mainImage';" />
                     </div>
                     <div class="card-body p-0 d-flex flex-column flex-grow-1">
-                        <div class="d-flex justify-content-between align-items-start mb-1">
-                            <h5 class="card-title text-truncate text-primary-theme m-0" style="max-width: 100%;" title="@prod.Name">@prod.Name</h5>
-                        </div>
-                        <div class="text-muted-theme mb-1" style="font-size: 0.72rem;">
-                            <i class="bi bi-calendar-event me-1 text-warning"></i>@prod.CreatedAt.ToString("dd.MM.yyyy")
-                        </div>
+                        <h5 class="home-card-title home-card-title-sm text-truncate m-0" title="@prod.Name">@prod.Name</h5>
                         
                         @if (!string.IsNullOrEmpty(prod.NatoReportingName))
                         {
-                            <div class="text-secondary italic mb-1" style="font-size: 0.72rem;">NATO: "@prod.NatoReportingName"</div>
+                            <div class="home-card-nato mt-1">NATO: "@prod.NatoReportingName"</div>
                         }
 
                         <div class="flex-grow-1"></div>
                         
-                        <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top border-theme" style="font-size: 0.75rem;">
-                            <span class="text-muted-theme text-truncate" style="max-width: 60%;">Üretici: <strong class="text-secondary-theme">@prod.Manufacturer</strong></span>
-                            @if (!string.IsNullOrEmpty(prod.Country))
+                        <div class="home-card-meta home-card-meta-sm">
+                            <span class="home-card-country-name text-truncate">@(!string.IsNullOrEmpty(prod.Country) ? prod.Country : prod.CreatedAt.ToString("dd.MM.yyyy"))</span>
+                            @if (!string.IsNullOrEmpty(prod.Country) && !string.IsNullOrEmpty(CountryHelper.GetFlagUrl(prod.Country)))
                             {
-                                @if (!string.IsNullOrEmpty(CountryHelper.GetFlagUrl(prod.Country)))
-                                {
-                                    <img src="@CountryHelper.GetFlagUrl(prod.Country)" alt="@prod.Country" title="@prod.Country" style="width: 22px; height: auto; object-fit: contain; border-radius: 2px; border: 1px solid var(--border-light, #e2e8f0); box-shadow: 0 1px 3px rgba(0,0,0,0.08);" />
-                                }
+                                <img src="@CountryHelper.GetFlagUrl(prod.Country)" alt="@prod.Country" title="@prod.Country" class="home-card-flag home-card-flag-sm" />
                             }
                         </div>
                     </div>

@@ -19,10 +19,7 @@ public class CategoryCommandService : ICategoryCommandService
 
     private async Task ClearCategoryCacheAsync()
     {
-        await _cacheService.RemoveAsync("categories:all");
-        await _cacheService.RemoveAsync("categories:root");
-        await _cacheService.RemoveAsync("categories:tree");
-        await _cacheService.RemoveAsync("categories:product-counts");
+        await _cacheService.RemoveByPrefixAsync("categories:");
     }
 
     public async Task AddCategoryAsync(Category category)
@@ -36,9 +33,18 @@ public class CategoryCommandService : ICategoryCommandService
 
     public async Task UpdateCategoryAsync(Category category)
     {
-        category.UpdatedAt = DateTime.UtcNow;
-        category.Slug = category.Name.ToSlug();
-        _context.Categories.Update(category);
+        var existing = await _context.Categories.FindAsync(category.Id);
+        if (existing == null) return;
+
+        existing.Name = category.Name;
+        existing.Slug = category.Name.ToSlug();
+        existing.ParentCategoryId = category.ParentCategoryId;
+        existing.IsShowcase = category.IsShowcase;
+        existing.Description = category.Description;
+        existing.IconClass = category.IconClass;
+        existing.SortOrder = category.SortOrder;
+        existing.UpdatedAt = DateTime.UtcNow;
+
         await _context.SaveChangesAsync();
         await ClearCategoryCacheAsync();
     }
@@ -71,6 +77,21 @@ public class CategoryCommandService : ICategoryCommandService
 
     public async Task<CategoryAttribute> AddCategoryAttributeAsync(int categoryId, CategoryAttribute attribute)
     {
+        var existing = await _context.CategoryAttributes
+            .FirstOrDefaultAsync(a => a.CategoryId == categoryId && a.Name == attribute.Name);
+        if (existing != null)
+        {
+            existing.DisplayName = attribute.DisplayName;
+            existing.Type = attribute.Type;
+            existing.Options = attribute.Options;
+            existing.IsRequired = attribute.IsRequired;
+            existing.DisplayOrder = attribute.DisplayOrder;
+            existing.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            await ClearCategoryCacheAsync();
+            return existing;
+        }
+
         attribute.CategoryId = categoryId;
         attribute.CreatedAt = DateTime.UtcNow;
         _context.CategoryAttributes.Add(attribute);

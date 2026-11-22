@@ -88,9 +88,13 @@ public class CategoryManagementController : Controller
         await _categoryCommandService.AddCategoryAsync(category);
 
         // Add attributes
+        var usedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        int displayOrder = 0;
         foreach (var attr in model.Attributes)
         {
             if (string.IsNullOrWhiteSpace(attr.Name)) continue;
+            var trimmedName = attr.Name.Trim();
+            if (!usedNames.Add(trimmedName)) continue;
 
             List<string>? options = null;
             if (attr.Type == AttributeType.Dropdown && !string.IsNullOrWhiteSpace(attr.OptionsJson))
@@ -111,10 +115,11 @@ public class CategoryManagementController : Controller
 
             var newAttr = new CategoryAttribute
             {
-                Name = attr.Name.Trim(),
-                DisplayName = string.IsNullOrWhiteSpace(attr.DisplayName) ? attr.Name.Trim() : attr.DisplayName.Trim(),
+                Name = trimmedName,
+                DisplayName = string.IsNullOrWhiteSpace(attr.DisplayName) ? trimmedName : attr.DisplayName.Trim(),
                 Type = attr.Type,
-                Options = options
+                Options = options,
+                DisplayOrder = displayOrder++
             };
             await _categoryCommandService.AddCategoryAttributeAsync(category.Id, newAttr);
         }
@@ -137,8 +142,12 @@ public class CategoryManagementController : Controller
             IsShowcase = category.IsShowcase
         };
 
-        // 1. Get own attributes
-        var ownAttributes = await _categoryQueryService.GetCategoryAttributesAsync(id);
+        // 1. Get own attributes (direct from DB to avoid stale cache)
+        var ownAttributes = await _context.CategoryAttributes
+            .AsNoTracking()
+            .Where(a => a.CategoryId == id)
+            .OrderBy(a => a.DisplayOrder)
+            .ToListAsync();
         var existingAttributeNames = ownAttributes.Select(a => a.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         // 2. AUTO-DISCOVERY: Check products under this category (or subcategories) for any Specs keys NOT YET in CategoryAttributes
@@ -171,10 +180,13 @@ public class CategoryManagementController : Controller
                     Type = AttributeType.Text,
                     DisplayOrder = order++
                 };
-                _context.CategoryAttributes.Add(attr);
+                await _categoryCommandService.AddCategoryAttributeAsync(id, attr);
             }
-            await _context.SaveChangesAsync();
-            ownAttributes = await _categoryQueryService.GetCategoryAttributesAsync(id);
+            ownAttributes = await _context.CategoryAttributes
+                .AsNoTracking()
+                .Where(a => a.CategoryId == id)
+                .OrderBy(a => a.DisplayOrder)
+                .ToListAsync();
         }
 
         foreach (var attr in ownAttributes)
@@ -230,7 +242,10 @@ public class CategoryManagementController : Controller
 
         await _categoryCommandService.UpdateCategoryAsync(category);
 
-        var existingAttributes = await _categoryQueryService.GetCategoryAttributesAsync(id);
+        var existingAttributes = await _context.CategoryAttributes
+            .AsNoTracking()
+            .Where(a => a.CategoryId == id)
+            .ToListAsync();
         var postedIds = model.Attributes.Where(a => a.Id.HasValue).Select(a => a.Id.Value).ToList();
 
         // 1. Delete removed attributes
@@ -243,9 +258,13 @@ public class CategoryManagementController : Controller
         }
 
         // 2. Add or Update attributes
+        var usedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        int displayOrder = 0;
         foreach (var attr in model.Attributes)
         {
             if (string.IsNullOrWhiteSpace(attr.Name)) continue;
+            var trimmedName = attr.Name.Trim();
+            if (!usedNames.Add(trimmedName)) continue; // Avoid duplicate key constraint on (CategoryId, Name)
 
             List<string>? options = null;
             if (attr.Type == AttributeType.Dropdown && !string.IsNullOrWhiteSpace(attr.OptionsJson))
@@ -266,10 +285,11 @@ public class CategoryManagementController : Controller
 
             var catAttr = new CategoryAttribute
             {
-                Name = attr.Name.Trim(),
-                DisplayName = string.IsNullOrWhiteSpace(attr.DisplayName) ? attr.Name.Trim() : attr.DisplayName.Trim(),
+                Name = trimmedName,
+                DisplayName = string.IsNullOrWhiteSpace(attr.DisplayName) ? trimmedName : attr.DisplayName.Trim(),
                 Type = attr.Type,
-                Options = options
+                Options = options,
+                DisplayOrder = displayOrder++
             };
 
             if (attr.Id.HasValue && attr.Id.Value > 0)
