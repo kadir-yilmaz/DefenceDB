@@ -63,7 +63,7 @@
     </script>
 </head>
 <body>
-    <header class="@(ViewData["IsHome"] as bool? == true ? "position-absolute w-100 top-0 z-3" : "")" style="z-index: 1030;">
+    <header class="@(ViewData["IsHome"] as bool? == true ? "home-header-overlay" : "")" style="z-index: 1030;">
         <partial name="_Navbar" />
     </header>
 

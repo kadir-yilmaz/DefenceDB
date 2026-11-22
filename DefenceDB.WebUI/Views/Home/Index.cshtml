@@ -12,29 +12,22 @@
 }
 
 <link rel="stylesheet" href="~/css/home.css" asp-append-version="true" />
-<!-- Hero Section with Full Screen Video -->
-<section class="hero-video-wrapper">
+<!-- Hero Section with Full Screen Video (Desktop Only) -->
+<section class="hero-video-wrapper d-none d-md-flex">
     <!-- Masaüstü Videosu (Geniş Ekranlar - Yatay 16:9) -->
     <video loop muted playsinline preload="auto" class="home-hero-video d-none d-md-block">
         <source data-src="/videos/home.mp4" type="video/mp4">
         <source data-src="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4">
     </video>
     
-    <!-- Mobil Videosu (Telefonlar - Dikey 9:16) -->
-    <video loop muted playsinline preload="auto" class="home-hero-video d-block d-md-none">
-        <source data-src="/videos/home.mp4" type="video/mp4">
-        <!-- Kaliteli ve akıcı dikey uçak uçuşu fallback videosu -->
-        <source data-src="https://assets.mixkit.co/videos/preview/mixkit-fighter-jet-maneuvering-in-the-clouds-43187-large.mp4" type="video/mp4">
-    </video>
-    
     <div class="hero-overlay"></div>
     
     <div class="container hero-content h-100 d-flex flex-column justify-content-end pb-5">
-        <div class="quote-wrapper text-center w-100 mb-4 px-3" style="animation: fadeInUp 1.5s ease-out;">
-            <p class="text-white opacity-90 fst-italic mx-auto" style="max-width: 800px; font-size: 1.45rem; line-height: 1.6; font-family: 'Outfit', sans-serif;">
+        <div class="quote-wrapper text-center w-100 mb-3 px-3" style="animation: fadeInUp 1.5s ease-out;">
+            <p class="text-white opacity-85 fst-italic mx-auto mb-2" style="max-width: 640px; font-size: 1.05rem; line-height: 1.55; font-family: 'Outfit', sans-serif;">
                 "Uçmayı bir kere tattıktan sonra, yeryüzünde sonsuza dek gözleriniz gökyüzüne çevrilmiş bir şekilde yürüyeceksiniz..."
             </p>
-            <p class="fw-bold mt-2" style="font-size: 0.95rem; letter-spacing: 2.5px; color: #cbd5e1;">
+            <p class="fw-semibold mb-0" style="font-size: 0.78rem; letter-spacing: 2px; color: #94a3b8;">
                 — LEONARDO DA VINCI
             </p>
         </div>
@@ -45,9 +38,9 @@
     (function () {
         function loadHomeHeroVideo() {
             var isMobile = window.matchMedia('(max-width: 767.98px)').matches;
-            var selector = isMobile ? '.home-hero-video.d-md-none' : '.home-hero-video.d-md-block';
-            var video = document.querySelector(selector);
+            if (isMobile) return;
 
+            var video = document.querySelector('.home-hero-video.d-md-block');
             if (!video || video.dataset.loaded === 'true') return;
 
             video.querySelectorAll('source[data-src]').forEach(function (source) {

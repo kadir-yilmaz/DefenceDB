@@ -38,29 +38,46 @@
     position: relative;
 }
 
-/* The search button — always visible on the right */
-.search-toggle-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    background: rgba(11, 15, 25, 0.8);
-    color: #ffc107;
+/* Unified Navbar Action Buttons (Search, Articles, Theme Toggle) */
+.navbar-action-btn,
+.search-toggle-btn,
+.theme-toggle-btn {
+    height: 36px;
+    min-width: 36px;
+    padding: 0 8px;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 8px;
+    color: #e2e8f0;
     font-size: 1.1rem;
+    font-weight: 500;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 6px;
     flex-shrink: 0;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 2;
+    text-decoration: none;
+    outline: none;
+    transition: color 0.15s ease, opacity 0.15s ease;
     position: relative;
+    z-index: 2;
 }
 
-.search-toggle-btn:hover {
-    background: rgba(255, 193, 7, 0.15);
-    border-color: #ffc107;
-    transform: scale(1.05);
+.navbar-action-btn:hover,
+.search-toggle-btn:hover,
+.theme-toggle-btn:hover {
+    color: #fbbf24;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.navbar-article-link span {
+    font-size: 0.92rem;
+    font-weight: 600;
 }
 
 /* Input — starts collapsed (width: 0) on the left of button */
@@ -430,42 +447,25 @@
 /* ==========================================================================
    HOMEPAGE TRANSPARENT NAVBAR OVERRIDES
    ========================================================================== */
-.navbar-transparent-home .navbar-top-row,
-.navbar-transparent-home .categories-nav-wrapper {
-    background-color: rgba(11, 15, 25, 0.7) !important;
-    backdrop-filter: blur(8px);
+@media (min-width: 768px) {
+    .home-header-overlay {
+        position: absolute;
+        width: 100%;
+        top: 0;
+        z-index: 1030;
+    }
+
+    .navbar-transparent-home .navbar-top-row,
+    .navbar-transparent-home .categories-nav-wrapper {
+        background-color: rgba(11, 15, 25, 0.7) !important;
+        backdrop-filter: blur(8px);
+    }
 }
 
-/* ==========================================================================
-   THEME TOGGLE BUTTON
-   ========================================================================== */
-.theme-toggle-btn {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    background: rgba(11, 15, 25, 0.8);
-    color: #f59e0b;
-    font-size: 1.05rem;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    outline: none;
-    padding: 0;
-}
-
-.theme-toggle-btn:hover {
-    background: rgba(245, 158, 11, 0.15);
-    border-color: #f59e0b;
-    color: #fbbf24;
-    transform: scale(1.08);
-    box-shadow: 0 0 16px rgba(245, 158, 11, 0.3);
-}
-
-.theme-toggle-btn:active {
-    transform: scale(0.95);
+@media (max-width: 767.98px) {
+    .home-header-overlay {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
 }
 
