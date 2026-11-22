@@ -85,14 +85,14 @@
             </div>
         </div>
 
-        <div class="row g-4">
+        <div class="row g-3 g-md-4">
             @{ var showIndex = 0; }
             @foreach (var prod in showcaseProducts)
             {
                 var mainImage = prod.Images?.FirstOrDefault(i => i.IsMainImage)?.ImagePath ?? prod.Images?.FirstOrDefault()?.ImagePath ?? "/images/default.jpg";
                 var thumbImage = toThumb(mainImage);
                 var categoryName = prod.Category?.Name;
-                <div class="col-md-6 col-lg-3 reveal-card" style="--delay: @(showIndex * 45)ms;">
+                <div class="col-6 col-md-6 col-lg-3 reveal-card" style="--delay: @(showIndex * 45)ms;">
                     <div class="card-premium home-product-card h-100 d-flex flex-column" onclick="handleProductClick(event, '/@(prod.Slug)')">
                         @if (!string.IsNullOrWhiteSpace(categoryName))
                         {
@@ -172,11 +172,11 @@
         </a>
     </div>
 
-    <div class="row g-4">
+    <div class="row g-3 g-md-4">
         @{ var catIndex = 0; }
         @foreach (var cat in categories)
         {
-            <div class="col-md-4 reveal-card" style="--delay: @(catIndex * 45)ms;">
+            <div class="col-6 col-md-4 reveal-card" style="--delay: @(catIndex * 45)ms;">
                 <div class="home-category-card d-flex flex-column h-100" onclick="location.href='@Url.Action("Index", "Product", new { categorySlug = cat.Slug })'">
                     <div class="d-flex align-items-center gap-3 mb-3">
                         <div class="home-category-icon">

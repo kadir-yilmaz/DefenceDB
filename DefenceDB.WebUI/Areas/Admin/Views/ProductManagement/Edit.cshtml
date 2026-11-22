@@ -802,9 +802,19 @@
             function autoResizeTextarea(el) {
                 if (!el) return;
                 var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                el.style.height = 'auto';
-                el.style.height = Math.max(220, el.scrollHeight) + 'px';
-                window.scrollTo(0, scrollTop);
+                var scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+                var prevHeight = el.offsetHeight;
+
+                // Keep parent container height locked during calculation so page doesn't collapse and jump
+                var parent = el.parentElement;
+                if (parent) parent.style.minHeight = prevHeight + 'px';
+
+                el.style.height = '0px';
+                var newHeight = Math.max(220, el.scrollHeight);
+                el.style.height = newHeight + 'px';
+
+                if (parent) parent.style.minHeight = '';
+                window.scrollTo(scrollLeft, scrollTop);
             }
             var descTextarea = document.getElementById('Description');
             if (descTextarea) {

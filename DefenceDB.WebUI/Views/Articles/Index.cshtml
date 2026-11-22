@@ -37,10 +37,12 @@
                     <a asp-controller="Articles" asp-action="Detail" asp-route-slug="@article.Slug" class="article-paper-card">
                         <span class="article-paper-category">@article.ArticleCategory?.Name</span>
                         <h2>@article.Title</h2>
-                        <time datetime="@((article.PublishedAt ?? article.CreatedAt).ToString("yyyy-MM-dd"))">@((article.PublishedAt ?? article.CreatedAt).ToString("dd.MM.yyyy"))</time>
-                        <span class="article-paper-view">
-                            Görüntüle <i class="bi bi-arrow-right"></i>
-                        </span>
+                        <div class="article-paper-footer">
+                            <time datetime="@((article.PublishedAt ?? article.CreatedAt).ToString("yyyy-MM-dd"))">@((article.PublishedAt ?? article.CreatedAt).ToString("dd.MM.yyyy"))</time>
+                            <span class="article-paper-view">
+                                Oku <i class="bi bi-arrow-up-right"></i>
+                            </span>
+                        </div>
                     </a>
                 }
             </div>
